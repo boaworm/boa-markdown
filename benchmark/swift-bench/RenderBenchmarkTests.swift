@@ -2,7 +2,8 @@
  * Layer 2: Swift / WKWebView Rendering Benchmark
  *
  * Measures:
- *   T2: evaluateJavaScript(renderMarkdown) round-trip (Swift → JS → Swift callback)
+ *   T2: evaluateJavaScript(renderMarkdown) round-trip (Swift → JS → Swift callback).
+ *       The Markdown → HTML step runs in Swift (BoaRender) before this call and is not part of T2.
  *   T5: collectImageData() duration (synchronous image base64 encoding, main thread)
  *   T_webview_init: WKWebView load + rendererReady handshake
  *
@@ -17,6 +18,7 @@
 
 import XCTest
 import WebKit
+import BoaRender
 
 // MARK: - Timing helpers
 
@@ -60,6 +62,8 @@ class BenchmarkWebViewHarness: NSObject, WKNavigationDelegate, WKScriptMessageHa
     private static let sharedProcessPool = WKProcessPool()
 
     private(set) var webView: WKWebView!
+    /// Serves the renderer bundle over the same custom scheme the app uses.
+    private var rendererHandler: RendererBundleSchemeHandler?
     private var rendererReadyContinuation: CheckedContinuation<Void, Error>?
     private var renderContinuation: CheckedContinuation<(Double, Int), Error>?
     private var renderStartTime: CFAbsoluteTime = 0
@@ -72,6 +76,10 @@ class BenchmarkWebViewHarness: NSObject, WKNavigationDelegate, WKScriptMessageHa
         ucc.add(self, name: "logger")
         ucc.add(self, name: "benchResult")
         config.userContentController = ucc
+        rendererHandler = RendererBundleSchemeHandler(bundle: Bundle(for: BenchmarkWebViewHarness.self))
+        if let rendererHandler {
+            config.setURLSchemeHandler(rendererHandler, forURLScheme: RendererBundleSchemeHandler.scheme)
+        }
         if #available(macOS 11.0, *) {
             let prefs = WKWebpagePreferences()
             prefs.allowsContentJavaScript = true
@@ -83,25 +91,13 @@ class BenchmarkWebViewHarness: NSObject, WKNavigationDelegate, WKScriptMessageHa
 
     /// Load the bundled index.html and wait for "rendererReady" handshake.
     func loadAndWaitForReady() async throws {
-        guard let bundleURL = findIndexHTML() else {
-            throw NSError(domain: "Benchmark", code: 1, userInfo: [NSLocalizedDescriptionKey: "index.html not found"])
+        guard rendererHandler != nil else {
+            throw NSError(domain: "Benchmark", code: 1, userInfo: [NSLocalizedDescriptionKey: "Renderer/index.html not found in the test bundle"])
         }
         return try await withCheckedThrowingContinuation { continuation in
             rendererReadyContinuation = continuation
-            do {
-                let html = try String(contentsOf: bundleURL, encoding: .utf8)
-                webView.loadHTMLString(html, baseURL: bundleURL.deletingLastPathComponent())
-            } catch {
-                continuation.resume(throwing: error)
-            }
+            webView.load(URLRequest(url: RendererBundleSchemeHandler.rendererURL()))
         }
-    }
-
-    private func findIndexHTML() -> URL? {
-        let bundle = Bundle(for: BenchmarkWebViewHarness.self)
-        return bundle.url(forResource: "index", withExtension: "html", subdirectory: "WebRenderer")
-            ?? bundle.url(forResource: "index", withExtension: "html", subdirectory: "dist")
-            ?? bundle.url(forResource: "index", withExtension: "html")
     }
 
     /// Render markdown and return (roundtrip_ms, html_length).
@@ -114,7 +110,9 @@ class BenchmarkWebViewHarness: NSObject, WKNavigationDelegate, WKScriptMessageHa
         }
         let safeContent = String(contentJsonArray.dropFirst().dropLast())
 
+        // The renderer displays HTML produced in Swift, so pass it the same page options the app does.
         var opts = options
+        opts.merge(MarkdownRenderer.render(content).pageOptions) { _, rendered in rendered }
         opts["theme"] = "light"
         guard let optsData = try? JSONSerialization.data(withJSONObject: opts),
               let optsJson = String(data: optsData, encoding: .utf8) else {
