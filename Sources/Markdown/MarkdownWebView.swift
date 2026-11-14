@@ -5,11 +5,6 @@ import os.log
 import CoreGraphics
 import BoaRender
 
-enum ViewMode {
-    case preview
-    case source
-}
-
 struct MarkdownWebView: NSViewRepresentable {
     var content: String
     var isTruncated: Bool = false
