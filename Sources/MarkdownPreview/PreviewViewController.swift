@@ -409,6 +409,10 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         userContentController.add(self, name: "linkClicked")
         userContentController.add(self, name: "readingToolsLayout")
         userContentController.add(self, name: "blockCopy")
+        if SubresourceDiagnostics.isEnabled() {
+            userContentController.add(self, name: SubresourceDiagnostics.messageHandlerName)
+            userContentController.addUserScript(SubresourceDiagnostics.userScript())
+        }
         webConfiguration.userContentController = userContentController
         
         let schemeHandler = LocalSchemeHandler()
@@ -653,6 +657,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "linkClicked")
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "readingToolsLayout")
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "blockCopy")
+        webView.configuration.userContentController.removeScriptMessageHandler(forName: SubresourceDiagnostics.messageHandlerName)
         
         for recognizer in webView.gestureRecognizers where recognizer is NSClickGestureRecognizer {
             webView.removeGestureRecognizer(recognizer)
@@ -1610,6 +1615,10 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard RendererBridgePolicy.accepts(message) else { return }
         if message.name == "blockCopy" { blockCopyBridge.handle(message, generation: renderScope.scope.uuidString, enabled: AppearancePreference.shared.showCopyButtons && currentPreviewMode != .compact); return }
+        if message.name == SubresourceDiagnostics.messageHandlerName {
+            SubresourceDiagnostics.report(message.body, documentURL: currentURL, logger: logger)
+            return
+        }
         if message.name == "logger", let body = message.body as? String {
             os_log("🟢 JS Log: %{public}@", log: logger, type: .debug, body)
             

@@ -45,6 +45,10 @@ struct MarkdownWebView: NSViewRepresentable {
         userContentController.add(coordinator, name: "linkClicked")
         userContentController.add(coordinator, name: "readingToolsLayout")
         userContentController.add(coordinator, name: "blockCopy")
+        if SubresourceDiagnostics.isEnabled() {
+            userContentController.add(coordinator, name: SubresourceDiagnostics.messageHandlerName)
+            userContentController.addUserScript(SubresourceDiagnostics.userScript())
+        }
         
         let debugSource = """
         window.onerror = function(msg, url, line, col, error) {
@@ -689,6 +693,10 @@ struct MarkdownWebView: NSViewRepresentable {
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard RendererBridgePolicy.accepts(message) else { return }
             if message.name == "blockCopy" { blockCopyBridge.handle(message, generation: renderScope.scope.uuidString, enabled: AppearancePreference.shared.showCopyButtons); return }
+            if message.name == SubresourceDiagnostics.messageHandlerName {
+                SubresourceDiagnostics.report(message.body, documentURL: currentFileURL, logger: logger)
+                return
+            }
             if message.name == "logger", let body = message.body as? String {
                 os_log("JS Log: %{public}@", log: logger, type: .debug, body)
                 

@@ -22,6 +22,9 @@ final class RendererBundleSchemeHandler: NSObject, WKURLSchemeHandler {
     func webView(_ webView: WKWebView, start urlSchemeTask: WKURLSchemeTask) {
         guard let url = urlSchemeTask.request.url,
               let fileURL = resolveContainedFileURL(from: url) else {
+            os_log("Rejected renderer resource request: %{public}@ (root %{public}@)",
+                   log: logger, type: .error,
+                   urlSchemeTask.request.url?.absoluteString ?? "<no url>", rootDirectory.path)
             urlSchemeTask.didFailWithError(NSError(
                 domain: "RendererBundleSchemeHandler",
                 code: -1,

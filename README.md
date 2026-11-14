@@ -106,6 +106,11 @@ Renderer tests (from `web-renderer/`): `npm ci && npm run typecheck && npm test`
 - **Quick Look shows stale output:** `qlmanage -r`
 - **Quick Look doesn't show up at all:** run **Help → Repair Quick Look…** in the app, or check `pluginkit -m -v` for the extension.
 - **Check that Quick Look renders:** **Help → Test Quick Look**.
+- **A broken image or renderer asset:** WebKit's own failure line is privacy-redacted (`Couldn't open <private>`).
+  Enable subresource logging with `defaults write io.github.boaworm.Markdown BOADiagnoseSubresources -bool true`
+  — and the same for `io.github.boaworm.Markdown.QuickLook` to cover Quick Look — then reopen the document and
+  read the `Subresource failed:` lines in Console.app. Set the value back to `false` when done.
+  `BOA_DIAGNOSE_SUBRESOURCES=1` does the same for one run when launching the executable from a terminal.
 
 ## License
 

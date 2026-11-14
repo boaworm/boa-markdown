@@ -40,7 +40,8 @@ class LocalSchemeHandler: NSObject, WKURLSchemeHandler {
         os_log("🔵 Start loading resource: %{public}@", log: logger, type: .debug, filePath)
 
         guard let fileUrl = resolveContainedFileURL(from: url) else {
-            os_log("Local image unavailable or not in the document allowlist", log: logger, type: .error)
+            os_log("Local image unavailable or not in the document allowlist: %{public}@ (base %{public}@)",
+                   log: logger, type: .error, url.absoluteString, baseDir.path)
             onReadFailure?()
             urlSchemeTask.didFailWithError(NSError(domain: "LocalSchemeHandler", code: -3, userInfo: [NSLocalizedDescriptionKey: "Resource unavailable or not allowed"]))
             return
