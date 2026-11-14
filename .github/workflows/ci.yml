@@ -86,3 +86,20 @@ jobs:
             -destination 'platform=macOS' \
             -skip-testing:MarkdownTests/RenderBenchmarkTests \
             CODE_SIGNING_ALLOWED=NO
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Scan for secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

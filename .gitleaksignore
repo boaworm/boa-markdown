@@ -1,0 +1,8 @@
+# Reviewed gitleaks findings that are intentionally kept in the repo.
+# Format: <commit>:<file path>:<rule id>:<line>
+#
+# 2026-10-18 (2541747): Sparkle SUPublicEDKey in the updater tests. SUPublicEDKey is
+# the public EdDSA key used to *verify* appcast signatures; publishing it is the
+# point, it grants no access. The test file was removed when the updater was
+# stripped out, so this only silences full-history scans.
+254174736f1040af5aad05ae473db7d5762e1687:Tests/MarkdownTests/UpdateErrorPresentationTests.swift:generic-api-key:76
