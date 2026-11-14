@@ -1,0 +1,62 @@
+.blockquote-placeholder {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    margin: 4px 0;
+    border-left: 3px solid #d0d7de;
+    border-radius: 0 4px 4px 0;
+    background-color: #f6f8fa;
+    color: #57606a;
+    font-size: 0.85em;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.15s ease;
+}
+
+.blockquote-placeholder:hover {
+    background-color: #eaeef2;
+    color: #24292f;
+}
+
+.blockquote-placeholder::before {
+    content: '▶';
+    font-size: 0.7em;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    .blockquote-placeholder {
+        border-left-color: #30363d;
+        background-color: #161b22;
+        color: #8b949e;
+    }
+
+    .blockquote-placeholder:hover {
+        background-color: #1c2128;
+        color: #c9d1d9;
+    }
+}
+
+[data-theme="dark"] .blockquote-placeholder {
+    border-left-color: #30363d;
+    background-color: #161b22;
+    color: #8b949e;
+}
+
+[data-theme="dark"] .blockquote-placeholder:hover {
+    background-color: #1c2128;
+    color: #c9d1d9;
+}
+
+@media print {
+    .blockquote-placeholder {
+        display: none !important;
+    }
+
+    blockquote,
+    .markdown-alert {
+        display: block !important;
+    }
+}

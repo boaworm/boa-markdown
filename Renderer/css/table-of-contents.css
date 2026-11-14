@@ -1,0 +1,153 @@
+:root {
+    --reading-controls-top: 64px;
+    --reading-controls-height: 0px;
+    --reading-content-top: 64px;
+    --reading-bg: #ffffff;
+    --reading-panel: #f6f8fa;
+    --reading-text: #24292f;
+    --reading-muted: #57606a;
+    --reading-border: #d0d7de;
+    --reading-active: #ddf4ff;
+    --reading-link: #0969da;
+    --toc-hover: rgba(31, 35, 40, 0.045);
+    --toc-active: rgba(9, 105, 218, 0.065);
+    --toc-divider: rgba(31, 35, 40, 0.12);
+    --toc-shadow: 0 12px 36px rgba(31, 35, 40, 0.10), 0 2px 8px rgba(31, 35, 40, 0.04);
+}
+html[data-reading-controls="true"] { --reading-content-top: max(64px, calc(var(--reading-controls-top) + var(--reading-controls-height) + 8px)); }
+html[data-reading-shared="true"] { --reading-controls-top: 10px; }
+html[data-reading-shared="true"] #reading-controls { right: var(--reading-native-reserve, 340px); }
+html[data-theme="dark"] {
+    --reading-bg: #0d1117; --reading-panel: #161b22; --reading-text: #c9d1d9;
+    --reading-muted: #a4afbd; --reading-border: #30363d; --reading-active: #1c2c40; --reading-link: #58a6ff;
+    --toc-hover: rgba(240, 246, 252, 0.055); --toc-active: rgba(88, 166, 255, 0.09);
+    --toc-divider: rgba(240, 246, 252, 0.14);
+    --toc-shadow: 0 12px 36px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+@media (prefers-color-scheme: dark) {
+    html:not([data-theme="default"]):not([data-theme="light"]) {
+        --reading-bg: #0d1117; --reading-panel: #161b22; --reading-text: #c9d1d9;
+        --reading-muted: #a4afbd; --reading-border: #30363d; --reading-active: #1c2c40; --reading-link: #58a6ff;
+        --toc-hover: rgba(240, 246, 252, 0.055); --toc-active: rgba(88, 166, 255, 0.09);
+        --toc-divider: rgba(240, 246, 252, 0.14);
+        --toc-shadow: 0 12px 36px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.18);
+    }
+}
+#reading-controls {
+    position: fixed; top: var(--reading-controls-top); left: 20px; right: 20px;
+    z-index: 1001; isolation: isolate; background: var(--reading-bg); color: var(--reading-text);
+}
+#reading-controls::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: var(--reading-content-top); background: var(--reading-bg); z-index: -1; }
+#reading-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; min-height: 32px; padding: 0; box-sizing: border-box; }
+#reading-controls [hidden], #toc-container [hidden], #reading-controls[hidden] { display: none !important; }
+html[data-reading-controls="true"] body, html[data-context="app"] body, html[data-context="quicklook"] body { padding-top: var(--reading-content-top); }
+.reading-tool-button {
+    position: static; display: inline-flex; align-items: center; justify-content: center;
+    min-height: 32px; padding: 4px 10px; box-sizing: border-box;
+    border: 1px solid var(--reading-border); border-radius: 6px; background: var(--reading-bg);
+    color: var(--reading-text); font: 13px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; cursor: pointer;
+}
+.reading-tool-button:hover { background: var(--reading-panel); }
+.reading-tool-button:focus-visible, .toc-link:focus-visible { outline: 2px solid var(--reading-link); outline-offset: 2px; }
+.toc-toggle[aria-expanded="true"], .blockquote-collapse-toggle.active { background: var(--reading-active); color: var(--reading-link); }
+#reading-layout { min-width: 0; }
+#markdown-preview { min-width: 0; max-width: none; width: 100%; margin: 0; padding-top: 16px; }
+/* Keep source-mode spacing owned by source-view.css. */
+#markdown-preview:not(.source-mode) { padding-right: 20px; padding-left: 20px; }
+@media (max-width: 767px) { #markdown-preview:not(.source-mode) { padding-right: 15px; padding-left: 15px; } }
+/* Finder preview panes retain their compact spacing. */
+html[data-context="finder"] #markdown-preview:not(.source-mode) { padding: 8px; }
+#markdown-preview.source-mode { max-width: none; margin: 0; }
+html[data-toc-docked="true"] #reading-layout { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 24px; align-items: start; }
+#toc-container { display: none; color: var(--reading-text); }
+#toc-container[data-layout="sidebar"] { width: 240px; align-self: start; }
+#toc-container[data-layout="sidebar"] .toc-nav { position: fixed; top: var(--reading-content-top); right: 20px; width: 240px; z-index: 1000; }
+.toc-nav {
+    box-sizing: border-box; width: 100%; background: transparent; border: 0;
+    overflow-y: auto; overscroll-behavior: contain;
+    max-height: calc(100vh - var(--reading-content-top) - 20px);
+    scrollbar-width: thin; scrollbar-color: var(--toc-divider) transparent;
+    /* A quiet rail fades away at both ends instead of outlining a separate pane. */
+    background-image: linear-gradient(to bottom, transparent, var(--toc-divider) 36px, var(--toc-divider) calc(100% - 36px), transparent);
+    background-size: 1px 100%; background-position: left top; background-repeat: no-repeat;
+    padding: 0 0 4px 12px;
+}
+.toc-header {
+    position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding: 2px 8px 10px 12px; border: 0; z-index: 1;
+    background: linear-gradient(to bottom, var(--reading-bg) 75%, transparent);
+}
+.toc-title { color: var(--reading-muted); font: 600 12px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; letter-spacing: 0.02em; }
+.toc-close {
+    min-width: 32px; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%;
+    background: transparent; color: var(--reading-muted); font-size: 19px; font-weight: 400;
+}
+.toc-close:hover { background: var(--toc-hover); color: var(--reading-text); }
+.toc-list { list-style: none; padding: 0; margin: 0; }
+.toc-nav > .toc-list { padding: 0 8px 8px; }
+.toc-nav > .toc-list::after { content: ''; display: block; height: 8px; }
+.toc-item { padding: 0; margin: 0; }
+.toc-link {
+    position: relative; display: block; padding: 7px 10px 7px calc(12px + var(--toc-indent, 0px)); text-align: start;
+    margin: 2px 0; color: var(--reading-muted); text-decoration: none;
+    font: 13px/1.5 -apple-system, BlinkMacSystemFont, sans-serif; border-radius: 8px;
+    white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    transition: background-color 120ms ease, color 120ms ease;
+}
+.toc-link:hover { background: var(--toc-hover); color: var(--reading-text); }
+.toc-link[data-depth="0"] { font-weight: 600; }
+.toc-link.active { background: var(--toc-active); color: var(--reading-link); font-weight: 600; }
+.toc-link.active::before {
+    content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 2px;
+    border-radius: 2px; background: currentColor;
+}
+.toc-toggle { border-color: transparent; border-radius: 16px; background: var(--toc-hover); }
+.toc-toggle[aria-expanded="true"] { background: var(--toc-hover); color: var(--reading-text); }
+.toc-toggle:hover { background: var(--toc-active); }
+#toc-container[data-layout="overlay"] { position: fixed; top: var(--reading-content-top); right: 16px; width: min(280px, calc(100vw - 32px)); z-index: 1002; }
+#toc-container[data-layout="overlay"] .toc-nav {
+    padding: 8px 4px 4px; background: var(--reading-bg); border: 1px solid var(--toc-divider);
+    border-radius: 14px; box-shadow: var(--toc-shadow);
+}
+#toc-container[data-layout="overlay"] .toc-header { border-radius: 10px 10px 0 0; }
+.toc-nav::-webkit-scrollbar { width: 6px; }
+.toc-nav::-webkit-scrollbar-track { background: transparent; }
+.toc-nav::-webkit-scrollbar-thumb { background: var(--toc-divider); border: 1px solid var(--reading-bg); border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) { .toc-link { transition: none; } }
+@media (pointer: coarse) { .reading-tool-button, .toc-link { min-height: 44px; } }
+@media print {
+    #reading-controls, #toc-container { display: none !important; }
+    html[data-reading-controls] body { padding-top: 20px !important; padding-right: 20px !important; }
+    html[data-toc-docked] #reading-layout { display: block !important; }
+    #markdown-preview { max-width: none; }
+}
+
+/* Physical left/right positions follow the persisted directory choice. */
+html[data-toc-side="left"] #reading-toolbar { justify-content: flex-start; }
+html[data-toc-side="left"] #toc-button-container { order: -1; }
+html[data-toc-side="left"][data-toc-docked="true"] #reading-layout { grid-template-columns: 240px minmax(0, 1fr); }
+html[data-toc-side="left"][data-toc-docked="true"] #markdown-preview { grid-column: 2; grid-row: 1; }
+html[data-toc-side="left"][data-toc-docked="true"] #toc-container { grid-column: 1; grid-row: 1; }
+html[data-toc-side="left"] #toc-container[data-layout="sidebar"] .toc-nav { left: 20px; right: auto; background-position: right top; padding: 0 12px 4px 0; }
+html[data-toc-side="left"] #toc-container[data-layout="overlay"] { left: 16px; right: auto; }
+
+html[data-reading-shared="true"]:not([data-toc-side="left"]) #toc-button-container {
+    position: fixed; top: var(--reading-controls-top); right: 20px; width: max-content;
+}
+
+/* Status consumes only spare toolbar width; it cannot move tools onto another row. */
+#reading-status { display: flex; flex: 1 1 0; min-width: 0; align-items: center; gap: 14px; overflow: hidden; white-space: nowrap; height: 32px; color: var(--reading-muted); font: 12px/1.4 -apple-system, BlinkMacSystemFont, sans-serif; }
+#reading-toolbar > :not(#reading-status) { flex-shrink: 0; }
+.reading-path { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.reading-filename { max-width: 30%; overflow: hidden; text-overflow: ellipsis; }
+.reading-filename:empty { display: none; }
+.reading-progress { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.reading-updated { overflow: hidden; text-overflow: ellipsis; }
+#reading-status:not([data-size="large"]) .reading-filename { display: none; }
+#reading-status[data-size="small"] .reading-parent, #reading-status[data-size="tiny"] .reading-parent { display: none; }
+#reading-status[data-size="tiny"] .reading-progress, #reading-status[data-size="tiny"] .reading-updated { display: none; }
+html:not([data-reading-shared="true"]) #reading-status { display: none; }
+
+/* Per-heading direction, including Safari 14.0 (before logical inset support). */
+.toc-link[data-text-direction="rtl"] { padding: 7px calc(12px + var(--toc-indent, 0px)) 7px 10px; }
+.toc-link[data-text-direction="rtl"].active::before { left: auto; right: 0; }

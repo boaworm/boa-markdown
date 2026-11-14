@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- Nothing here may reach the network: scripts, styles and fonts come from the app bundle,
+         images from the bundle or the local-md: scheme the app serves from disk. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' boa-renderer:; style-src 'self' boa-renderer: 'unsafe-inline'; img-src 'self' boa-renderer: local-md: data: blob:; font-src 'self' boa-renderer: data:; connect-src 'none'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Preview</title>
+    <link rel="stylesheet" href="vendor/github-markdown-css/github-markdown.css">
+    <link rel="stylesheet" href="vendor/katex/katex.css">
+    <link rel="stylesheet" href="css/page.css">
+    <link rel="stylesheet" href="css/block-copy.css">
+    <link rel="stylesheet" href="css/math.css">
+    <link rel="stylesheet" href="css/tsv.css">
+    <link rel="stylesheet" href="css/highlight-adaptive.css">
+    <link rel="stylesheet" href="css/table-of-contents.css">
+    <link rel="stylesheet" href="css/image-fallback.css">
+    <link rel="stylesheet" href="css/search.css">
+    <link rel="stylesheet" href="css/source-view.css">
+    <link rel="stylesheet" href="css/callouts.css">
+    <link rel="stylesheet" href="css/print.css">
+    <link rel="stylesheet" href="css/help-overlay.css">
+    <link rel="stylesheet" href="css/blockquote-collapse.css">
+    <link rel="stylesheet" href="css/diff-animations.css">
+    <link rel="stylesheet" href="css/line-numbers.css">
+    <link rel="stylesheet" href="css/position-navigation.css">
+    <link rel="stylesheet" href="css/finder-pane.css">
+    <link rel="stylesheet" href="css/rtl.css">
+</head>
+<body>
+    <div id="loading-status">Loading renderer...</div>
+    <div id="reading-controls" hidden>
+        <div id="reading-toolbar" role="group" aria-label="Reading controls">
+            <div id="reading-status" hidden></div>
+            <div id="collapse-btn-container" hidden></div>
+            <div id="toc-button-container" hidden></div>
+        </div>
+    </div>
+    <div id="search-container"></div>
+    <div id="reading-layout">
+        <div id="markdown-preview" class="markdown-body"></div>
+        <div id="toc-container"></div>
+    </div>
+    <div id="link-status-bar" aria-hidden="true"></div>
+    <script src="vendor/highlight/highlight.js"></script>
+    <script src="vendor/katex/katex.js"></script>
+    <script src="vendor/katex/contrib/mhchem.js"></script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
