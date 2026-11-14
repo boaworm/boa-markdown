@@ -252,13 +252,6 @@ struct RenderingSettingsView: View {
 
             VStack(spacing: 0) {
                 FeatureToggleRow(
-                    title: NSLocalizedString("Mermaid Diagrams", comment: "Mermaid toggle title"),
-                    subtitle: NSLocalizedString("Flowcharts, sequence diagrams, and more", comment: "Mermaid toggle subtitle"),
-                    icon: "diagram",
-                    isOn: Binding(get: { preference.enableMermaid }, set: { preference.enableMermaid = $0 })
-                )
-                Divider().padding(.leading, 52)
-                FeatureToggleRow(
                     title: NSLocalizedString("Mathematical Formulas", comment: "Mathematical rendering toggle title"),
                     subtitle: NSLocalizedString("Mathematical expressions and equations", comment: "Mathematical rendering toggle subtitle"),
                     icon: "function",
@@ -270,13 +263,6 @@ struct RenderingSettingsView: View {
                     subtitle: NSLocalizedString("GitHub flavored emoji codes like :smile:", comment: "Emoji toggle subtitle"),
                     icon: "face.smiling",
                     isOn: Binding(get: { preference.enableEmoji }, set: { preference.enableEmoji = $0 })
-                )
-                Divider().padding(.leading, 52)
-                FeatureToggleRow(
-                    title: NSLocalizedString("Typst Math", comment: "Typst toggle title"),
-                    subtitle: NSLocalizedString("Typst math expressions in ```typst code blocks", comment: "Typst toggle subtitle"),
-                    icon: "x.squareroot",
-                    isOn: Binding(get: { preference.enableTypst }, set: { preference.enableTypst = $0 })
                 )
                 Divider().padding(.leading, 52)
                 FeatureToggleRow(

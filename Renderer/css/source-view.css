@@ -81,3 +81,50 @@ html[data-line-numbers="false"] .source-diff-wrap {
   grid-template-columns: 1fr;
 }
 
+
+/* ══════════════════════════════════════
+   Line wrappers (source view)
+   ══════════════════════════════════════ */
+
+.source-diff-wrap {
+  display: flex;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  --line-row-height: calc(13px * 1.5);
+  overflow-x: auto;
+}
+
+.source-diff-gutter {
+  flex-shrink: 0;
+  width: 52px;
+  padding: 0;
+  text-align: right;
+  user-select: none;
+  border-right: 1px solid var(--diff-gutter-border, rgba(128,128,128,0.2));
+}
+
+.source-diff-line-num {
+  display: block;
+  padding: 0 8px;
+  height: var(--line-row-height, 19.5px);
+  line-height: var(--line-row-height, 19.5px);
+  font-size: 11px;
+  color: rgba(128,128,128,0.5);
+  border-left: 3px solid transparent;
+  transition: border-color 0.2s, color 0.2s;
+  position: relative;
+}
+
+.source-diff-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.source-diff-line {
+  display: block;
+  padding: 0 16px;
+  min-height: var(--line-row-height, 19.5px);
+  line-height: var(--line-row-height, 19.5px);
+  white-space: pre;
+}

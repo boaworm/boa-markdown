@@ -152,10 +152,8 @@ final class CLIExporter: NSObject {
             "theme":              "light",
             "fontSize":           fontSize,
             "codeHighlightTheme": "default",
-            "enableMermaid":      true,
             "enableKatex":        true,
             "enableEmoji":        true,
-            "enableTypst":        true,
         ]
         if inputURL.pathExtension.lowercased() == "tsv" {
             options["format"] = "tsv"

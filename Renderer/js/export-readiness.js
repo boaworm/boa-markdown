@@ -16,9 +16,6 @@ export async function waitForExportReady(timeoutMs = 15000, checkCurrent        
     if (root?.querySelector('.math-error, .katex-error')) {
         throw new MathematicalExportError('Cannot export: mathematics or an equation reference failed to render');
     }
-    if (root?.querySelector('.mermaid-error, .vega-error, .graphviz-error, .typst-error')) {
-        throw new Error('Cannot export: a diagram failed to render');
-    }
     const cleanup                    = [];
     let timer                                           ;
     const images = Array.from(root?.querySelectorAll('img') || []).map(img => {

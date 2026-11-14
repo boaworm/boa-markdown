@@ -39,11 +39,11 @@ final class SharedPreferenceStoreTests: XCTestCase {
     }
 
     func testBoolRoundTrip() {
-        store.set(false, forKey: "enableMermaid")
+        store.set(false, forKey: "enableKatex")
         store.synchronize()
 
         let reloaded = SharedPreferenceStore(fileURL: tempFile)
-        XCTAssertEqual(reloaded.bool(forKey: "enableMermaid"), false)
+        XCTAssertEqual(reloaded.bool(forKey: "enableKatex"), false)
     }
 
     func testMissingKeyDefaults() {

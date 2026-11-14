@@ -503,7 +503,6 @@ window.renderSource = function (text, theme, _prevContent, options = {}) {
 };
 
 // Reload change marks are not part of this renderer; the native host still calls this.
-window.clearDiffMarks = function () {};
 
 window.updateTheme = function (theme) { applyTheme(theme); };
 

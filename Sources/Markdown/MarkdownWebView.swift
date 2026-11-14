@@ -17,10 +17,8 @@ struct MarkdownWebView: NSViewRepresentable {
     var appearanceMode: AppearanceMode = .light
     var viewMode: ViewMode = .preview
     var baseFontSize: Double = 14
-    var enableMermaid: Bool = true
     var enableKatex: Bool = true
     var enableEmoji: Bool = true
-    var enableTypst: Bool = true
     var codeHighlightTheme: String = "default"
     var collapseBlockquotesByDefault: Bool = false
     var showLineNumbers: Bool = true
@@ -114,7 +112,7 @@ struct MarkdownWebView: NSViewRepresentable {
 
         context.coordinator.modelIsTruncated = isTruncated
         context.coordinator.updateContentsSide(webView: webView, side: contentsSide)
-        context.coordinator.render(webView: webView, content: content, fileURL: fileURL, viewMode: viewMode, appearanceMode: appearanceMode, baseFontSize: baseFontSize, enableMermaid: enableMermaid, enableKatex: enableKatex, enableEmoji: enableEmoji, enableTypst: enableTypst, codeHighlightTheme: codeHighlightTheme, collapseBlockquotesByDefault: collapseBlockquotesByDefault, showLineNumbers: showLineNumbers, showCopyButtons: showCopyButtons)
+        context.coordinator.render(webView: webView, content: content, fileURL: fileURL, viewMode: viewMode, appearanceMode: appearanceMode, baseFontSize: baseFontSize, enableKatex: enableKatex, enableEmoji: enableEmoji, codeHighlightTheme: codeHighlightTheme, collapseBlockquotesByDefault: collapseBlockquotesByDefault, showLineNumbers: showLineNumbers, showCopyButtons: showCopyButtons)
     }
 
     class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
@@ -157,8 +155,8 @@ struct MarkdownWebView: NSViewRepresentable {
                 pendingRender = { [weak self, weak webView] in
                     guard let self, let webView else { return }
                     self.executeRender(webView: webView, content: retained, fileURL: self.currentFileURL, viewMode: self.lastViewMode,
-                                       appearanceMode: self.lastAppearanceMode, baseFontSize: self.lastBaseFontSize, enableMermaid: self.lastEnableMermaid,
-                                       enableKatex: self.lastEnableKatex, enableEmoji: self.lastEnableEmoji, enableTypst: self.lastEnableTypst,
+                                       appearanceMode: self.lastAppearanceMode, baseFontSize: self.lastBaseFontSize,
+                                       enableKatex: self.lastEnableKatex, enableEmoji: self.lastEnableEmoji,
                                        codeHighlightTheme: self.lastCodeHighlightTheme, collapseBlockquotesByDefault: self.lastCollapseBlockquotesByDefault,
                                        showLineNumbers: self.lastShowLineNumbers, showCopyButtons: self.lastShowCopyButtons)
                 }
@@ -184,10 +182,8 @@ struct MarkdownWebView: NSViewRepresentable {
         private var contentState = DocumentContentState()
         private var lastRenderedFeatures: RenderFeatureConfiguration?
         private var lastBaseFontSize: Double = 16
-        private var lastEnableMermaid: Bool = true
         private var lastEnableKatex: Bool = true
         private var lastEnableEmoji: Bool = true
-        private var lastEnableTypst: Bool = true
         private var lastCodeHighlightTheme: String = "default"
         private var lastCollapseBlockquotesByDefault: Bool = false
         private var lastShowCopyButtons = true
@@ -347,8 +343,7 @@ struct MarkdownWebView: NSViewRepresentable {
                   window.isKeyWindow || window.windowController?.document === NSDocumentController.shared.currentDocument,
                   let url = currentFileURL else { return }
             os_log("🔄 Manual reload triggered: %{public}@", log: logger, type: .default, url.lastPathComponent)
-            webView.evaluateJavaScript("window.clearDiffMarks && window.clearDiffMarks();", completionHandler: nil)
-            reloadFromDisk(url: url, force: true) { success in
+                reloadFromDisk(url: url, force: true) { success in
                 NotificationCenter.default.post(name: success ? .reloadFileSucceeded : .reloadFileFailed, object: window)
             }
         }
@@ -449,15 +444,13 @@ struct MarkdownWebView: NSViewRepresentable {
             }
         }
 
-        func render(webView: WKWebView, content: String, fileURL: URL?, viewMode: ViewMode, appearanceMode: AppearanceMode, baseFontSize: Double, enableMermaid: Bool, enableKatex: Bool, enableEmoji: Bool, enableTypst: Bool, codeHighlightTheme: String, collapseBlockquotesByDefault: Bool, showLineNumbers: Bool = false, showCopyButtons: Bool = true) {
+        func render(webView: WKWebView, content: String, fileURL: URL?, viewMode: ViewMode, appearanceMode: AppearanceMode, baseFontSize: Double, enableKatex: Bool, enableEmoji: Bool, codeHighlightTheme: String, collapseBlockquotesByDefault: Bool, showLineNumbers: Bool = false, showCopyButtons: Bool = true) {
             print("🟢 Coordinator.render called with viewMode=\(viewMode)")
             let content = contentState.resolve(modelText: content, fileURL: fileURL)
             lastAppearanceMode = appearanceMode
             lastBaseFontSize = baseFontSize
-            lastEnableMermaid = enableMermaid
             lastEnableKatex = enableKatex
             lastEnableEmoji = enableEmoji
-            lastEnableTypst = enableTypst
             lastCodeHighlightTheme = codeHighlightTheme
 
             if fileURL != currentFileURL {
@@ -489,7 +482,7 @@ struct MarkdownWebView: NSViewRepresentable {
             }
 
             pendingRender = { [weak self] in
-                self?.executeRender(webView: webView, content: content, fileURL: fileURL, viewMode: viewMode, appearanceMode: appearanceMode, baseFontSize: baseFontSize, enableMermaid: enableMermaid, enableKatex: enableKatex, enableEmoji: enableEmoji, enableTypst: enableTypst, codeHighlightTheme: codeHighlightTheme, collapseBlockquotesByDefault: collapseBlockquotesByDefault, showLineNumbers: showLineNumbers, showCopyButtons: showCopyButtons)
+                self?.executeRender(webView: webView, content: content, fileURL: fileURL, viewMode: viewMode, appearanceMode: appearanceMode, baseFontSize: baseFontSize, enableKatex: enableKatex, enableEmoji: enableEmoji, codeHighlightTheme: codeHighlightTheme, collapseBlockquotesByDefault: collapseBlockquotesByDefault, showLineNumbers: showLineNumbers, showCopyButtons: showCopyButtons)
             }
 
             if isWebViewLoaded {
@@ -500,8 +493,8 @@ struct MarkdownWebView: NSViewRepresentable {
             }
         }
 
-        private func executeRender(webView: WKWebView, content: String, fileURL: URL?, viewMode: ViewMode, appearanceMode: AppearanceMode, baseFontSize: Double, enableMermaid: Bool, enableKatex: Bool, enableEmoji: Bool, enableTypst: Bool, codeHighlightTheme: String, collapseBlockquotesByDefault: Bool, showLineNumbers: Bool = false, showCopyButtons: Bool = true) {
-            let features = RenderFeatureConfiguration(fontSize: baseFontSize, mermaid: enableMermaid, katex: enableKatex, emoji: enableEmoji, typst: enableTypst, codeTheme: codeHighlightTheme)
+        private func executeRender(webView: WKWebView, content: String, fileURL: URL?, viewMode: ViewMode, appearanceMode: AppearanceMode, baseFontSize: Double, enableKatex: Bool, enableEmoji: Bool, codeHighlightTheme: String, collapseBlockquotesByDefault: Bool, showLineNumbers: Bool = false, showCopyButtons: Bool = true) {
+            let features = RenderFeatureConfiguration(fontSize: baseFontSize, katex: enableKatex, emoji: enableEmoji, codeTheme: codeHighlightTheme)
             let onlyThemeChanged = lastRenderedTruncated == (diskIsTruncated ?? modelIsTruncated) && !renderingPositionContent && lastRenderedFeatures == features && (fileURL == lastRenderedFileURL) && (content == lastRenderedContent) && (viewMode == .preview) && (viewMode == lastViewMode) && (collapseBlockquotesByDefault == lastCollapseBlockquotesByDefault) && (showLineNumbers == lastShowLineNumbers) && (showCopyButtons == lastShowCopyButtons)
             if onlyThemeChanged {
                 os_log("🔵 FAST PATH: only theme changed, viewMode=%{public}@ lastViewMode=%{public}@", log: logger, type: .debug, String(describing: viewMode), String(describing: lastViewMode))
@@ -568,10 +561,8 @@ struct MarkdownWebView: NSViewRepresentable {
 
             options["fontSize"] = baseFontSize
             options["codeHighlightTheme"] = codeHighlightTheme
-            options["enableMermaid"] = enableMermaid
             options["enableKatex"] = enableKatex
             options["enableEmoji"] = enableEmoji
-            options["enableTypst"] = enableTypst
             options["collapseBlockquotes"] = collapseBlockquotesByDefault
             options["showLineNumbers"] = showLineNumbers
             options["showCopyButtons"] = showCopyButtons
@@ -618,8 +609,7 @@ struct MarkdownWebView: NSViewRepresentable {
                 os_log("🟢 Calling renderMarkdown", log: logger, type: .debug)
             }
             
-            webView.evaluateJavaScript("window.clearDiffMarks && window.clearDiffMarks();", completionHandler: nil)
-            navigationRenderVersion += 1
+                navigationRenderVersion += 1
             let generation = navigationRenderVersion
             renderingPositionContent = true
             webView.callAsyncJavaScript("return " + js, arguments: [:], in: nil, in: .page) { [weak self] result in
@@ -959,10 +949,8 @@ struct MarkdownWebView: NSViewRepresentable {
                     viewMode: self.lastViewMode,
                     appearanceMode: self.lastAppearanceMode,
                     baseFontSize: self.lastBaseFontSize,
-                    enableMermaid: self.lastEnableMermaid,
                     enableKatex: self.lastEnableKatex,
                     enableEmoji: self.lastEnableEmoji,
-                    enableTypst: self.lastEnableTypst,
                     codeHighlightTheme: self.lastCodeHighlightTheme,
                     collapseBlockquotesByDefault: self.lastCollapseBlockquotesByDefault,
                     showLineNumbers: self.lastShowLineNumbers, showCopyButtons: self.lastShowCopyButtons

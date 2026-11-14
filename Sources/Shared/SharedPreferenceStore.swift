@@ -96,10 +96,8 @@ public class SharedPreferenceStore {
                 "preferredAppearanceMode",
                 "baseFontSize",
                 "codeHighlightTheme",
-                "enableMermaid",
                 "enableKatex",
                 "enableEmoji",
-                "enableTypst",
                 "collapseBlockquotesByDefault"
             ]
 
