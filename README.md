@@ -4,6 +4,8 @@ A stripped-down, local-only Markdown viewer for macOS: a small GUI app plus a Fi
 
 This is a fork of [xykong/flux-markdown](https://github.com/xykong/flux-markdown). The upstream project is a full product with auto-updates, usage statistics, in-app issue reporting and a release pipeline. This fork keeps only the viewer, with everything that talks to the outside world removed. It is meant to be built from source and used on your own machine.
 
+**Maintainer:** Henrik Thorburn ([@boaworm](https://github.com/boaworm))
+
 ## What was removed
 
 | Removed | Notes |

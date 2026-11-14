@@ -318,5 +318,7 @@
 			</dict>
 		</dict>
 	</array>
+	<key>NSHumanReadableCopyright</key>
+	<string>Henrik Thorburn, 2026. GPL v3.</string>
 </dict>
 </plist>
