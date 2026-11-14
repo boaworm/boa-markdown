@@ -20,27 +20,27 @@ This is a fork of [xykong/flux-markdown](https://github.com/xykong/flux-markdown
 | Multi-language UI | The language picker, runtime localization switching, and the German, French, Spanish, Chinese and Arabic strings. The interface is English only |
 | Upstream links and docs | Help-menu and Welcome-screen links to the upstream repo, the `docs/` tree, translated READMEs, upstream agent/process files |
 | Outbound notifications | The Feishu workflows and scripts |
+| npm renderer | The `web-renderer/` Vite project, its Node dependencies and the CI jobs that built it. Markdown is parsed in Swift by cmark-gfm |
+| Diagram and chart engines | Mermaid, Vega, Vega-Lite, Graphviz and Typst lived in the npm renderer. Fenced `mermaid`, `vega`, `dot` and `typst` blocks now render as code, and `.mmd` files open as a ```mermaid code block |
 
 When a failure happens, the app now shows a local message with a retry button (`Sources/Shared/FailureNotice.swift`). Nothing is recorded or sent.
 
 ## What is still here
 
-- The renderer's JavaScript libraries (markdown-it, KaTeX/MathJax, Mermaid, Vega, Graphviz, Typst, highlight.js and so on). They are bundled into the app at build time and run locally. This fork does **not** remove them; trimming the ones you don't use is a possible next step.
+- The two JavaScript libraries the renderer still needs: KaTeX for math and highlight.js for code colouring. Both are vendored under `Renderer/vendor/` with their licences and a checksum record, so nothing is fetched at build time.
 - The macOS app itself is not sandboxed, so removing an entitlement does not technically block network access from it. What was removed is the code that made requests (updates, statistics, reporting). A document that references a remote image or a link can still cause the web view to load it, or open your browser when you click it.
-- Building needs the network once, to fetch the renderer's npm packages.
+- Building needs no package manager: the Markdown parser is vendored C (`Vendor/cmark-gfm`), the renderer assets are in the repo, and `xcodegen` assembles the project.
 - The app is named BoaMarkdown, with bundle identifiers under `io.github.boaworm`, and the upstream "flux" names (renderer scheme, JavaScript globals, CSS classes, environment variables) have been renamed to "boa". Only the `markdownpreview://` URL scheme is unchanged. Settings live in `~/Library/Application Support/BoaMarkdown/`, so they do not carry over from an upstream FluxMarkdown install.
 
-The remaining code has not been fully audited yet. Changes from upstream are reviewed commit by commit before they are merged; see `.claude/skills/upstream-sync/SKILL.md` (local to the maintainer's checkout).
+The remaining code has not been fully audited yet. Changes from upstream are reviewed commit by commit before they are merged.
 
 ## Features
 
 | Feature | Description |
 |---------|-------------|
-| Mermaid diagrams | Flowcharts, sequence diagrams, architecture diagrams |
-| Math | Inline and block expressions (KaTeX / MathJax) |
+| Math | Inline and block expressions (KaTeX) |
 | GFM | Tables, task lists, strikethrough, GitHub-style alerts |
 | Code highlighting | Syntax highlighting for 40+ languages |
-| Charts | Vega, Vega-Lite and Graphviz (DOT) |
 | Table of contents | Interactive panel with section tracking |
 | YAML front matter | Rendered as a table |
 | Export | PDF (`Cmd+Shift+P`) and HTML (`Cmd+Shift+E`) |
@@ -49,7 +49,7 @@ The remaining code has not been fully audited yet. Changes from upstream are rev
 | Themes | Light, Dark, or follow the system |
 | Formats | `.md`, `.mdx`, `.rmd`, `.qmd`, `.mdoc`, `.mdc`, `.mmd`, `.livemd`, `.mkd`, `.mkdn`, `.mkdown`, `.mdwn`, `.mdown`, `.markdown`, plus read-only `.tsv` tables |
 
-Settings (`Cmd+,`) cover appearance, rendering toggles (Mermaid, KaTeX, Emoji), font size and code-highlighting theme.
+Settings (`Cmd+,`) cover appearance, rendering toggles (math, emoji, blockquote collapse), font size and code-highlighting theme.
 
 ### Keyboard shortcuts
 
@@ -70,7 +70,7 @@ Previews show up to 500 KiB, 1,000 rows, 100 columns and 20,000 cells, and trunc
 
 ## Build and install
 
-Requirements: macOS 12 or later, Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), and Node.js with npm.
+Requirements: macOS 12 or later, Xcode, and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`).
 
 The project is generated from `project.yml` using XcodeGen. Run `make` targets
 to ensure the project file is regenerated before building:
@@ -98,8 +98,6 @@ make app CONFIGURATION=Debug     # debug build only
 make install-debug               # debug build + install
 make clean                       # clean build artifacts
 ```
-
-Renderer tests (from `web-renderer/`): `npm ci && npm run typecheck && npm test`.
 
 ## Troubleshooting
 
