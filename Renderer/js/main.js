@@ -288,27 +288,6 @@ window.setContentsSide = function (side) {
     restoreReadingAnchor(anchor);
 };
 
-// A resolved JS call alone does not prove that Markdown was rendered.
-window.verifyQuickLookProbe = (heading, boldText) => {
-    const root = document.getElementById('markdown-preview');
-    if (completedRender !== renderCount || !root?.isConnected ||
-        root.classList.contains('source-mode') || root.querySelector('.render-error')) return false;
-    const title = root.querySelector('h1');
-    const strong = root.querySelector('p strong');
-    const visible = (element) => {
-        if (!element) return false;
-        const box = element.getBoundingClientRect();
-        if (box.width <= 0 || box.height <= 0) return false;
-        for (let node = element; node; node = node.parentElement) {
-            const style = getComputedStyle(node);
-            if (style.display === 'none' || style.visibility === 'hidden' ||
-                style.visibility === 'collapse' || style.opacity === '0') return false;
-        }
-        return true;
-    };
-    return title?.textContent === heading && strong?.textContent === boldText &&
-        visible(root) && visible(title) && visible(strong);
-};
 
 function applyTheme(theme) {
     let normalized = theme || 'default';
@@ -394,7 +373,7 @@ async function renderMarkdown(text, options = {}) {
             outputDiv.setAttribute('dir', 'ltr');
             blockquoteCollapse?.setInitialState(false);
             searchUI?.refresh();
-            readingStatus?.render(text, options.filename);
+            readingStatus?.render(text);
             updateReadingControlsLayout();
             toc?.render([]);
             completedRender = callId;
@@ -435,7 +414,7 @@ async function renderMarkdown(text, options = {}) {
         else outputDiv.removeAttribute('dir');
 
         searchUI?.refresh();
-        readingStatus?.render(text, options.filename, options.prevContent);
+        readingStatus?.render(text, options.prevContent);
         window.dispatchEvent(new Event('scroll'));
         completedRender = callId;
         logToSwift(`[renderMarkdown:${callId}] COMPLETE`);
@@ -479,7 +458,7 @@ window.renderSource = function (text, theme, _prevContent, options = {}) {
         outputDiv.appendChild(pre);
         toc?.render([]);
         searchUI?.refresh();
-        readingStatus?.render(text, options.filename);
+        readingStatus?.render(text);
         return;
     }
     readingStatus?.render(text);
@@ -632,8 +611,6 @@ window.showSearch = function () {
 window.hideSearch = function () { searchUI?.hide(); };
 window.toggleSearch = function () { searchUI?.toggle(); };
 
-window.showHelp = function () { helpOverlay?.show(); };
-window.hideHelp = function () { helpOverlay?.hide(); };
 window.toggleHelp = function () { helpOverlay?.toggle(); };
 
 window.addEventListener('afterprint', () => {

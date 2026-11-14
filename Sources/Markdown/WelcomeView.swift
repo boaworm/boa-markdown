@@ -129,13 +129,6 @@ struct WelcomeView: View {
 
     private var tips: some View {
         VStack(alignment: .leading, spacing: 10) {
-            let quickLookTitle = NSLocalizedString("QuickLook", comment: "Tip title")
-            let quickLookSubtitle = NSLocalizedString("In Finder, select a file and press Space.", comment: "QuickLook tip subtitle")
-            if #available(macOS 12.0, *) {
-                TipRow(icon: "space", title: quickLookTitle, subtitle: quickLookSubtitle)
-            } else {
-                TipRow(icon: "keyboard", title: quickLookTitle, subtitle: quickLookSubtitle)
-            }
             TipRow(icon: "doc.text",
                    title: NSLocalizedString("Open with App", comment: "Tip title"),
                    subtitle: NSLocalizedString("Double-click a .md file to open it here.", comment: "Open with App tip subtitle"))

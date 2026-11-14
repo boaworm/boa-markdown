@@ -10,7 +10,7 @@ export const TSV_MAX_ROWS = 1000;
 export const TSV_MAX_COLUMNS = 100;
 export const TSV_MAX_CELLS = 20000;
 
-/** Parse the deliberately literal TSV dialect used by the QuickLook preview. */
+/** Parse the deliberately literal TSV dialect. */
 export function parseTSV(input        , byteTruncated = false)                   {
     // Bound work even for direct bridge callers; native readers apply the byte limit too.
     let text = input.slice(0, 500 * 1024).replace(/^\uFEFF/, '');

@@ -245,16 +245,6 @@ final class FileExtensionTests: XCTestCase {
                       "Sources/Markdown/Info.plist must exist")
     }
 
-    func testUTIDeclarations_extensionInfoPlistExists() {
-        let plistURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: plistURL.path),
-                      "Sources/MarkdownPreview/Info.plist must exist")
-    }
-
     func testUTIDeclarations_appPlistContainsMmdUTI() throws {
         let plistURL = URL(fileURLWithPath: #file)
             .deletingLastPathComponent()
@@ -318,85 +308,6 @@ final class FileExtensionTests: XCTestCase {
         for ext in exportedExtensions {
             XCTAssertTrue(plistContent.contains("io.github.boaworm.\(ext)"),
                           "App Info.plist must export UTI for .\(ext)")
-        }
-    }
-
-    func testUTIDeclarations_extensionPlistContainsMmdUTI() throws {
-        let plistURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
-        let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("io.github.boaworm.mmd"),
-                      "Extension Info.plist QLSupportedContentTypes must include io.github.boaworm.mmd")
-    }
-
-    func testUTIDeclarations_extensionPlistContainsLivemdUTI() throws {
-        let plistURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
-        let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("io.github.boaworm.livemd"),
-                      "Extension Info.plist QLSupportedContentTypes must include io.github.boaworm.livemd")
-    }
-
-    func testUTIDeclarations_extensionPlistContainsMdcUTI() throws {
-        let plistURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
-        let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("io.github.boaworm.mdc"),
-                      "Extension Info.plist QLSupportedContentTypes must include io.github.boaworm.mdc")
-    }
-
-    func testUTIDeclarations_extensionPlistContainsIAWriterMarkdownUTI() throws {
-        let plistURL = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
-        let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("net.ia.markdown"),
-                      "Extension Info.plist QLSupportedContentTypes must include iA Writer's net.ia.markdown UTI")
-    }
-
-    func testUTIDeclarations_bothPlistsDeclareSameUTIs() throws {
-        let root = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        let appPlist = try String(contentsOf: root.appendingPathComponent("Sources/Markdown/Info.plist"), encoding: .utf8)
-        let extPlist = try String(contentsOf: root.appendingPathComponent("Sources/MarkdownPreview/Info.plist"), encoding: .utf8)
-
-        let requiredUTIs = [
-            "net.daringfireball.markdown",
-            "public.markdown",
-            "net.ia.markdown",
-            "io.github.boaworm.mdx",
-            "io.github.boaworm.rmd",
-            "io.github.boaworm.qmd",
-            "io.github.boaworm.mdoc",
-            "io.github.boaworm.mmd",
-            "io.github.boaworm.livemd",
-            "io.github.boaworm.mdc",
-            "io.github.boaworm.markdown",
-            "io.github.boaworm.mdown",
-            "io.github.boaworm.mkd",
-            "io.github.boaworm.mkdn",
-            "io.github.boaworm.mkdown",
-            "io.github.boaworm.mdwn",
-            "public.tab-separated-values-text",
-        ]
-        for uti in requiredUTIs {
-            XCTAssertTrue(appPlist.contains(uti),
-                          "App Info.plist must reference UTI: \(uti)")
-            XCTAssertTrue(extPlist.contains(uti),
-                          "Extension Info.plist must reference UTI: \(uti)")
         }
     }
 

@@ -40,7 +40,7 @@ html[data-theme="dark"] {
 #reading-controls::before { content: ""; position: fixed; top: 0; left: 0; right: 0; height: var(--reading-content-top); background: var(--reading-bg); z-index: -1; }
 #reading-toolbar { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 12px; min-height: 32px; padding: 0; box-sizing: border-box; }
 #reading-controls [hidden], #toc-container [hidden], #reading-controls[hidden] { display: none !important; }
-html[data-reading-controls="true"] body, html[data-context="app"] body, html[data-context="quicklook"] body { padding-top: var(--reading-content-top); }
+html[data-reading-controls="true"] body, html[data-context="app"] body { padding-top: var(--reading-content-top); }
 .reading-tool-button {
     position: static; display: inline-flex; align-items: center; justify-content: center;
     min-height: 32px; padding: 4px 10px; box-sizing: border-box;
@@ -56,7 +56,6 @@ html[data-reading-controls="true"] body, html[data-context="app"] body, html[dat
 #markdown-preview:not(.source-mode) { padding-right: 20px; padding-left: 20px; }
 @media (max-width: 767px) { #markdown-preview:not(.source-mode) { padding-right: 15px; padding-left: 15px; } }
 /* Finder preview panes retain their compact spacing. */
-html[data-context="finder"] #markdown-preview:not(.source-mode) { padding: 8px; }
 #markdown-preview.source-mode { max-width: none; margin: 0; }
 html[data-toc-docked="true"] #reading-layout { display: grid; grid-template-columns: minmax(0, 1fr) 240px; gap: 24px; align-items: start; }
 #toc-container { display: none; color: var(--reading-text); }

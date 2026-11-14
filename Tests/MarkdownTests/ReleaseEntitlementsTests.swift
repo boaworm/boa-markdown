@@ -8,33 +8,19 @@ final class ReleaseEntitlementsTests: XCTestCase {
         )
 
         XCTAssertTrue(project.contains("CODE_SIGN_ENTITLEMENTS: Sources/Markdown/MarkdownRelease.entitlements"))
-        XCTAssertTrue(project.contains("CODE_SIGN_ENTITLEMENTS: Sources/MarkdownPreview/MarkdownPreviewRelease.entitlements"))
-        XCTAssertEqual(
-            project.components(separatedBy: "CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO").count - 1,
-            3,
-            "App, QuickLook and search launch service Release configurations must disable Xcode's base entitlement injection."
+        XCTAssertTrue(
+            project.contains("CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO"),
+            "The app Release configuration must disable Xcode's base entitlement injection."
         )
     }
 
-    func testReleaseEntitlementsUsePortableReadOnlyHomeAccessWithoutDebugger() throws {
-        let root = projectRoot()
+    func testReleaseEntitlementsDropTheDebugger() throws {
         let appRelease = try String(
-            contentsOf: root.appendingPathComponent("Sources/Markdown/MarkdownRelease.entitlements"),
-            encoding: .utf8
-        )
-        let previewRelease = try String(
-            contentsOf: root.appendingPathComponent("Sources/MarkdownPreview/MarkdownPreviewRelease.entitlements"),
+            contentsOf: projectRoot().appendingPathComponent("Sources/Markdown/MarkdownRelease.entitlements"),
             encoding: .utf8
         )
 
         XCTAssertFalse(appRelease.contains("com.apple.security.get-task-allow"))
-        XCTAssertFalse(previewRelease.contains("com.apple.security.get-task-allow"))
-        XCTAssertFalse(previewRelease.contains("temporary-exception.files.absolute-path.read-only"))
-        XCTAssertFalse(previewRelease.contains("$HOME"))
-        XCTAssertFalse(previewRelease.contains("/Users/"))
-        XCTAssertTrue(previewRelease.contains("temporary-exception.files.home-relative-path.read-only"))
-        XCTAssertTrue(previewRelease.contains("<string>/</string>"))
-        XCTAssertTrue(previewRelease.contains("com.apple.security.app-sandbox"))
     }
 
     private func projectRoot() -> URL {

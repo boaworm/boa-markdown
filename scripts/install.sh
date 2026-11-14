@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Markdown QuickLook Installation Script
+# BoaMarkdown Installation Script
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -12,7 +12,7 @@ SKIP_BUILD=${2:-false}
 INSTALL_MODE=${3:-development}
 
 echo "════════════════════════════════════════════════════════════════"
-echo "  🚀 Installing Markdown QuickLook - $CONFIGURATION Configuration"
+echo "  🚀 Installing BoaMarkdown - $CONFIGURATION Configuration"
 echo "════════════════════════════════════════════════════════════════"
 echo ""
 
@@ -52,8 +52,6 @@ cp -R "$APP_PATH" /Applications/
 if [ "$INSTALL_MODE" = "development" ]; then
     INSTALLED_APP_PATH="/Applications/BoaMarkdown.app"
     APP_ENTITLEMENTS="$PROJECT_ROOT/Sources/Markdown/Markdown.entitlements"
-    QUICKLOOK_EXTENSION_PATH="$INSTALLED_APP_PATH/Contents/PlugIns/MarkdownPreview.appex"
-    QUICKLOOK_ENTITLEMENTS="$PROJECT_ROOT/Sources/MarkdownPreview/MarkdownPreview.entitlements"
 
     BASE_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INSTALLED_APP_PATH/Contents/Info.plist")
     DISPLAY_VERSION="${BASE_VERSION}-dev-$(date '+%Y%m%d-%H%M%S')"
@@ -61,19 +59,7 @@ if [ "$INSTALL_MODE" = "development" ]; then
     /usr/libexec/PlistBuddy -c "Set :FMDisplayVersion $DISPLAY_VERSION" "$INSTALLED_APP_PATH/Contents/Info.plist" 2>/dev/null || \
         /usr/libexec/PlistBuddy -c "Add :FMDisplayVersion string $DISPLAY_VERSION" "$INSTALLED_APP_PATH/Contents/Info.plist"
 
-    EXTENSION_INFO_PLIST="$INSTALLED_APP_PATH/Contents/PlugIns/MarkdownPreview.appex/Contents/Info.plist"
-    if [ -f "$EXTENSION_INFO_PLIST" ]; then
-        /usr/libexec/PlistBuddy -c "Set :FMDisplayVersion $DISPLAY_VERSION" "$EXTENSION_INFO_PLIST" 2>/dev/null || \
-            /usr/libexec/PlistBuddy -c "Add :FMDisplayVersion string $DISPLAY_VERSION" "$EXTENSION_INFO_PLIST"
-    fi
-
     echo "🔏 Re-signing development install..."
-    TEMP_QUICKLOOK_ENTITLEMENTS=$(mktemp)
-    trap 'rm -f "$TEMP_QUICKLOOK_ENTITLEMENTS"' EXIT
-    /usr/bin/sed "s|\$HOME|$HOME|g" "$QUICKLOOK_ENTITLEMENTS" > "$TEMP_QUICKLOOK_ENTITLEMENTS"
-    if [ -d "$QUICKLOOK_EXTENSION_PATH" ]; then
-        /usr/bin/codesign --force --sign - --entitlements "$TEMP_QUICKLOOK_ENTITLEMENTS" "$QUICKLOOK_EXTENSION_PATH"
-    fi
     /usr/bin/codesign --force --sign - --entitlements "$APP_ENTITLEMENTS" "$INSTALLED_APP_PATH"
     /usr/bin/codesign --verify --strict --deep --verbose=2 "$INSTALLED_APP_PATH"
 fi
@@ -86,34 +72,12 @@ echo "🔓 Removing quarantine attribute..."
 echo "🔧 Registering with system..."
 /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f "/Applications/BoaMarkdown.app"
 
-# 5. Reset QuickLook cache (before launching app)
-echo "🔄 Resetting QuickLook cache..."
-qlmanage -r
-
-# 5a. Enable QuickLook extension (required on macOS Ventura+)
-echo "🔌 Enabling QuickLook extension..."
-pluginkit -e use -i io.github.boaworm.Markdown.QuickLook
-
-# 5b. Ensure BoaMarkdown is first in the QuickLook extension display order.
-# macOS stores a user-ordered list in this plist; if a previously-installed
-# Markdown previewer (e.g. QLMarkdown) is still in the list but now missing,
-# it silently wins priority over BoaMarkdown, causing fallback to plain-text.
-echo "📋 Setting QuickLook extension priority..."
-CURRENT_ORDER=$(defaults read com.apple.preferences.extensions.QuickLook displayOrder 2>/dev/null | tr -d '(),"' | tr -s ' \n' ' ' | xargs)
-if echo "$CURRENT_ORDER" | grep -qv "io.github.boaworm.Markdown.QuickLook"; then
-    defaults write com.apple.preferences.extensions.QuickLook displayOrder -array \
-        "io.github.boaworm.Markdown.QuickLook" \
-        $(defaults read com.apple.preferences.extensions.QuickLook displayOrder 2>/dev/null | grep -v "io.github.boaworm.Markdown.QuickLook" | grep '"' | sed 's/.*"\(.*\)".*/\1/' | xargs -I{} echo '"{}"' | tr '\n' ' ')
-    defaults write com.apple.preferences.extensions.QuickLook userHasOrdered -bool true
-fi
-qlmanage -r cache
-
-# 6. Launch app once to complete system registration
+# 5. Launch app once to complete system registration
 echo "🚀 Launching application to complete registration..."
 open -g "/Applications/BoaMarkdown.app" --args --register-only
 sleep 2
 
-# 7. Set as default handler for .md files
+# 6. Set as default handler for .md files
 echo "🔗 Setting as default handler for Markdown files..."
 BUNDLE_ID="io.github.boaworm.Markdown"
 
@@ -172,16 +136,8 @@ echo "📋 What was done:"
 echo "   ✓ Application installed to /Applications"
 echo "   ✓ Quarantine attribute removed (xattr -cr)"
 echo "   ✓ Registered with system LaunchServices"
-echo "   ✓ QuickLook extension enabled (pluginkit)"
-echo "   ✓ QuickLook cache reset"
 echo "   ✓ Launched once to complete registration"
 echo "   ✓ Set as default handler for .md files"
 echo ""
-echo "🧪 Test the installation:"
-echo "   qlmanage -p Tests/fixtures/feature-validation.md"
-echo "   Or press Space on any .md file in Finder"
-echo ""
-echo "💡 If QuickLook doesn't work immediately, try:"
-echo "   1. Log out and log back in (OR restart your Mac)"
-echo "   2. Or manually verify in Finder: Right-click .md file → Get Info → Open with"
-echo ""
+echo "📝 Sanity check:"
+echo '   open -a BoaMarkdown "$PROJECT_ROOT/Tests/fixtures/acceptance-all.md"'

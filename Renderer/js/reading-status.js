@@ -56,12 +56,11 @@ export class ReadingStatus {
         }
     }
     isMounted()          { return this.element === document.getElementById('reading-status'); }
-    render(text        , filename         , previous         )       {
+    render(text        , previous         )       {
         if (this.timer) clearTimeout(this.timer);
         this.updated.hidden = true;
         this.headings = Array.from(document.querySelectorAll             ('#markdown-preview h1[id], #markdown-preview h2[id], #markdown-preview h3[id], #markdown-preview h4[id], #markdown-preview h5[id], #markdown-preview h6[id]'));
         this.parent.textContent = ''; this.current.textContent = ''; this.path.title = '';
-        this.file.textContent = document.documentElement.dataset.context === 'quicklook' ? filename || '' : '';
         this.file.title = this.file.textContent;
         if (previous !== undefined && previous !== text && this.lastText !== text) {
             this.updated.textContent = this.strings()[1]; this.updated.hidden = false;
@@ -81,7 +80,7 @@ export class ReadingStatus {
         this.progress.title = this.progress.textContent;
         this.element.hidden = document.documentElement.dataset.context === 'finder'
             || !!document.querySelector('#markdown-preview.source-mode')
-            || (!this.headings.length && !this.file.textContent && value === null && this.updated.hidden);
+            || (!this.headings.length && value === null && this.updated.hidden);
         const width = this.element.getBoundingClientRect().width;
         this.element.dataset.size = width < 170 ? 'tiny' : width < 300 ? 'small' : width < 480 ? 'medium' : 'large';
         updateReadingControlsLayout();

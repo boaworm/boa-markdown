@@ -1,27 +1,21 @@
 import Foundation
 
-/// A file-based preference store for sharing settings between the main app
-/// and the sandboxed QuickLook extension without requiring App Group entitlements.
+/// A file-based preference store for settings that must survive relaunches.
 ///
 /// On macOS 26 (Tahoe), ad-hoc signed apps can no longer use App Group containers
 /// because `containermanagerd` requires a valid Team ID prefix. This store replaces
-/// `UserDefaults(suiteName:)` with a plist file at a known location.
+/// `UserDefaults(suiteName:)` with a plist at
+/// `~/Library/Application Support/BoaMarkdown/shared-preferences.plist`.
 ///
-/// - The main app (unsandboxed) writes to:
-///   `~/Library/Application Support/BoaMarkdown/shared-preferences.plist`
-/// - The QuickLook extension (sandboxed) reads from that file via a read-only
-///   temporary exception for the app's Application Support directory.
-///
-/// Both processes resolve the path via `getpwuid(getuid())` to ensure the real
-/// home directory is used, bypassing sandbox container redirection.
+/// The path is resolved through `getpwuid(getuid())` so it names the real home
+/// directory instead of a sandbox container. Writing there is exactly what blocks
+/// enabling the app sandbox; see `docs/sandbox-plan.md`.
 ///
 /// **Thread safety:** All access is serialized through a serial DispatchQueue.
 /// This matches the thread-safety guarantee of the `UserDefaults` API it replaces.
 ///
-/// **Reload strategy:** The extension re-reads the plist from disk on every read
-/// call. The file is small (~1 KB) and the extension's lifetime is short (one preview),
-/// so the I/O cost is negligible and avoids stale-cache issues from same-second writes.
-/// The main app skips redundant reloads using file modification date checks.
+/// **Reload strategy:** Reads are cached and re-read when the file's modification
+/// date changes. Pass `alwaysReload: true` to re-read on every access instead.
 ///
 /// See: upstream issue #13
 public class SharedPreferenceStore {
@@ -39,14 +33,13 @@ public class SharedPreferenceStore {
     private var lastModificationDate: Date?
     private let queue = DispatchQueue(label: "io.github.boaworm.Markdown.SharedPreferenceStore")
 
-    /// If true, always re-reads from disk on every read (for the extension).
-    /// If false, uses modification-date caching (for the main app).
+    /// If true, always re-reads from disk on every read.
+    /// If false, uses modification-date caching.
     private let alwaysReload: Bool
 
     /// Creates a store backed by the default shared plist location.
-    /// - Parameter alwaysReload: When true, re-reads from disk on every read.
-    ///   Use `true` for the QuickLook extension (short-lived, needs latest settings).
-    ///   Use `false` for the main app (long-lived, writes settings itself).
+    /// - Parameter alwaysReload: When true, re-reads from disk on every read
+    ///   instead of caching by modification date.
     public convenience init(alwaysReload: Bool = false) {
         let url = Self.defaultFileURL()
         self.init(fileURL: url, alwaysReload: alwaysReload)
@@ -57,8 +50,8 @@ public class SharedPreferenceStore {
         self.fileURL = fileURL
         self.alwaysReload = alwaysReload
 
-        // Ensure the parent directory exists (succeeds for unsandboxed main app;
-        // may fail for sandboxed extension — that's expected).
+        // Ensure the parent directory exists. Creating it fails when the store
+        // location is not writable, which is why writability is checked separately.
         let dir = fileURL.deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
 
@@ -80,7 +73,7 @@ public class SharedPreferenceStore {
 
     /// Migrates preferences from the legacy App Group UserDefaults to this file-based store.
     /// Safe to call multiple times — runs only once per installation.
-    /// Should be called from the main app's init path (not the extension).
+    /// Call it from the app's init path, before the settings UI is shown.
     public func migrateFromAppGroupIfNeeded(legacyDefaults: UserDefaults? = nil, onMigration: ((String, Any) -> Void)? = nil) {
         queue.sync {
             guard canWrite else { return }
@@ -191,7 +184,7 @@ public class SharedPreferenceStore {
         queue.sync { _ = cache.removeValue(forKey: key) }
     }
 
-    /// Flush in-memory cache to disk. No-op for the sandboxed extension.
+    /// Flush in-memory cache to disk. No-op when the store is read-only.
     @discardableResult
     public func synchronize() -> Bool {
         queue.sync { _synchronizeUnsafe() }
@@ -199,19 +192,18 @@ public class SharedPreferenceStore {
 
     // MARK: - Private
 
-    /// Resolves the real user home directory via the password database,
-    /// bypassing sandbox container redirection. This ensures the main app
-    /// and sandboxed QuickLook extension both resolve to the same absolute path.
+    /// Resolves the real user home directory via the password database, so the
+    /// path survives sandbox container redirection.
     private static func realHomeDirectory() -> URL {
         if let pw = getpwuid(getuid()), let home = pw.pointee.pw_dir {
             return URL(fileURLWithPath: String(cString: home))
         }
         // getpwuid failed — this is unexpected on macOS. Log a warning because
         // the fallback will return the container path for sandboxed processes,
-        // silently breaking cross-process preference sharing.
+        // silently pointing the store at a location nothing else reads.
         NSLog("[SharedPreferenceStore] WARNING: getpwuid(getuid()) failed — " +
               "falling back to homeDirectoryForCurrentUser. " +
-              "Preference sharing between main app and extension may not work.")
+              "Preferences may not be read from the shared location.")
         return FileManager.default.homeDirectoryForCurrentUser
     }
 

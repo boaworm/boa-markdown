@@ -35,21 +35,13 @@ final class NativeMagnificationTests: XCTestCase {
         )
     }
 
-    func testBothHostsUseNativeMagnifyingWebViewWithoutJavaScriptZoomBridges() throws {
-        let root = projectRoot()
-        let quickLookSource = try String(
-            contentsOf: root.appendingPathComponent("Sources/MarkdownPreview/PreviewViewController.swift"),
-            encoding: .utf8
-        )
+    func testAppUsesNativeMagnifyingWebViewWithoutJavaScriptZoomBridges() throws {
         let appSource = try String(
-            contentsOf: root.appendingPathComponent("Sources/Markdown/MarkdownWebView.swift"),
+            contentsOf: projectRoot().appendingPathComponent("Sources/Markdown/MarkdownWebView.swift"),
             encoding: .utf8
         )
 
-        XCTAssertTrue(quickLookSource.contains("class InteractiveWebView: NativeMagnifyingWebView"))
         XCTAssertTrue(appSource.contains("class ResizableWKWebView: NativeMagnifyingWebView"))
-        XCTAssertFalse(quickLookSource.contains("name: \"pinchZoom\""))
-        XCTAssertFalse(quickLookSource.contains("name: \"gestureZoom\""))
         XCTAssertFalse(appSource.contains("name: \"pinchZoom\""))
         XCTAssertFalse(appSource.contains("name: \"gestureZoom\""))
     }

@@ -21,9 +21,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NotificationCenter.default.addObserver(forName: Notification.Name("BoaMarkdown.TestQuickLook"), object: nil, queue: .main) { _ in
-            QuickLookSelfTest.shared.show()
-        }
         preferenceObservationTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
             AppearancePreference.shared.observePreferenceChanges()
         }
@@ -124,15 +121,11 @@ struct MarkdownApp: App {
                 .keyboardShortcut("f", modifiers: [.command])
             }
 
+            // Empty on purpose: without this the system adds a Help menu whose book does not exist.
+            // The shortcut guide lives in the view (press ? or use the ? toolbar button).
             CommandGroup(replacing: .help) {
-                Button(NSLocalizedString("Repair Quick Look…", comment: "QuickLook recovery menu")) {
-                    QuickLookRepairController.shared.show()
-                }
-                
-                Divider()
-                
-                Button(NSLocalizedString("Test Quick Look", comment: "QuickLook self-test")) { QuickLookSelfTest.shared.show() }
             }
+
             CommandGroup(after: .toolbar) {
                 Button(action: {
                     viewMode = (viewMode == .preview) ? .source : .preview

@@ -76,8 +76,6 @@
 "Open a Markdown file or drop it here to start." = "Open a Markdown file or drop it here to start.";
 "Open Markdown File…" = "Open Markdown File…";
 "Drag & drop .md/.mdx/.txt here" = "Drag & drop .md/.mdx/.txt here";
-"QuickLook" = "QuickLook";
-"In Finder, select a file and press Space." = "In Finder, select a file and press Space.";
 "Open with App" = "Open with App";
 "Double-click a .md file to open it here." = "Double-click a .md file to open it here.";
 "Drag & Drop" = "Drag & Drop";
@@ -88,8 +86,6 @@
 "BoaMarkdown App Icon" = "BoaMarkdown App Icon";
 
 /* === Toast Messages === */
-"QuickLook preview does not support link navigation" = "QuickLook preview does not support link navigation";
-"Double-click .md file to open in main app for full functionality" = "Double-click .md file to open in main app for full functionality";
 
 /* === Feedback and diagnostics === */
 "Suggest a Feature…" = "Suggest a Feature…";
@@ -116,12 +112,6 @@
 "Could not open the browser. Copy the report or save it and try again." = "Could not open the browser. Copy the report or save it and try again.";
 "Copy Link" = "Copy Link";
 
-/* QuickLook recovery */
-"Repair Quick Look…" = "Repair Quick Look…";
-"Quick Look registration repaired" = "Quick Look registration repaired";
-"Quick Look repair failed" = "Quick Look repair failed";
-"Try selecting the file in Finder and pressing Space. Your default editor was preserved." = "Try selecting the file in Finder and pressing Space. Your default editor was preserved.";
-
 "Contents Position" = "Contents Position";
 
 "Left" = "Left";
@@ -139,23 +129,10 @@
 "Don't Remind Me" = "Don't Remind Me";
 "Invite me to support the project on GitHub" = "Invite me to support the project on GitHub";
 
-"Preview limited to 500 KiB. Use Open with BoaMarkdown above to read the complete document." = "Preview limited to 500 KiB. Use Open with BoaMarkdown above to read the complete document.";
-"Test Quick Look" = "Test Quick Look";
-"Quick Look preview verified" = "Quick Look preview verified";
-"Quick Look preview not confirmed" = "Quick Look preview not confirmed";
-"The installed extension rendered the test document. Your default editor was preserved." = "The installed extension rendered the test document. Your default editor was preserved.";
-"The test did not confirm a rendered preview. Include Quick Look diagnostics when reporting this issue." = "The test did not confirm a rendered preview. Include Quick Look diagnostics when reporting this issue.";
-"Some local images could not be read. Use Open with BoaMarkdown above to view the document." = "Some local images could not be read. Use Open with BoaMarkdown above to view the document.";
-
 "Document reloaded" = "Document reloaded";
 "Reload failed" = "Reload failed";
 "Zoom reset" = "Zoom reset";
 
-
-
-"Finder Preview Font Size" = "Finder Preview Font Size";
-
-"Font size when previewing in Finder's column view" = "Font size when previewing in Finder's column view";
 /* Actionable update failure recovery */
 "Could Not Update BoaMarkdown" = "Could Not Update BoaMarkdown";
 "The automatic update could not be completed. You can update manually: download BoaMarkdown.dmg from our official download page, open it, quit BoaMarkdown, then drag BoaMarkdown into Applications and choose Replace.\n\nIf manual installation also fails, choose Help → Report an Issue and include the diagnostics, your macOS version, and how you installed BoaMarkdown." = "The automatic update could not be completed. You can update manually: download BoaMarkdown.dmg from our official download page, open it, quit BoaMarkdown, then drag BoaMarkdown into Applications and choose Replace.\n\nIf manual installation also fails, choose Help → Report an Issue and include the diagnostics, your macOS version, and how you installed BoaMarkdown.";
@@ -172,7 +149,6 @@
 "Export could not be completed" = "Export could not be completed";
 "Document could not be displayed" = "Document could not be displayed";
 "Search could not be completed" = "Search could not be completed";
-"Quick Look could not complete this operation" = "Quick Look could not complete this operation";
 "Some images could not be displayed" = "Some images could not be displayed";
 "This preview is incomplete" = "This preview is incomplete";
 "The destination could not be opened" = "The destination could not be opened";
@@ -183,9 +159,6 @@
 "Try exporting again and choose another writable folder." = "Try exporting again and choose another writable folder.";
 "Try reloading the preview, or open the document in your editor." = "Try reloading the preview, or open the document in your editor.";
 "Check the source syntax in your editor. The rest of the document is still available." = "Check the source syntax in your editor. The rest of the document is still available.";
-"Check the search expression, or open the document in BoaMarkdown and press Command-F." = "Check the search expression, or open the document in BoaMarkdown and press Command-F.";
-"Open the document in BoaMarkdown. You can also run Repair Quick Look from the Help menu." = "Open the document in BoaMarkdown. You can also run Repair Quick Look from the Help menu.";
-"Open the document in BoaMarkdown to read beyond the preview limits." = "Open the document in BoaMarkdown to read beyond the preview limits.";
 "Open the destination in your browser or editor. You can copy a report if this keeps happening." = "Open the destination in your browser or editor. You can copy a report if this keeps happening.";
 "The link may point to a file that is not on this Mac, or to a path that is not relative to the document. Copy the link to open it manually, or check the path in your editor." = "The link may point to a file that is not on this Mac, or to a path that is not relative to the document. Copy the link to open it manually, or check the path in your editor.";
 "Report This Problem" = "Report This Problem";
@@ -205,7 +178,6 @@
 "Export Again" = "Export Again";
 "Choose Another Folder" = "Choose Another Folder";
 "Choose Another File" = "Choose Another File";
-"Open in BoaMarkdown" = "Open in BoaMarkdown";
 "How to Install…" = "How to Install…";
 "Download and open BoaMarkdown.dmg, quit BoaMarkdown, then drag the app into Applications and choose Replace." = "Download and open BoaMarkdown.dmg, quit BoaMarkdown, then drag the app into Applications and choose Replace.";
 "Preview could not start" = "Preview could not start";
@@ -222,8 +194,6 @@
 "Dismiss" = "Dismiss";
 
 "Usage statistics preference could not be saved" = "Usage statistics preference could not be saved";
-
-"Close BoaMarkdown and Quick Look to stop this session. Check available disk space, then try turning statistics off again." = "Close BoaMarkdown and Quick Look to stop this session. Check available disk space, then try turning statistics off again.";
 
 "Promotion source could not be linked" = "Promotion source could not be linked";
 
@@ -249,7 +219,6 @@
 
 /* Block copy controls */
 "Show Copy Buttons" = "Show Copy Buttons";
-"Copy code and quotes. Reload open Quick Look previews to apply." = "Copy code and quotes. Reload open Quick Look previews to apply.";
 "Text could not be copied" = "Text could not be copied";
 "Select the text to copy it manually, or try the copy button again." = "Select the text to copy it manually, or try the copy button again.";
 

@@ -2,42 +2,9 @@ const FIRST_RUN_KEY = 'boamd-help-shown-v1';
 const CMD_HOLD_DELAY_MS = 2000;
 const CMD_HOLD_ENABLED_KEY = 'boamd-cmd-hold-enabled';
 
-                
-                      
-                              
-     
- 
-
-                 
-
-                
-                  
-                           
-                            
-                     
-                         
-                     
-                      
-                      
-                       
-                                 
-             
-                                                      
-                                                 
-                                                 
-                                                   
-                                                     
-      
- 
-
 const STRINGS                     = {
     en: {
         title: '⌨️ BoaMarkdown Feature Guide',
-        contextBadgeQL: 'QuickLook Preview',
-        contextBadgeApp: 'BoaMarkdown App',
-        badgeApp: 'App',
-        qlBannerText: 'QuickLook intercepts keyboard events. Only <strong>Cmd+scroll</strong> and <strong>pinch gesture</strong> work; use toolbar buttons or double-click to open in App for full access.',
-        footerQL: 'Click backdrop or <kbd>✕</kbd> to close',
         footerApp: 'Press <kbd>?</kbd> or <kbd>Esc</kbd> to close · Hold <kbd>⌘</kbd> 2s to reopen',
         toastText: '💡 Press <kbd>?</kbd> or click <strong>?</strong> in the toolbar to view all shortcuts',
         closeLabel: 'Close',
@@ -67,21 +34,15 @@ const STRINGS                     = {
     },
 };
 
-                         
-                 
-                                   
-                                                                                          
- 
-
 const SHORTCUT_GROUPS                  = [
     {
         icon: '🔍',
         groupKey: 'searchNav',
         items: [
-            { keys: ['⌘', 'F'], labelIdx: 0, qlDisabled: true },
-            { keys: ['Enter'], labelIdx: 1, qlDisabled: true },
-            { keys: ['⇧', 'Enter'], labelIdx: 2, qlDisabled: true },
-            { keys: ['Esc'], labelIdx: 3, qlDisabled: true },
+            { keys: ['⌘', 'F'], labelIdx: 0 },
+            { keys: ['Enter'], labelIdx: 1 },
+            { keys: ['⇧', 'Enter'], labelIdx: 2 },
+            { keys: ['Esc'], labelIdx: 3 },
             { keys: ['Click'], labelIdx: 4 },
         ],
     },
@@ -89,9 +50,9 @@ const SHORTCUT_GROUPS                  = [
         icon: '🔎',
         groupKey: 'zoom',
         items: [
-            { keys: ['⌘', '+'], labelIdx: 0, qlDisabled: true },
-            { keys: ['⌘', '-'], labelIdx: 1, qlDisabled: true },
-            { keys: ['⌘', '0'], labelIdx: 2, qlDisabled: true },
+            { keys: ['⌘', '+'], labelIdx: 0 },
+            { keys: ['⌘', '-'], labelIdx: 1 },
+            { keys: ['⌘', '0'], labelIdx: 2 },
             { keys: ['⌘', '⬆scroll'], labelIdx: 3 },
             { keys: ['Pinch'], labelIdx: 4 },
         ],
@@ -100,7 +61,7 @@ const SHORTCUT_GROUPS                  = [
         icon: '📄',
         groupKey: 'view',
         items: [
-            { keys: ['⌘', '⇧', 'M'], labelIdx: 0, qlDisabled: true },
+            { keys: ['⌘', '⇧', 'M'], labelIdx: 0 },
             { keys: ['Click'], labelIdx: 1 },
             { keys: ['Click'], labelIdx: 2 },
         ],
@@ -109,18 +70,18 @@ const SHORTCUT_GROUPS                  = [
         icon: '📤',
         groupKey: 'export',
         items: [
-            { keys: ['⌘', '⇧', 'E'], labelIdx: 0, appOnly: true },
-            { keys: ['⌘', '⇧', 'P'], labelIdx: 1, appOnly: true },
+            { keys: ['⌘', '⇧', 'E'], labelIdx: 0 },
+            { keys: ['⌘', '⇧', 'P'], labelIdx: 1 },
         ],
     },
     {
         icon: '⚙️',
         groupKey: 'settings',
         items: [
-            { keys: ['⌘', ','], labelIdx: 0, appOnly: true },
-            { keys: ['⌘', 'U'], labelIdx: 1, appOnly: true },
+            { keys: ['⌘', ','], labelIdx: 0 },
+            { keys: ['⌘', 'U'], labelIdx: 1 },
             { keys: ['Click'], labelIdx: 2 },
-            { keys: ['⌘', 'Hold'], labelIdx: 3, qlDisabled: true },
+            { keys: ['⌘', 'Hold'], labelIdx: 3 },
         ],
     },
 ];
@@ -177,34 +138,17 @@ export class HelpOverlay {
     }
 
             buildOverlayHTML()         {
-        const isQuickLook = window.__boaContext === 'quicklook';
-        const lang = detectLang();
-        const s = STRINGS[lang];
-
-        const contextBadge = isQuickLook
-            ? `<span class="help-context-badge help-context-ql">${s.contextBadgeQL}</span>`
-            : `<span class="help-context-badge help-context-app">${s.contextBadgeApp}</span>`;
+        const s = STRINGS[detectLang()];
 
         const groups = SHORTCUT_GROUPS.map(g => {
             const groupStrings = s.groups[g.groupKey];
             const items = g.items.map(item => {
-                const isAppOnlyDimmed = isQuickLook && item.appOnly;
-                const isQlDisabled = isQuickLook && item.qlDisabled;
-
-                let className = 'help-item';
-                if (isAppOnlyDimmed || isQlDisabled) className += ' help-item-dimmed';
-
-                const badges           = [];
-                if (item.appOnly || item.qlDisabled) {
-                    badges.push(`<span class="help-badge help-badge-app">${s.badgeApp}</span>`);
-                }
-
                 const label = groupStrings.items[item.labelIdx] ?? '';
 
                 return `
-                    <li class="${className}">
+                    <li class="help-item">
                         <span class="help-keys">${item.keys.map(k => `<kbd>${k}</kbd>`).join('')}</span>
-                        <span class="help-label">${label}${badges.join('')}</span>
+                        <span class="help-label">${label}</span>
                     </li>
                 `;
             }).join('');
@@ -216,36 +160,21 @@ export class HelpOverlay {
             `;
         }).join('');
 
-        const qlBanner = isQuickLook ? `
-            <div class="help-ql-banner">
-                <span class="help-ql-banner-icon">⚠️</span>
-                <span>${s.qlBannerText}</span>
-            </div>
-        ` : '';
-
-        const footerText = isQuickLook ? `<span>${s.footerQL}</span>` : `<span>${s.footerApp}</span>`;
-
-        const cmdHoldCheckbox = !isQuickLook ? `
-            <label class="help-checkbox-label">
-                <input type="checkbox" id="help-cmd-hold-checkbox" ${this.isCmdHoldEnabled() ? 'checked' : ''}>
-                ${s.cmdHoldCheckboxLabel}
-            </label>
-        ` : '';
-
         return `
             <div class="help-dialog">
                 <div class="help-header">
                     <span class="help-title">${s.title}</span>
-                    ${contextBadge}
                     <button id="help-overlay-close" class="help-close" aria-label="${s.closeLabel}">✕</button>
                 </div>
-                ${qlBanner}
                 <div class="help-body">
                     ${groups}
                 </div>
                 <div class="help-footer">
-                    ${footerText}
-                    ${cmdHoldCheckbox}
+                    <span>${s.footerApp}</span>
+                    <label class="help-checkbox-label">
+                        <input type="checkbox" id="help-cmd-hold-checkbox" ${this.isCmdHoldEnabled() ? 'checked' : ''}>
+                        ${s.cmdHoldCheckboxLabel}
+                    </label>
                 </div>
             </div>
         `;

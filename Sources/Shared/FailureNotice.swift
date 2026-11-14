@@ -3,7 +3,7 @@ import AppKit
 /// What went wrong, in terms a reader can act on. Nothing here is recorded or sent anywhere.
 enum FailureKind: String, CaseIterable {
     case copy, fileRead, fileTooLarge, reload, exportHTML, exportPDF, renderer, rendererResources, source
-    case math, search, quickLook, images, previewLimit, link, browser
+    case math, search, images, previewLimit, link, browser
 
     var title: String {
         switch self {
@@ -15,7 +15,6 @@ enum FailureKind: String, CaseIterable {
         case .renderer, .source: return "Document could not be displayed"
         case .math: return "This formula could not be displayed"
         case .search: return "Search could not be completed"
-        case .quickLook: return "Quick Look could not complete this operation"
         case .images: return "Some images could not be displayed"
         case .previewLimit: return "This preview is incomplete"
         case .link, .browser: return "The destination could not be opened"
@@ -33,7 +32,6 @@ enum FailureKind: String, CaseIterable {
         case .renderer, .source: return "Try reloading the preview, or open the document in your editor."
         case .math: return "Check the formula source in your editor. The rest of the document is still available."
         case .search: return "Check the search expression, or open the document in the app and press Command-F."
-        case .quickLook: return "Open the document in the app. You can also run Repair Quick Look from the Help menu."
         case .images, .previewLimit: return "Open the document in the app to read beyond the preview limits."
         case .link: return "The link may point to a file that is not on this Mac, or to a path that is not relative to the document."
         case .browser: return "Open the destination in your browser or editor."

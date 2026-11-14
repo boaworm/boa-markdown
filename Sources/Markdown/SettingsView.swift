@@ -281,7 +281,7 @@ struct RenderingSettingsView: View {
                 Divider().padding(.leading, 52)
                 FeatureToggleRow(
                     title: NSLocalizedString("Show Copy Buttons", comment: "Block copy setting"),
-                    subtitle: NSLocalizedString("Copy code and quotes. Reload open Quick Look previews to apply.", comment: "Block copy setting description"),
+                    subtitle: NSLocalizedString("Copy code and quotes.", comment: "Block copy setting description"),
                     icon: "doc.on.doc",
                     isOn: Binding(get: { preference.showCopyButtons }, set: { preference.showCopyButtons = $0 })
                 )
@@ -376,51 +376,6 @@ struct EditorSettingsView: View {
                 )
             }
  
-            // Finder Pane Font Size
-            VStack(alignment: .leading, spacing: 12) {
-                SettingsSectionHeader(
-                    title: NSLocalizedString("Finder Preview Font Size", comment: "Finder pane font size section title"),
-                    description: NSLocalizedString("Font size when previewing in Finder's column view", comment: "Finder pane font size section description")
-                )
-
-                VStack(spacing: 0) {
-                    HStack {
-                        Text(NSLocalizedString("Font Size", comment: "Font size label"))
-                            .font(.system(size: 13))
-                        Spacer()
-                        Text("\(Int(preference.finderPaneFontSize))px")
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
-                            .foregroundColor(.accentColor)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-
-                    Divider()
-
-                    HStack(spacing: 8) {
-                        Text("A").font(.system(size: 11)).foregroundColor(.secondary)
-                        Slider(
-                            value: Binding(
-                                get: { preference.finderPaneFontSize },
-                                set: { preference.finderPaneFontSize = $0 }
-                            ),
-                            in: 10...24,
-                            step: 1
-                        )
-                        .accentColor(.accentColor)
-                        Text("A").font(.system(size: 20)).foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                }
-                .background(Color(NSColor.controlBackgroundColor))
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(NSColor.separatorColor), lineWidth: 1)
-                )
-            }
-
             // Code Theme
             VStack(alignment: .leading, spacing: 12) {
                 SettingsSectionHeader(

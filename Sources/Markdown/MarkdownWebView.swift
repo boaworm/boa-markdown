@@ -540,7 +540,6 @@ struct MarkdownWebView: NSViewRepresentable {
 
             if let url = fileURL {
                 let baseUrlString = url.deletingLastPathComponent().path
-                options["filename"] = url.lastPathComponent
                 options["baseUrl"] = baseUrlString
                 if url.pathExtension.lowercased() != "tsv" {
                     // SVG metadata is needed to choose a readable intrinsic size.

@@ -53,7 +53,7 @@ private func stats(_ samples: [Double]) -> [String: Double] {
 // MARK: - BenchmarkWebViewHarness
 
 /// Minimal WKWebView harness that replicates the real rendering pipeline
-/// (both QuickLook and MainApp paths share the same JS bridge and collectImageData logic).
+/// (the app path shares the same JS bridge and collectImageData logic).
 @MainActor
 class BenchmarkWebViewHarness: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 

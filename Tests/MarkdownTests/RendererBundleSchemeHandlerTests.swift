@@ -49,36 +49,16 @@ final class RendererBundleSchemeHandlerTests: XCTestCase {
         XCTAssertEqual((response as? HTTPURLResponse)?.mimeType, "application/javascript")
     }
 
-    func testWebViewsLoadRendererThroughCustomScheme() throws {
+    func testAppLoadsRendererThroughCustomScheme() throws {
         let root = try projectRoot()
-        let quickLookSource = try String(
-            contentsOf: root.appendingPathComponent("Sources/MarkdownPreview/PreviewViewController.swift"),
-            encoding: .utf8
-        )
         let mainWebViewSource = try String(
             contentsOf: root.appendingPathComponent("Sources/Markdown/MarkdownWebView.swift"),
             encoding: .utf8
         )
 
-        XCTAssertTrue(quickLookSource.contains("setURLSchemeHandler(rendererHandler, forURLScheme: RendererBundleSchemeHandler.scheme)"))
-        XCTAssertTrue(quickLookSource.contains("webView.load(URLRequest(url: url))"))
-        XCTAssertFalse(quickLookSource.contains("webView.loadFileURL(url, allowingReadAccessTo:"))
-
         XCTAssertTrue(mainWebViewSource.contains("setURLSchemeHandler(rendererHandler, forURLScheme: RendererBundleSchemeHandler.scheme)"))
         XCTAssertTrue(mainWebViewSource.contains("webView.load(URLRequest(url: url))"))
         XCTAssertFalse(mainWebViewSource.contains("webView.loadFileURL(url, allowingReadAccessTo:"))
-    }
-
-    func testQuickLookInitialBackgroundIsNotHardcodedWhite() throws {
-        let root = try projectRoot()
-        let quickLookSource = try String(
-            contentsOf: root.appendingPathComponent("Sources/MarkdownPreview/PreviewViewController.swift"),
-            encoding: .utf8
-        )
-
-        XCTAssertTrue(quickLookSource.contains("applyInitialBackgroundColor()"))
-        XCTAssertTrue(quickLookSource.contains("NSColor(red: 0.051, green: 0.067, blue: 0.09, alpha: 1.0)"))
-        XCTAssertFalse(quickLookSource.contains("NSColor.white.cgColor"))
     }
 
     private func projectRoot() throws -> URL {

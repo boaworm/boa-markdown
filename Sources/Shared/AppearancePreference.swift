@@ -42,12 +42,11 @@ public class AppearancePreference: ObservableObject {
     
     // Key for UserDefaults
     private let key = "preferredAppearanceMode"
-    private let quickLookSizeKey = "quickLookWindowSize"
     private let hostWindowFrameKey = "hostWindowFrame"
     private let zoomLevelKey = "markdownZoomLevel"
     private let scrollPositionsKey = "markdownScrollPositions"
     
-    // File-based store for settings shared between main app and QuickLook extension.
+    // File-based store for settings that must survive relaunches.
     // Replaces App Group UserDefaults which fails on macOS 26 (Tahoe) for ad-hoc signed apps.
     // See: upstream issue #13
     private let sharedStore: SharedPreferenceStore
@@ -110,28 +109,6 @@ public class AppearancePreference: ObservableObject {
         return dict[key] as? Double ?? 0
     }
 
-    public var quickLookSize: CGSize? {
-        get {
-            guard let dict = localStore.dictionary(forKey: quickLookSizeKey) else { return nil }
-
-            let w = dict["w"] as? Double ?? 0
-            let h = dict["h"] as? Double ?? 0
-
-            if w > 0 && h > 0 {
-                return CGSize(width: w, height: h)
-            }
-            return nil
-        }
-        set {
-            if let v = newValue {
-                localStore.set(["w": Double(v.width), "h": Double(v.height)], forKey: quickLookSizeKey)
-            } else {
-                localStore.removeObject(forKey: quickLookSizeKey)
-            }
-            localStore.synchronize()
-        }
-    }
-
     public var zoomLevel: Double {
         get {
             let level = localStore.double(forKey: zoomLevelKey)
@@ -151,7 +128,6 @@ public class AppearancePreference: ObservableObject {
     private let contentsSideKey = "contentsSide"
     private let showCopyButtonsKey = "showCopyButtons"
     private let showLineNumbersKey = "showLineNumbers"
-    private let finderPaneFontSizeKey = "finderPaneFontSize"
 
     public var baseFontSize: Double {
         get {
@@ -243,29 +219,13 @@ public class AppearancePreference: ObservableObject {
         }
     }
 
-    public var finderPaneFontSize: Double {
-        get {
-            let v = sharedStore.double(forKey: finderPaneFontSizeKey)
-            return v == 0 ? 13 : v
-        }
-        set {
-            objectWillChange.send()
-            sharedStore.set(newValue, forKey: finderPaneFontSizeKey)
-            scheduleSyncToSharedStore()
-        }
-    }
-
-    // Per-process store for settings that don't need cross-process sharing
+    // Settings that stay in app defaults rather than the shared plist
     // (zoom level, scroll positions, window sizes)
     private let localStore: UserDefaults
 
     public convenience init() {
-        // Detect if running inside the QuickLook extension by checking bundle identifier.
-        // Extension: alwaysReload=true (short-lived, needs latest settings from main app).
-        // Main app: alwaysReload=false (long-lived, writes settings itself, uses mod-date caching).
-        let isExtension = Bundle.main.bundleIdentifier?.hasSuffix(".QuickLook") == true
         self.init(
-            sharedStore: SharedPreferenceStore(alwaysReload: isExtension),
+            sharedStore: SharedPreferenceStore(alwaysReload: false),
             localStore: UserDefaults.standard,
             migrateFromAppGroup: true
         )
@@ -276,7 +236,7 @@ public class AppearancePreference: ObservableObject {
         self.localStore = localStore
 
         // Migrate preferences from pre-Tahoe App Group UserDefaults on first launch.
-        // Safe to call from extension too (no-op since canWrite is false).
+        // No-op when the shared store is read-only.
         if migrateFromAppGroup {
             sharedStore.migrateFromAppGroupIfNeeded()
         }
