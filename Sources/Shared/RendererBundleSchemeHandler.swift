@@ -91,9 +91,6 @@ final class RendererBundleSchemeHandler: NSObject, WKURLSchemeHandler {
         if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "Renderer") {
             return url
         }
-        if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "dist") {
-            return url
-        }
         return bundle.url(forResource: "index", withExtension: "html")
     }
 

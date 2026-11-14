@@ -1,15 +1,8 @@
 .DS_Store
 .vscode/
 
-# Web Renderer
-web-renderer/node_modules/
-web-renderer/dist/
-web-renderer/npm-debug.log
-
 # Benchmark
-benchmark/js-bench/node_modules/
 benchmark/results/*.json
-!benchmark/results/js-bench-latest.json
 !benchmark/results/ql-bench-latest.json
 !benchmark/results/swift-bench-latest.json
 
@@ -84,9 +77,8 @@ release_notes_tmp.md
 !README.md
 !README_ZH.md
 
-# Generated HTML files (except web-renderer)
+# Generated HTML files
 /*.html
-!web-renderer/
 
 # Playwright MCP (temporary)
 .playwright-mcp/
@@ -96,8 +88,3 @@ docs/superpowers/
 
 # Test PDF exports (from manual export testing)
 README*.pdf
-playground.html
-playground.ts
-
-# Local Vite acceptance-preview cache
-.vite/

@@ -88,7 +88,7 @@ def main():
         before_path = Path(args[0])
         after_path = Path(args[1])
     elif len(args) == 0:
-        jsons = sorted(RESULTS_DIR.glob("js-bench-*.json"), key=lambda p: p.stat().st_mtime)
+        jsons = sorted(RESULTS_DIR.glob("*-bench-*.json"), key=lambda p: p.stat().st_mtime)
         jsons = [p for p in jsons if "latest" not in p.name]
         if len(jsons) < 2:
             print("Need at least 2 result files to compare.")
