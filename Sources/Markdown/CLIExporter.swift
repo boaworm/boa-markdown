@@ -1,6 +1,7 @@
 import AppKit
 import WebKit
 import os.log
+import BoaRender
 
 final class CLIAppDelegate: NSObject, NSApplicationDelegate {
     private var exporter: CLIExporter?
@@ -160,6 +161,7 @@ final class CLIExporter: NSObject {
             options["format"] = "tsv"
             options["isTruncated"] = truncated
         } else {
+            options.merge(MarkdownRenderer.render(content).pageOptions) { _, rendered in rendered }
             options["imageData"] = MarkdownImageDataCollector.collectImageData(
                 from: inputURL, content: content, fileExtensions: ["svg"])
         }

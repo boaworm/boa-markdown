@@ -3,6 +3,7 @@ import QuickLookUI
 import os.log
 import WebKit
 import SwiftUI
+import BoaRender
 
 final class QuickLookDoubleClickGestureRecognizer: NSClickGestureRecognizer {
     override func canPrevent(_ preventedGestureRecognizer: NSGestureRecognizer) -> Bool {
@@ -161,14 +162,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     private var securityScopedURL: URL?
     private var isSecurityScopedAccessActive: Bool = false
     
-    // MARK: - Process Pool Management
-    
-    /// Shared process pool for all WKWebView instances to reduce memory footprint.
-    /// Without this, each WKWebView creates its own Web Content process, leading to
-    /// 30+ processes (60-80MB each) when previewing multiple markdown files.
-    /// With a shared pool, all WebViews share 1-2 Web Content processes (~100-200MB total).
-    private static let sharedProcessPool = WKProcessPool()
-
     // MARK: - Size Persistence Constants
 
     /// Minimum window size that should be persisted.
@@ -400,7 +393,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         os_log("🔵 configuring WebView...", log: logger, type: .default)
         
         let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.processPool = PreviewViewController.sharedProcessPool
         
         let preferences = WKPreferences()
         webConfiguration.preferences = preferences
@@ -1090,7 +1082,10 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
 
         let generation = renderScope.beginDocument()
         webView.evaluateJavaScript("window.setRenderGeneration && window.setRenderGeneration('\(generation)');", completionHandler: nil)
-        let sourceOptions = "{format: '\(currentURL?.pathExtension.lowercased() == "tsv" ? "tsv" : "markdown")', isTruncated: \(previewIsTruncated)}"
+        let sourceIsTSV = currentURL?.pathExtension.lowercased() == "tsv"
+        let sourceHeadings = sourceIsTSV ? [] : MarkdownRenderer.render(content).pageHeadings
+        let sourceHeadingsJson = (try? JSONSerialization.data(withJSONObject: sourceHeadings)).flatMap { String(data: $0, encoding: .utf8) } ?? "[]"
+        let sourceOptions = "{format: '\(sourceIsTSV ? "tsv" : "markdown")', isTruncated: \(previewIsTruncated), headings: \(sourceHeadingsJson)}"
         var callJs: String
         if let prev = capturedPrevForSource, !prev.isEmpty,
            let prevData = try? JSONSerialization.data(withJSONObject: [prev]),
@@ -1439,6 +1434,8 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             if capturedURL?.pathExtension.lowercased() == "tsv" {
                 options["format"] = "tsv"
                 options["isTruncated"] = capturedTruncated
+            } else {
+                options.merge(MarkdownRenderer.render(content).pageOptions) { _, rendered in rendered }
             }
             if let url = capturedURL {
                 options["filename"] = url.lastPathComponent

@@ -1,15 +1,8 @@
-.PHONY: all build_renderer generate app install install-debug
+.PHONY: all generate app install install-debug
 
 all: app
 
-web-renderer/node_modules/.dependencies-installed: web-renderer/package.json web-renderer/package-lock.json
-	cd web-renderer && npm ci --no-audit --no-fund --loglevel=warn
-	touch $@
-
-build_renderer: web-renderer/node_modules/.dependencies-installed
-	cd web-renderer && npm run build
-
-generate: build_renderer
+generate:
 	@if ! command -v xcodegen >/dev/null; then \
 		echo "Error: xcodegen is not installed. Please install it with 'brew install xcodegen'"; \
 		exit 1; \
@@ -43,7 +36,7 @@ install-debug:
 
 .PHONY: check_toolchain clean
 check_toolchain:
-	@./scripts/check-build-toolchain.sh $(or $(LOCAL_DEPLOYMENT_TARGET),11.0)
+	@./scripts/check-build-toolchain.sh $(or $(LOCAL_DEPLOYMENT_TARGET),12.0)
 
 clean:
 	xcodebuild -project BoaMarkdown.xcodeproj -scheme Markdown clean

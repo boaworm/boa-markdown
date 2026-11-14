@@ -2,10 +2,13 @@ name: BoaMarkdown
 options:
   bundleIdPrefix: io.github.boaworm
   deploymentTarget:
-    macOS: "11.0"
+    macOS: "12.0"
 settings:
   MARKETING_VERSION: ${MARKETING_VERSION}
   CURRENT_PROJECT_VERSION: ${CURRENT_PROJECT_VERSION}
+packages:
+  BoaRender:
+    path: Packages/BoaRender
 targets:
   Markdown:
     type: application
@@ -13,8 +16,7 @@ targets:
     sources: 
       - Sources/Markdown
       - Sources/Shared
-      - path: web-renderer/dist
-        name: WebRenderer
+      - path: Renderer
         type: folder
     settings:
       base:
@@ -35,6 +37,7 @@ targets:
     dependencies:
       - target: MarkdownPreview
         embed: true
+      - package: BoaRender
 
   MarkdownPreview:
     type: app-extension
@@ -42,8 +45,7 @@ targets:
     sources:
       - Sources/MarkdownPreview
       - Sources/Shared
-      - path: web-renderer/dist
-        name: WebRenderer
+      - path: Renderer
         type: folder
     settings:
       base:
@@ -60,6 +62,7 @@ targets:
           CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
     dependencies:
       - sdk: QuickLookUI.framework
+      - package: BoaRender
       - target: SearchLauncher
         embed: true
 
@@ -112,14 +115,15 @@ targets:
       - Sources/MarkdownPreview
       - Sources/Shared
       - benchmark/swift-bench/RenderBenchmarkTests.swift
-      - path: web-renderer/dist
-        name: WebRenderer
+      - path: Renderer
         type: folder
     settings:
       GENERATE_INFOPLIST_FILE: YES
       PRODUCT_BUNDLE_IDENTIFIER: io.github.boaworm.Markdown.Tests
       MARKETING_VERSION: ${MARKETING_VERSION}
       CURRENT_PROJECT_VERSION: ${CURRENT_PROJECT_VERSION}
+    dependencies:
+      - package: BoaRender
 schemes:
   Markdown:
     build:

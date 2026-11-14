@@ -85,7 +85,7 @@ final class RendererBundleSchemeHandler: NSObject, WKURLSchemeHandler {
     }
 
     static func findIndexHtml(in bundle: Bundle) -> URL? {
-        if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "WebRenderer") {
+        if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "Renderer") {
             return url
         }
         if let url = bundle.url(forResource: "index", withExtension: "html", subdirectory: "dist") {

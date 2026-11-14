@@ -68,20 +68,33 @@ Previews show up to 500 KiB, 1,000 rows, 100 columns and 20,000 cells, and trunc
 
 ## Build and install
 
-Requirements: macOS 11 or later, Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), and Node.js with npm.
+Requirements: macOS 12 or later, Xcode, [XcodeGen](https://github.com/yonaskolb/XcodeGen) (`brew install xcodegen`), and Node.js with npm.
+
+The project is generated from `project.yml` using XcodeGen. Run `make` targets
+to ensure the project file is regenerated before building:
 
 ```bash
 git clone https://github.com/boaworm/boa-markdown.git
 cd boa-markdown
-make install        # Release build, copies the app to /Applications and registers Quick Look
+make app            # regenerate (xcodegen) + build only (Release)
+make install        # build + copy to /Applications and register Quick Look
+```
+
+If XcodeGen is not installed or the project is already generated, a plain
+`xcodebuild` can be used, but running through `make` is recommended so the
+project file stays in sync with `project.yml`:
+
+```bash
+xcodegen generate     # regenerate BoaMarkdown.xcodeproj from project.yml
+xcodebuild -project BoaMarkdown.xcodeproj -scheme Markdown -configuration Release build
 ```
 
 Other targets:
 
 ```bash
-make app            # build only (CONFIGURATION=Debug for a debug build)
-make install-debug  # debug build + install
-make clean
+make app CONFIGURATION=Debug     # debug build only
+make install-debug               # debug build + install
+make clean                       # clean build artifacts
 ```
 
 Renderer tests (from `web-renderer/`): `npm ci && npm run typecheck && npm test`.

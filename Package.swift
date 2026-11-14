@@ -2,7 +2,7 @@ import PackageDescription
 
 let package = Package(
     name: "BoaMarkdown",
-    platforms: [.macOS(.v11)],
+    platforms: [.macOS(.v12)],
     targets: [
         .target(
             name: "Markdown",

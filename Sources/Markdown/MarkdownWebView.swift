@@ -3,6 +3,7 @@ import AppKit
 import WebKit
 import os.log
 import CoreGraphics
+import BoaRender
 
 enum ViewMode {
     case preview
@@ -38,7 +39,6 @@ struct MarkdownWebView: NSViewRepresentable {
         let coordinator = context.coordinator
         
         let webConfiguration = WKWebViewConfiguration()
-        webConfiguration.processPool = WKProcessPool()
         webConfiguration.websiteDataStore = .default()
         let userContentController = WKUserContentController()
         userContentController.add(coordinator, name: "logger")
@@ -576,6 +576,10 @@ struct MarkdownWebView: NSViewRepresentable {
             if fileURL?.pathExtension.lowercased() == "tsv" {
                 options["format"] = "tsv"
                 options["isTruncated"] = diskIsTruncated ?? modelIsTruncated
+            } else {
+                let document = MarkdownRenderer.render(content)
+                if viewMode == .source { options["headings"] = document.pageHeadings }
+                else { options.merge(document.pageOptions) { _, rendered in rendered } }
             }
 
             if !previousContent.isEmpty && previousContent != content {
