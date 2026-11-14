@@ -1,1 +1,1 @@
-module.exports = 'flux-renderer://bundle/assets/test.wasm';
+module.exports = 'boa-renderer://bundle/assets/test.wasm';

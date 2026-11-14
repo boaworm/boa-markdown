@@ -151,12 +151,12 @@ final class LocalLinkTargetTests: XCTestCase {
 
     // MARK: - What clicking decides
 
-    func testMarkdownLineSuffixNavigatesToSourceLineInsideFluxMarkdown() throws {
+    func testMarkdownLineSuffixNavigatesToSourceLineInsideBoaMarkdown() throws {
         try makeFile("notes.md")
 
         let target = try XCTUnwrap(LinkNavigation.resolveLocalLink(href: "notes.md:12", relativeTo: documentURL))
 
-        XCTAssertEqual(LinkNavigation.action(for: target), .openFluxMarkdown(.line(12)))
+        XCTAssertEqual(LinkNavigation.action(for: target), .openBoaMarkdown(.line(12)))
     }
 
     func testMarkdownAnchorStillNavigatesToTheHeading() throws {
@@ -164,7 +164,7 @@ final class LocalLinkTargetTests: XCTestCase {
 
         let target = try XCTUnwrap(LinkNavigation.resolveLocalLink(href: "notes.md#section", relativeTo: documentURL))
 
-        XCTAssertEqual(LinkNavigation.action(for: target), .openFluxMarkdown(.anchor("section")))
+        XCTAssertEqual(LinkNavigation.action(for: target), .openBoaMarkdown(.anchor("section")))
     }
 
     func testMarkdownTargetWithoutPositionOpensTheDocument() throws {
@@ -172,7 +172,7 @@ final class LocalLinkTargetTests: XCTestCase {
 
         let target = try XCTUnwrap(LinkNavigation.resolveLocalLink(href: "notes.md", relativeTo: documentURL))
 
-        XCTAssertEqual(LinkNavigation.action(for: target), .openFluxMarkdown(nil))
+        XCTAssertEqual(LinkNavigation.action(for: target), .openBoaMarkdown(nil))
     }
 
     func testSourceFileLineSuffixOpensTheFileExternally() throws {
@@ -188,7 +188,7 @@ final class LocalLinkTargetTests: XCTestCase {
 
         let target = try XCTUnwrap(LinkNavigation.resolveLocalLink(href: "data.tsv:3", relativeTo: documentURL))
 
-        XCTAssertEqual(LinkNavigation.action(for: target), .openFluxMarkdown(.line(3)))
+        XCTAssertEqual(LinkNavigation.action(for: target), .openBoaMarkdown(.line(3)))
     }
 
     // MARK: - Clipboard text for failed destinations

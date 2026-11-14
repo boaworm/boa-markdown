@@ -53,7 +53,7 @@ struct DocumentOpenRequest {
 final class DocumentPositionStore {
     static let shared = DocumentPositionStore()
     static let searchRequests = DocumentPositionStore()
-    static let notification = Notification.Name("FluxMarkdown.documentPositionRequested")
+    static let notification = Notification.Name("BoaMarkdown.documentPositionRequested")
     private var requests: [String: (UUID, DocumentPosition)] = [:]
     private var order: [String] = []
     private let lock = NSLock()

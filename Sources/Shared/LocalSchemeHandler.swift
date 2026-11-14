@@ -5,7 +5,7 @@ class LocalSchemeHandler: NSObject, WKURLSchemeHandler {
     private let logger = OSLog(subsystem: "com.markdownquicklook.app", category: "LocalSchemeHandler")
     private let allowedFilesLock = NSLock()
     private var allowedFilePaths = Set<String>()
-    private let resourceQueue = DispatchQueue(label: "com.xykong.Markdown.images", qos: .userInitiated)
+    private let resourceQueue = DispatchQueue(label: "io.github.boaworm.Markdown.images", qos: .userInitiated)
     private var activeTasks: [ObjectIdentifier: UUID] = [:]
     private var loadedBytes: [String: Int] = [:]
     private var resourceGeneration = 0

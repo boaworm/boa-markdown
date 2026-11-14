@@ -49,10 +49,9 @@ public class AppearancePreference: ObservableObject {
     
     // File-based store for settings shared between main app and QuickLook extension.
     // Replaces App Group UserDefaults which fails on macOS 26 (Tahoe) for ad-hoc signed apps.
-    // See: https://github.com/xykong/flux-markdown/issues/13
+    // See: upstream issue #13
     private let sharedStore: SharedPreferenceStore
     private var pendingSyncWorkItem: DispatchWorkItem?
-    let history: SettingsHistoryStore?
 
     /// Backing store for currentMode — @Published ensures SwiftUI views (including
     /// the Settings scene) reliably re-render when the value changes.
@@ -61,7 +60,6 @@ public class AppearancePreference: ObservableObject {
     public var currentMode: AppearanceMode {
         get { _currentMode }
         set {
-            recordSetting(key: key, newValue: newValue.rawValue, source: .settings)
             _currentMode = newValue
             sharedStore.set(newValue.rawValue, forKey: key)
             scheduleSyncToSharedStore()
@@ -152,7 +150,6 @@ public class AppearancePreference: ObservableObject {
     private let enableEmojiKey = "enableEmoji"
     private let enableTypstKey = "enableTypst"
     private let collapseBlockquotesByDefaultKey = "collapseBlockquotesByDefault"
-    private let uiLanguageKey = "uiLanguage"
     private let contentsSideKey = "contentsSide"
     private let showCopyButtonsKey = "showCopyButtons"
     private let showLineNumbersKey = "showLineNumbers"
@@ -165,7 +162,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: baseFontSizeKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: baseFontSizeKey)
             scheduleSyncToSharedStore()
         }
@@ -175,7 +171,6 @@ public class AppearancePreference: ObservableObject {
         get { sharedStore.string(forKey: codeHighlightThemeKey) ?? "default" }
         set {
             objectWillChange.send()
-            recordSetting(key: codeHighlightThemeKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: codeHighlightThemeKey)
             scheduleSyncToSharedStore()
         }
@@ -188,7 +183,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: enableMermaidKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: enableMermaidKey)
             scheduleSyncToSharedStore()
         }
@@ -201,7 +195,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: enableKatexKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: enableKatexKey)
             scheduleSyncToSharedStore()
         }
@@ -214,7 +207,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: enableEmojiKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: enableEmojiKey)
             scheduleSyncToSharedStore()
         }
@@ -227,7 +219,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: enableTypstKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: enableTypstKey)
             scheduleSyncToSharedStore()
         }
@@ -240,21 +231,8 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: collapseBlockquotesByDefaultKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: collapseBlockquotesByDefaultKey)
             scheduleSyncToSharedStore()
-        }
-    }
-
-    public var uiLanguage: String {
-        get { sharedStore.string(forKey: uiLanguageKey) ?? "system" }
-        set {
-            objectWillChange.send()
-            recordSetting(key: uiLanguageKey, newValue: newValue, source: .settings)
-            sharedStore.set(newValue, forKey: uiLanguageKey)
-            scheduleSyncToSharedStore()
-            LocalizationManager.apply(languageCode: newValue)
-            LocalizationManager.applyAppleLanguages(for: newValue)
         }
     }
 
@@ -262,7 +240,6 @@ public class AppearancePreference: ObservableObject {
         get { ContentsSidebarSide(rawValue: sharedStore.string(forKey: contentsSideKey) ?? "right") ?? .right }
         set {
             objectWillChange.send()
-            recordSetting(key: contentsSideKey, newValue: newValue.rawValue, source: .settings)
             sharedStore.set(newValue.rawValue, forKey: contentsSideKey)
             scheduleSyncToSharedStore()
         }
@@ -275,7 +252,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: showLineNumbersKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: showLineNumbersKey)
             scheduleSyncToSharedStore()
         }
@@ -288,7 +264,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: showCopyButtonsKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: showCopyButtonsKey)
             scheduleSyncToSharedStore()
         }
@@ -301,7 +276,6 @@ public class AppearancePreference: ObservableObject {
         }
         set {
             objectWillChange.send()
-            recordSetting(key: finderPaneFontSizeKey, newValue: newValue, source: .settings)
             sharedStore.set(newValue, forKey: finderPaneFontSizeKey)
             scheduleSyncToSharedStore()
         }
@@ -319,25 +293,18 @@ public class AppearancePreference: ObservableObject {
         self.init(
             sharedStore: SharedPreferenceStore(alwaysReload: isExtension),
             localStore: UserDefaults.standard,
-            migrateFromAppGroup: true,
-            history: SettingsHistoryStore.production()
+            migrateFromAppGroup: true
         )
     }
 
-    init(sharedStore: SharedPreferenceStore, localStore: UserDefaults, migrateFromAppGroup: Bool,
-         history: SettingsHistoryStore? = nil) {
+    init(sharedStore: SharedPreferenceStore, localStore: UserDefaults, migrateFromAppGroup: Bool) {
         self.sharedStore = sharedStore
         self.localStore = localStore
-        self.history = history
 
         // Migrate preferences from pre-Tahoe App Group UserDefaults on first launch.
         // Safe to call from extension too (no-op since canWrite is false).
         if migrateFromAppGroup {
-            sharedStore.migrateFromAppGroupIfNeeded { key, value in
-                history?.record(key: key, oldValue: DiagnosticSettings.defaults[key],
-                                newValue: DiagnosticSettings.effectiveValue(value, key: key),
-                                source: .migration, oldWasDefault: true)
-            }
+            sharedStore.migrateFromAppGroupIfNeeded()
         }
 
         // Sync @Published backing store from disk so views have the correct initial value.
@@ -362,37 +329,15 @@ public class AppearancePreference: ObservableObject {
         pendingSyncWorkItem?.cancel()
         pendingSyncWorkItem = nil
         sharedStore.synchronize()
-        history?.flush()
     }
     
-    /// A snapshot includes only settings, never document state or paths.
-    var diagnosticSettings: [String: Any] {
-        var values = DiagnosticSettings.defaults
-        for key in values.keys {
-            values[key] = DiagnosticSettings.effectiveValue(sharedStore.object(forKey: key), key: key)
-        }
-        return values
-    }
-
     func observePreferenceChanges() {
-        guard let history else { return }
-        history.observe(settings: diagnosticSettings)
         // Keep the @Published theme in sync with an observed external write.
         let mode = AppearanceMode(rawValue: sharedStore.string(forKey: key) ?? "system") ?? .system
         if mode != _currentMode { _currentMode = mode }
     }
 
-    private func recordSetting(key: String, newValue: Any, source: SettingChangeSource) {
-        guard let history else { return }
-        observePreferenceChanges()
-        let raw = sharedStore.object(forKey: key)
-        history.record(key: key, oldValue: DiagnosticSettings.effectiveValue(raw, key: key),
-                       newValue: DiagnosticSettings.effectiveValue(newValue, key: key),
-                       source: source, oldWasDefault: DiagnosticSettings.usesDefault(raw, key: key))
-    }
-
-    func setAppearance(_ mode: AppearanceMode, source: SettingChangeSource) {
-        recordSetting(key: key, newValue: mode.rawValue, source: source)
+    func setAppearance(_ mode: AppearanceMode) {
         _currentMode = mode
         sharedStore.set(mode.rawValue, forKey: key)
         scheduleSyncToSharedStore()

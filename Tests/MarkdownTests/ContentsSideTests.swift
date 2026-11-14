@@ -18,7 +18,5 @@ final class ContentsSideTests: XCTestCase {
         store.set("invalid", forKey: "contentsSide")
         store.synchronize()
         XCTAssertEqual(reloaded.contentsSide, .right)
-        XCTAssertEqual(DiagnosticSettings.value("left", key: "contentsSide"), "left")
-        XCTAssertEqual(DiagnosticSettings.value("invalid", key: "contentsSide"), "invalid")
     }
 }

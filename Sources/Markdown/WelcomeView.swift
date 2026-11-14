@@ -9,7 +9,6 @@ struct WelcomeView: View {
     @State private var openErrorMessage: String?
     @State private var isOpening = false
 
-    @Environment(\.openURL) private var openURL
 
     private let settingsWindowManager = SettingsWindowManager.shared
 
@@ -50,7 +49,6 @@ struct WelcomeView: View {
         .onReceive(Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()) { _ in
             closeIfAnyDocumentIsOpen()
         }
-        .interfaceLayoutDirection(for: preference.uiLanguage)
     }
 
     private var background: some View {
@@ -79,10 +77,10 @@ struct WelcomeView: View {
                             .stroke(Color(NSColor.separatorColor).opacity(0.8), lineWidth: 1)
                     )
                     .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 6)
-                    .accessibilityLabel(Text(NSLocalizedString("FluxMarkdown App Icon", comment: "App icon accessibility label")))
+                    .accessibilityLabel(Text(NSLocalizedString("BoaMarkdown App Icon", comment: "App icon accessibility label")))
             }
 
-            Text("FluxMarkdown")
+            Text("BoaMarkdown")
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundColor(.primary)
 
@@ -155,25 +153,7 @@ struct WelcomeView: View {
                 .buttonStyle(BorderlessButtonStyle())
                 .foregroundColor(.accentColor)
 
-                Text("•")
-                    .foregroundColor(Color.secondary.opacity(0.6))
-
-                Button(NSLocalizedString("Troubleshooting", comment: "Troubleshooting button")) {
-                    if let url = URL(string: "https://github.com/xykong/flux-markdown/blob/master/docs/user/HELP.md") {
-                        openURL(url)
-                    }
-                }
-                .buttonStyle(BorderlessButtonStyle())
-                .foregroundColor(.accentColor)
-
                 Spacer()
-
-                Button(action: GitHubStar.showRepository) {
-                    Label(NSLocalizedString("Star on GitHub", comment: "Support project"), systemImage: "star")
-                }
-                .buttonStyle(BorderlessButtonStyle())
-                .foregroundColor(.accentColor)
-                .help(NSLocalizedString("Open GitHub and click Star to support FluxMarkdown.", comment: "GitHub star hint"))
             }
             .font(.system(size: 12, weight: .semibold))
         }

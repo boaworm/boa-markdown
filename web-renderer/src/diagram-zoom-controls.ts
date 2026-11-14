@@ -1,16 +1,11 @@
 const labels: Record<string, [string, string, string]> = {
     en: ['Zoom out diagram', 'Reset diagram zoom', 'Zoom in diagram'],
-    zh: ['缩小图表', '还原图表缩放', '放大图表'],
-    de: ['Diagramm verkleinern', 'Diagrammzoom zurücksetzen', 'Diagramm vergrößern'],
-    fr: ['Réduire le diagramme', 'Réinitialiser le zoom du diagramme', 'Agrandir le diagramme'],
-    es: ['Alejar diagrama', 'Restablecer zoom del diagrama', 'Acercar diagrama'],
-    ar: ['تصغير المخطط', 'إعادة تعيين تكبير المخطط', 'تكبير المخطط'],
 };
 
 
 /** Shared interaction, bounds and labels for rendered and referenced diagrams. */
 export function createDiagramZoomControls(className: string, changed: () => void) {
-    const strings = labels[(window.__fluxLang || navigator.language).split('-')[0]] || labels.en;
+    const strings = labels.en;
     const element = document.createElement('span'); element.className = `diagram-tools ${className}`;
     let step = 0, ready = true, disposed = false;
     const buttons = strings.map((label, index) => {

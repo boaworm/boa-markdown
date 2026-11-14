@@ -17,13 +17,13 @@ enum QuickLookProbeEvidence {
         let native = error.map { $0 as NSError }
         let domain = native.map { safeDomains.contains($0.domain) ? $0.domain : "other" } ?? "none"
         let code = native.flatMap { Int32(exactly: $0.code) } ?? 0
-        return "FluxQuickLookStage schema=2 token=\(token) version=\(version) build=\(build) attempt=\(attempt.uuidString) context=\(context.rawValue) stage=\(stage.rawValue) error=\(domain) code=\(code)"
+        return "BoaQuickLookStage schema=2 token=\(token) version=\(version) build=\(build) attempt=\(attempt.uuidString) context=\(context.rawValue) stage=\(stage.rawValue) error=\(domain) code=\(code)"
     }
 
-    static let heading = "FluxMarkdown Quick Look Test"
+    static let heading = "BoaMarkdown Quick Look Test"
     static let boldText = "Rendered Markdown"
     static let fixture = "# \(heading)\n\n**\(boldText)** confirms the extension was selected.\n\nThis temporary document contains no personal data.\n"
-    static let prefix = "flux-quicklook-probe-"
+    static let prefix = "boa-quicklook-probe-"
     static func token(for url: URL) -> String? {
         guard url.pathExtension == "md" else { return nil }
         let name = url.deletingPathExtension().lastPathComponent
@@ -31,7 +31,7 @@ enum QuickLookProbeEvidence {
         return id.uuidString
     }
     static func marker(token: String, version: String, build: String, stage: String) -> String {
-        "FluxQuickLookProbe token=\(token) version=\(version) build=\(build) stage=\(stage)"
+        "BoaQuickLookProbe token=\(token) version=\(version) build=\(build) stage=\(stage)"
     }
     static func rendered(in json: String, token: String, version: String, build: String, executableURL: URL) -> Bool {
         guard executableURL.isFileURL, executableURL.path.hasPrefix("/"),

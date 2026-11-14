@@ -9,17 +9,17 @@ struct LocalLinkTarget: Equatable {
     let line: Int?
 }
 
-/// What clicking a resolved local link asks FluxMarkdown to do.
+/// What clicking a resolved local link asks BoaMarkdown to do.
 enum LocalLinkAction: Equatable {
-    /// Open the file in FluxMarkdown itself, optionally at a source line or anchor.
-    case openFluxMarkdown(DocumentPosition?)
+    /// Open the file in BoaMarkdown itself, optionally at a source line or anchor.
+    case openBoaMarkdown(DocumentPosition?)
     /// Hand an existing non-document file to its macOS application.
     case openExternally
 }
 
 enum LinkNavigation {
 
-    /// Document types that FluxMarkdown both hosts and can position inside.
+    /// Document types that BoaMarkdown both hosts and can position inside.
     static let documentExtensions: Set<String> = ["md", "mdx", "markdown", "mdown", "mkd", "mkdn", "mkdown", "mdwn", "rmd", "qmd", "mdoc", "mdc", "mmd", "livemd", "tsv"]
 
     /// Resolves a clicked local href, accepting the `path:line[:column]` form that
@@ -77,9 +77,9 @@ enum LinkNavigation {
     /// file such as `Foo.java:57` opens its file instead of failing.
     static func action(for link: LocalLinkTarget) -> LocalLinkAction {
         guard documentExtensions.contains(link.url.pathExtension.lowercased()) else { return .openExternally }
-        if let line = link.line { return .openFluxMarkdown(.line(line)) }
-        if let fragment = link.fragment, !fragment.isEmpty { return .openFluxMarkdown(.anchor(fragment)) }
-        return .openFluxMarkdown(nil)
+        if let line = link.line { return .openBoaMarkdown(.line(line)) }
+        if let fragment = link.fragment, !fragment.isEmpty { return .openBoaMarkdown(.anchor(fragment)) }
+        return .openBoaMarkdown(nil)
     }
 
     // MARK: - Editor-style suffixes

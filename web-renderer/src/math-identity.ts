@@ -19,7 +19,7 @@ function labelHex(label: string): string {
 }
 
 /** Register one class, never a growing tagformat class per rendered document. */
-class FluxAmsTags extends AmsTags {
+class BoaAmsTags extends AmsTags {
     private equations = new WeakMap<object, number>();
     private nextEquation = 0;
     private equation = 0;
@@ -51,23 +51,23 @@ class FluxAmsTags extends AmsTags {
     }
 
     protected formatId(_id: string): string {
-        const namespace = String(this.configuration.options.fluxMathNamespace);
+        const namespace = String(this.configuration.options.boaMathNamespace);
         return this.label
             ? `${namespace}-l-${labelHex(this.label)}`
             : `${namespace}-u-${this.equation}-${this.row++}`;
     }
 }
 
-Configuration.create('flux-math-identity', {
-    tags: { 'flux-ams': FluxAmsTags },
-    options: { fluxMathNamespace: 'fxeq' },
+Configuration.create('boa-math-identity', {
+    tags: { 'boa-ams': BoaAmsTags },
+    options: { boaMathNamespace: 'fxeq' },
 });
 
 export function createMathInput(namespace: string): TeX<unknown, unknown, unknown> {
     if (!/^[a-zA-Z][a-zA-Z0-9-]*$/.test(namespace)) throw new Error('Invalid math namespace');
     return new TeX({
-        packages: ['base', 'ams', 'newcommand', 'textmacros', 'flux-math-identity'],
-        tags: 'flux-ams', fluxMathNamespace: namespace,
+        packages: ['base', 'ams', 'newcommand', 'textmacros', 'boa-math-identity'],
+        tags: 'boa-ams', boaMathNamespace: namespace,
         baseURL: '',
         maxBuffer: 64 * 1024, maxMacros: 1000,
         processEnvironments: true, processRefs: true,

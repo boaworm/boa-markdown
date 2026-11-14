@@ -2,7 +2,7 @@ import WebKit
 import os.log
 
 final class RendererBundleSchemeHandler: NSObject, WKURLSchemeHandler {
-    static let scheme = "flux-renderer"
+    static let scheme = "boa-renderer"
 
     private let logger = OSLog(subsystem: "com.markdownquicklook.app", category: "RendererBundleSchemeHandler")
     private let rootDirectory: URL

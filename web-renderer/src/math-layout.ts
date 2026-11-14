@@ -3,7 +3,7 @@ import { originalMathSource } from './math-source-store';
 /** Only oversized inline mathematics changes its baseline/scrolling behavior. */
 export function installMathLayout(root: HTMLElement): () => void {
     const update = () => {
-        const decisions = Array.from(root.querySelectorAll<HTMLElement>('span.flux-math-source, div.flux-math-source')).flatMap(node => {
+        const decisions = Array.from(root.querySelectorAll<HTMLElement>('span.boa-math-source, div.boa-math-source')).flatMap(node => {
             if (originalMathSource(node) === undefined) return [];
             const svg = node.querySelector('svg');
             if (!svg) return [];

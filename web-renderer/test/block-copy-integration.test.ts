@@ -33,7 +33,7 @@ test('export retains content without control markup and live document stays inta
 });
 
 test('search does not match copy controls or success messages', async () => {
-    await window.renderMarkdown('```\nhello\n```', {context:'app',showCopyButtons:true,uiLanguage:'en'});
+    await window.renderMarkdown('```\nhello\n```', {context:'app',showCopyButtons:true});
     document.querySelector('[role=status]')!.textContent = 'Copied';
     const engine = new SearchEngine();
     expect(engine.search('Copied', {caseSensitive:false, wholeWord:false, useRegex:false})).toBe(0);

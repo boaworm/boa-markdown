@@ -8,7 +8,7 @@ final class CLIAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let args = CommandLine.arguments
         guard let idx = args.firstIndex(of: "--export-pdf"), idx + 1 < args.count else {
-            fputs("Usage: FluxMarkdown --export-pdf <input.md> [output.pdf]\n", stderr)
+            fputs("Usage: BoaMarkdown --export-pdf <input.md> [output.pdf]\n", stderr)
             CLIErrorGuidance.printReport(); exit(1)
         }
 
@@ -155,7 +155,6 @@ final class CLIExporter: NSObject {
             "enableKatex":        true,
             "enableEmoji":        true,
             "enableTypst":        true,
-            "uiLanguage":         "en",
         ]
         if inputURL.pathExtension.lowercased() == "tsv" {
             options["format"] = "tsv"
@@ -260,9 +259,6 @@ extension CLIExporter: WKScriptMessageHandler {
 
 private enum CLIErrorGuidance {
     static func printReport() {
-        let incident = ErrorIncident(kind: .exportPDF, source: .cli, environment: DiagnosticEnvironment.current())
         fputs("Try a readable UTF-8 Markdown file and a writable output folder.\n", stderr)
-        fputs("Report this problem (review before publishing): \(incident.feedbackURL().absoluteString)\n", stderr)
-        fputs("Safe diagnostic summary (no document content or paths):\n\(incident.report)\n", stderr)
     }
 }

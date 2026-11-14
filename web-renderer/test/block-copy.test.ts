@@ -86,26 +86,6 @@ test('pending copies are coalesced and native timeout remains a failure', async 
     controller.dispose(); jest.useRealTimers();
 });
 
-test('copy failures use contextual feedback without document text', async () => {
-    const { installErrorFeedback, setFeedbackGeneration } = await import('../src/error-feedback');
-    const postMessage = jest.fn();
-    window.webkit = { messageHandlers: { logger:{postMessage:jest.fn()}, linkClicked:{postMessage:jest.fn()}, errorFeedback:{postMessage} } };
-    setFeedbackGeneration('incident-generation');
-    const root = fixture('<blockquote><p>private document text</p><pre><code>nested</code></pre></blockquote>');
-    const feedback = installErrorFeedback(root);
-    const controller = installBlockCopy(root, 'incident-generation', async () => false);
-    await controller.copy(root.querySelector('blockquote')!);
-    await new Promise(resolve => setTimeout(resolve, 0));
-    root.querySelector<HTMLButtonElement>('[data-feedback-action="report"]')!.click();
-    expect(postMessage.mock.calls.map(call => call[0].action)).toEqual(['record','report']);
-    expect(postMessage.mock.calls[1][0]).toMatchObject({kind:'copy', generation:'incident-generation'});
-    expect(JSON.stringify(postMessage.mock.calls)).not.toContain('private document');
-    const select = Array.from(root.querySelectorAll<HTMLButtonElement>('button')).find(b=>b.textContent==='Select Text')!;
-    select.click();
-    expect(window.getSelection()?.toString()).toContain('private document text');
-    controller.dispose(); feedback();
-});
-
 test('copy lifecycle pins feedback visible until success expires, and keeps errors reachable', async () => {
     jest.useFakeTimers();
     const root = fixture('<pre><code>x</code></pre>');

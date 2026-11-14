@@ -5,7 +5,7 @@ for(const context of ['app','quicklook','finder']) {
  await window.renderMarkdown(String.raw`\(\eqref{target}\)`+'\n\n'+spacer+'\n\n'+String.raw`\[a^2+b^2=c^2\tag{1}\label{target}\]`+'\n\n'+spacer,{context,showCopyButtons:false});
  const link=document.querySelector('a.math-reference-link');
  const target=document.getElementById(decodeURIComponent(link.hash.slice(1)));
- const formula=target.closest('.flux-math-source');
+ const formula=target.closest('.boa-math-source');
  link.click();
  let stable=0,previous=Infinity;
  const until=performance.now()+3000;

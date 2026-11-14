@@ -1,7 +1,7 @@
 #!/bin/bash
 # Read-only, allowlisted diagnostics for issue #49. No file contents or paths in output.
 set -u
-app_path="/Applications/FluxMarkdown.app"
+app_path="/Applications/BoaMarkdown.app"
 probe_file=""
 while [ "$#" -gt 0 ]; do
     case "$1" in
@@ -21,7 +21,7 @@ plist() {
     /usr/libexec/PlistBuddy -c "Print :$2" "$1/Contents/Info.plist" 2>/dev/null || true
 }
 field() { printf '%s=%s\n' "$1" "$(scalar "$2")"; }
-printf '%s\n' 'FluxMarkdown QuickLook diagnostics (read-only; no document contents or paths)'
+printf '%s\n' 'BoaMarkdown QuickLook diagnostics (read-only; no document contents or paths)'
 field macos_version "$(/usr/bin/sw_vers -productVersion)"
 field macos_build "$(/usr/bin/sw_vers -buildVersion)"
 field architecture "$(/usr/bin/uname -m)"
@@ -47,11 +47,11 @@ if /usr/sbin/spctl --assess --type execute "$app_path" >/dev/null 2>&1; then
 else
     printf '%s\n' 'gatekeeper_assessment=rejected-or-unavailable'
 fi
-registrations=$(/usr/bin/pluginkit -m -A -D -i com.xykong.Markdown.QuickLook 2>/dev/null)
+registrations=$(/usr/bin/pluginkit -m -A -D -i io.github.boaworm.Markdown.QuickLook 2>/dev/null)
 registration_status=$?
 if [ "$registration_status" -eq 0 ]; then
     printf '%s\n' "$registrations" | /usr/bin/awk '
-        /com\.xykong\.Markdown\.QuickLook\(/ {
+        /io\.github\.boaworm\.Markdown\.QuickLook\(/ {
             total++; if ($1 == "+") enabled++; if ($1 == "-") disabled++;
         }
         END { printf "extension_registrations=%d\nextension_enabled_registrations=%d\nextension_disabled_registrations=%d\n", total, enabled, disabled }'
@@ -61,9 +61,9 @@ fi
 first_id=$(/usr/bin/defaults read com.apple.preferences.extensions.QuickLook displayOrder 2>/dev/null |
     /usr/bin/sed -E 's/[",()]//g; s/^[[:space:]]+//; s/[[:space:]]+$//' |
     /usr/bin/grep -E '^[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$' | /usr/bin/head -n 1)
-if [ -z "$first_id" ]; then printf '%s\n' 'flux_first_in_saved_order=unknown'
-elif [ "$first_id" = "com.xykong.Markdown.QuickLook" ]; then printf '%s\n' 'flux_first_in_saved_order=true'
-else printf '%s\n' 'flux_first_in_saved_order=false'; fi
+if [ -z "$first_id" ]; then printf '%s\n' 'boa_first_in_saved_order=unknown'
+elif [ "$first_id" = "io.github.boaworm.Markdown.QuickLook" ]; then printf '%s\n' 'boa_first_in_saved_order=true'
+else printf '%s\n' 'boa_first_in_saved_order=false'; fi
 if command -v duti >/dev/null 2>&1; then
     field default_md_handler "$(duti -x md 2>/dev/null | /usr/bin/tail -n 1)"
 else printf '%s\n' 'default_md_handler=unavailable'; fi

@@ -9,9 +9,9 @@ beforeEach(() => {
     document.body.innerHTML = '<div id="reading-controls"><div id="reading-toolbar"><div id="toc-button-container"></div></div></div><div id="toc-container"></div><div id="markdown-preview"><h2 id="title">Title</h2><h3 id="child">Child</h3></div>';
     document.documentElement.dataset.context = 'app';
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1100 });
-    window.__fluxLang = 'en'; toc = new TableOfContents('toc-container'); toc.render(headings);
+    toc = new TableOfContents('toc-container'); toc.render(headings);
 });
-afterEach(() => { toc?.dispose(); delete window.__fluxLang; });
+afterEach(() => { toc?.dispose(); });
 test('wide contents docks, but shrinking never automatically opens an overlay', () => {
     expect(document.documentElement.dataset.tocDocked).toBe('true'); resize(700);
     expect(document.documentElement.dataset.tocDocked).toBe('false'); expect(visible()).toBe(false);
@@ -48,9 +48,8 @@ test('no headings and compact Finder hide controls without losing docked prefere
     toc.render(headings); expect(visible()).toBe(false); document.documentElement.dataset.context = 'finder'; toc.render(headings);
     expect(document.documentElement.dataset.tocDocked).toBe('false'); expect(document.querySelector<HTMLElement>('#toc-button-container')?.hidden).toBe(true);
 });
-test('toolbar labels localize and indentation starts at the shallowest heading', () => {
-    window.__fluxLang = 'zh'; toc.render(headings); expect(document.querySelector('.toc-toggle')?.getAttribute('aria-label')).toBe('目录');
-    window.__fluxLang = 'ar'; toc.render(headings); expect(document.querySelector('.toc-toggle')?.getAttribute('aria-label')).toBe('المحتويات');
+test('toolbar label and indentation start at the shallowest heading', () => {
+    expect(document.querySelector('.toc-toggle')?.getAttribute('aria-label')).toBe('Contents');
     expect(document.querySelector('[href="#title"]')?.getAttribute('data-depth')).toBe('0'); expect(document.querySelector('[href="#child"]')?.getAttribute('data-depth')).toBe('1');
     expect(document.querySelector('[href="#title"]')?.getAttribute('title')).toBe('Title');
 });

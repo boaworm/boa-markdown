@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PROJECT_ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
-MATH_LAB=$(mktemp -d "${TMPDIR:-/tmp}/flux-issue64-design.XXXXXX")
+MATH_LAB=$(mktemp -d "${TMPDIR:-/tmp}/boa-issue64-design.XXXXXX")
 cp "$PROJECT_ROOT/scripts/research/issue64-math/"{package.json,package-lock.json,compare.js,compare.py,contracts.mjs,svg.html,chtml.html,main.swift} "$MATH_LAB/"
 cp "$PROJECT_ROOT/docs/research/issue64/math-cases.json" "$MATH_LAB/cases.json"
 (cd "$MATH_LAB" && npm ci --ignore-scripts --no-audit --no-fund)

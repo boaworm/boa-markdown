@@ -3,7 +3,7 @@ import XCTest
 final class QuickLookRegistrationTests: XCTestCase {
     func testRegistrationFailureIsReportedAndEditorStateIsRestored() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let app = directory.appendingPathComponent("FluxMarkdown.app")
+        let app = directory.appendingPathComponent("BoaMarkdown.app")
         try FileManager.default.createDirectory(at: app.appendingPathComponent("Contents/PlugIns/MarkdownPreview.appex"), withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         let editors = ["net.daringfireball.markdown":"com.microsoft.VSCode"]
@@ -20,7 +20,7 @@ final class QuickLookRegistrationTests: XCTestCase {
 
     func testOnlyKnownSpotlightErrorIsToleratedAndOrderPreservesOtherProviders() throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        let app = directory.appendingPathComponent("FluxMarkdown.app")
+        let app = directory.appendingPathComponent("BoaMarkdown.app")
         try FileManager.default.createDirectory(at: app.appendingPathComponent("Contents/PlugIns/MarkdownPreview.appex"), withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: directory) }
         var arguments: [[String]] = []
@@ -50,23 +50,23 @@ final class QuickLookRegistrationTests: XCTestCase {
 
     func testSuccessfulReturnCodeDoesNotHideAnUnappliedEditorChange() {
         let errors = QuickLookRegistration.restoreEditors(["net.daringfireball.markdown":"com.microsoft.VSCode"],
-            current: { _ in "com.xykong.Markdown" }, set: { _, _ in 0 })
+            current: { _ in "io.github.boaworm.Markdown" }, set: { _, _ in 0 })
         XCTAssertEqual(errors, ["editor-restore-unconfirmed"])
     }
 
     func testInstallerSnapshotPreservesExplicitSelfDuringTemporaryRemoval() {
-        let handlers: [[String: Any]] = [["LSHandlerContentType": "net.daringfireball.markdown", "LSHandlerRoleAll": "com.xykong.markdown"]]
+        let handlers: [[String: Any]] = [["LSHandlerContentType": "net.daringfireball.markdown", "LSHandlerRoleAll": "io.github.boaworm.markdown"]]
         let state = QuickLookRegistration.editorState(current: { type in
             type == "net.daringfireball.markdown" ? "com.apple.dt.Xcode" : "com.microsoft.Word"
         }, handlers: handlers)
-        XCTAssertEqual(state["net.daringfireball.markdown"], "com.xykong.Markdown")
+        XCTAssertEqual(state["net.daringfireball.markdown"], "io.github.boaworm.Markdown")
         XCTAssertEqual(state["public.markdown"], "com.microsoft.Word")
     }
 
     func testSnapshotDoesNotOverrideOtherEditorsOrConflictingSpecificRoles() {
         for handlers: [[String: Any]] in [
             [["LSHandlerContentType": "net.daringfireball.markdown", "LSHandlerRoleAll": "com.microsoft.VSCode"]],
-            [["LSHandlerContentType": "net.daringfireball.markdown", "LSHandlerRoleAll": "com.xykong.Markdown", "LSHandlerRoleViewer": "com.microsoft.VSCode"]],
+            [["LSHandlerContentType": "net.daringfireball.markdown", "LSHandlerRoleAll": "io.github.boaworm.Markdown", "LSHandlerRoleViewer": "com.microsoft.VSCode"]],
             []
         ] {
             let state = QuickLookRegistration.editorState(current: { _ in "com.microsoft.VSCode" }, handlers: handlers)
@@ -78,8 +78,8 @@ final class QuickLookRegistrationTests: XCTestCase {
 
 final class QuickLookRegistrationDiagnosticTests: XCTestCase {
     func testDuplicateAndDisabledCopiesDoNotCountAsInstalledEnabled() {
-        let ext = URL(fileURLWithPath: "/Applications/FluxMarkdown.app/Contents/PlugIns/MarkdownPreview.appex")
-        let output = "+ com.xykong.Markdown.QuickLook(1.0) id date /Users/private/old/MarkdownPreview.appex\n- com.xykong.Markdown.QuickLook(2.0) id date " + ext.path
+        let ext = URL(fileURLWithPath: "/Applications/BoaMarkdown.app/Contents/PlugIns/MarkdownPreview.appex")
+        let output = "+ io.github.boaworm.Markdown.QuickLook(1.0) id date /Users/private/old/MarkdownPreview.appex\n- io.github.boaworm.Markdown.QuickLook(2.0) id date " + ext.path
         let report = QuickLookRegistration.registrationSummary(output, expectedExtension: ext)
         XCTAssertEqual(report["registeredCopies"], "2")
         XCTAssertEqual(report["installedCopyEnabled"], "false")
@@ -87,7 +87,7 @@ final class QuickLookRegistrationDiagnosticTests: XCTestCase {
     }
     func testDiagnosticOutputDoesNotIncludeRegistrationPathsOrClaimRuntimeSuccess() {
         let text = QuickLookRegistration.diagnosticSummary(appURL: URL(fileURLWithPath: "/tmp/private-name.app"), runner: { _,_ in
-            RegistrationCommandResult(status: 0, output: "+ com.xykong.Markdown.QuickLook(1.0) id date /Users/private-person/MarkdownPreview.appex")
+            RegistrationCommandResult(status: 0, output: "+ io.github.boaworm.Markdown.QuickLook(1.0) id date /Users/private-person/MarkdownPreview.appex")
         })
         XCTAssertFalse(text.contains("private-person"))
         XCTAssertFalse(text.contains("private-name"))

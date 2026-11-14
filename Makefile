@@ -1,4 +1,4 @@
-.PHONY: all build_renderer generate app install install-debug dmg release delete-release
+.PHONY: all build_renderer generate app install install-debug
 
 all: app
 
@@ -24,7 +24,7 @@ generate: build_renderer
 
 app: check_toolchain generate
 	@echo "🔨 Building application in $(or $(CONFIGURATION),Release) configuration..."
-	@xcodebuild -project FluxMarkdown.xcodeproj -scheme Markdown -configuration $(or $(CONFIGURATION),Release) -destination 'platform=macOS,arch=arm64' $(if $(LOCAL_DEPLOYMENT_TARGET),MACOSX_DEPLOYMENT_TARGET=$(LOCAL_DEPLOYMENT_TARGET)) build -quiet 2> build_error.log || (cat build_error.log; rm -f build_error.log; exit 1)
+	@xcodebuild -project BoaMarkdown.xcodeproj -scheme Markdown -configuration $(or $(CONFIGURATION),Release) -destination 'platform=macOS,arch=arm64' $(if $(LOCAL_DEPLOYMENT_TARGET),MACOSX_DEPLOYMENT_TARGET=$(LOCAL_DEPLOYMENT_TARGET)) build -quiet 2> build_error.log || (cat build_error.log; rm -f build_error.log; exit 1)
 	@rm -f build_error.log
 	@echo "✅ Build completed: $(or $(CONFIGURATION),Release) configuration"
 
@@ -38,15 +38,6 @@ install-debug:
 	make app CONFIGURATION=Debug && \
 	./scripts/install.sh Debug true development
 
-dmg:
-	./scripts/create_dmg.sh
-
-release:
-	./scripts/release.sh $(filter-out $@,$(MAKECMDGOALS))
-
-delete-release:
-	./scripts/delete_release.sh $(filter-out $@,$(MAKECMDGOALS))
-
 %:
 	@:
 
@@ -55,4 +46,4 @@ check_toolchain:
 	@./scripts/check-build-toolchain.sh $(or $(LOCAL_DEPLOYMENT_TARGET),11.0)
 
 clean:
-	xcodebuild -project FluxMarkdown.xcodeproj -scheme Markdown clean
+	xcodebuild -project BoaMarkdown.xcodeproj -scheme Markdown clean

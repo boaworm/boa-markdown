@@ -1,7 +1,7 @@
 jest.mock('mermaid', () => ({ initialize: jest.fn(), render: jest.fn() }));
 import '../src/index';
 
-const heading = 'FluxMarkdown Quick Look Test';
+const heading = 'BoaMarkdown Quick Look Test';
 const bold = 'Rendered Markdown';
 const fixture = `# ${heading}\n\n**${bold}** confirms the extension was selected.`;
 const verify = () => Reflect.get(window, 'verifyQuickLookProbe')?.(heading, bold) === true;

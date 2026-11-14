@@ -8,7 +8,7 @@ beforeEach(()=>{
 });
 test('searches original TeX once per formula without altering SVG or assistive MathML',async()=>{
     await window.renderMarkdown(String.raw`\(\frac{x}{x}\)`);
-    const root=document.querySelector('.flux-math')!;
+    const root=document.querySelector('.boa-math')!;
     const original=root.innerHTML;
     const search=new SearchEngine();
     expect(search.search('frac',options)).toBe(1);
@@ -24,7 +24,7 @@ test('keeps math and prose matches in document order and export omits highlights
     const search=new SearchEngine();
     expect(search.search('x',options)).toBe(3);
     search.next();
-    expect(document.querySelector('.flux-math')?.classList.contains('search-highlight-active')).toBe(true);
-    expect(window.exportHTML()).not.toContain('class="flux-math-source flux-math math-search-highlight');
+    expect(document.querySelector('.boa-math')?.classList.contains('search-highlight-active')).toBe(true);
+    expect(window.exportHTML()).not.toContain('class="boa-math-source boa-math math-search-highlight');
     expect(window.exportHTML()).not.toContain('search-highlight-active"');
 });

@@ -21,12 +21,12 @@ const settle = () => new Promise(resolve => {
 });
 const cases = [];
 const labels = {
-    en: ['Reload', 'Open in FluxMarkdown', 'Report This Problem'],
-    'zh-Hans': ['重新载入', '用 FluxMarkdown 打开', '反馈此问题'],
-    de: ['Neu laden', 'In FluxMarkdown öffnen', 'Dieses Problem melden'],
-    fr: ['Recharger', 'Ouvrir dans FluxMarkdown', 'Signaler ce problème'],
-    es: ['Volver a cargar', 'Abrir en FluxMarkdown', 'Reportar este problema'],
-    ar: ['إعادة التحميل', 'فتح في FluxMarkdown', 'الإبلاغ عن هذه المشكلة'],
+    en: ['Reload', 'Open in BoaMarkdown', 'Report This Problem'],
+    'zh-Hans': ['重新载入', '用 BoaMarkdown 打开', '反馈此问题'],
+    de: ['Neu laden', 'In BoaMarkdown öffnen', 'Dieses Problem melden'],
+    fr: ['Recharger', 'Ouvrir dans BoaMarkdown', 'Signaler ce problème'],
+    es: ['Volver a cargar', 'Abrir en BoaMarkdown', 'Reportar este problema'],
+    ar: ['إعادة التحميل', 'فتح في BoaMarkdown', 'الإبلاغ عن هذه المشكلة'],
 };
     for (const context of ['app', 'quicklook', 'finder']) {
         for (const uiLanguage of ['en', 'zh-Hans', 'de', 'fr', 'es', 'ar']) {

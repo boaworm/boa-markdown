@@ -2,7 +2,7 @@ import { installMathLayout } from '../src/math-layout';
 import { rememberMathSource } from '../src/math-source-store';
 
 test('confines oversized trusted inline math and restores ordinary baseline behavior after resize', () => {
-    document.body.innerHTML='<div id="root"><p><span class="flux-math-source"><svg></svg></span></p></div>';
+    document.body.innerHTML='<div id="root"><p><span class="boa-math-source"><svg></svg></span></p></div>';
     const root=document.getElementById('root')!;const block=root.querySelector('p')!;const formula=root.querySelector<HTMLElement>('span')!;
     let width=80;Object.defineProperty(block,'clientWidth',{get:()=>width});
     formula.querySelector('svg')!.getBoundingClientRect=()=>({width:100} as DOMRect);
@@ -18,9 +18,9 @@ test('confines oversized trusted inline math and restores ordinary baseline beha
 });
 
 test.each(['wrapper','container'])('makes overflowing trusted display %s keyboard reachable and updates after resize', surface => {
-    document.body.innerHTML='<main id="root"><div class="flux-math-source"><svg></svg></div></main>';
+    document.body.innerHTML='<main id="root"><div class="boa-math-source"><svg></svg></div></main>';
     const root=document.getElementById('root')!;
-    const wrapper=root.querySelector<HTMLElement>('.flux-math-source')!;
+    const wrapper=root.querySelector<HTMLElement>('.boa-math-source')!;
     if(surface==='container')wrapper.innerHTML='<mjx-container><svg></svg></mjx-container>';
     const formula=surface==='container' ? wrapper.querySelector<HTMLElement>('mjx-container')! : wrapper;
     formula.style.overflowX='auto';

@@ -26,12 +26,6 @@ if CommandLine.arguments.contains("--quicklook-diagnostics") {
     exit(0)
 }
 
-let applicationLanguagesBeforeBootstrap = DiagnosticEnvironment.applicationLanguages()
-
-// Install the runtime localization swizzle and apply the persisted language
-// preference before any view, menu or scene is built.
-LocalizationManager.bootstrap(initialPreference: AppearancePreference.shared.uiLanguage)
-
 if CommandLine.arguments.contains("--quicklook-self-test") {
     let app = NSApplication.shared
     app.setActivationPolicy(.regular)
@@ -57,9 +51,5 @@ if CommandLine.arguments.contains("--quicklook-self-test") {
     app.setActivationPolicy(.accessory)
     app.run()
 } else {
-    let preference = AppearancePreference.shared
-    var environment = DiagnosticEnvironment.current()
-    environment["applicationLanguagesBeforeBootstrap"] = applicationLanguagesBeforeBootstrap
-    preference.history?.startSession(settings: preference.diagnosticSettings, environment: environment)
     MarkdownApp.main()
 }

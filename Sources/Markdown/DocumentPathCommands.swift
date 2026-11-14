@@ -18,8 +18,7 @@ struct DocumentPathCommands: Commands {
 
     private func copy(_ url: URL) {
         guard DocumentPathClipboard.copy(url) else {
-            let incident = ErrorFeedback.capture(.copy)
-            ErrorFeedback.present(incident, recoveryTitle: "Try Again", recovery: { copy(url) })
+            FailureNotice.alert(.copy, recoveryTitle: "Try Again", recovery: { copy(url) })
             return
         }
     }

@@ -37,18 +37,6 @@ final class ReleaseEntitlementsTests: XCTestCase {
         XCTAssertTrue(previewRelease.contains("com.apple.security.app-sandbox"))
     }
 
-    func testReleaseVerificationRejectsDebugEntitlements() throws {
-        let script = try String(
-            contentsOf: projectRoot().appendingPathComponent("scripts/verify-release-entitlements.sh"),
-            encoding: .utf8
-        )
-
-        XCTAssertTrue(script.contains("com.apple.security.get-task-allow"))
-        XCTAssertTrue(script.contains("com.apple.security.temporary-exception.files.absolute-path.read-only"))
-        XCTAssertTrue(script.contains("/Users/"))
-        XCTAssertTrue(script.contains("release entitlements must not include"))
-    }
-
     private func projectRoot() -> URL {
         URL(fileURLWithPath: #file)
             .deletingLastPathComponent()

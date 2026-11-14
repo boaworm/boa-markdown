@@ -1,16 +1,13 @@
 import Foundation
 
-@objc(FluxMarkdownSearchLaunchServing)
+@objc(BoaMarkdownSearchLaunchServing)
 protocol SearchLaunchServing {
-    func flushUsage(reply: @escaping (Bool) -> Void)
-    func reportError(_ request: Data, reply: @escaping (Bool) -> Void)
     func openDocument(_ request: String, reply: @escaping (Bool) -> Void)
-    func openGitHubRepository(reply: @escaping (Bool) -> Void)
     func openDocumentSearch(_ request: String, reply: @escaping (Bool) -> Void)
 }
 
 enum SearchLaunchPolicy {
-    static let serviceName = "com.xykong.Markdown.SearchLauncher"
+    static let serviceName = "io.github.boaworm.Markdown.SearchLauncher"
     static func request(_ value: String) -> DocumentOpenRequest? {
         guard value.utf8.count <= 8192, let url = URL(string: value), url.host == "open",
               let request = DocumentOpenRequest(url: url), request.wantsSearch else { return nil }
@@ -19,6 +16,6 @@ enum SearchLaunchPolicy {
     }
     static func acceptsPeer(sameUser: Bool, validSignature: Bool, identifier: String,
                             expectedExecutable: Bool) -> Bool {
-        sameUser && validSignature && identifier == "com.xykong.Markdown.QuickLook" && expectedExecutable
+        sameUser && validSignature && identifier == "io.github.boaworm.Markdown.QuickLook" && expectedExecutable
     }
 }

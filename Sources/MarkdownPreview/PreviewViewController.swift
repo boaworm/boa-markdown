@@ -89,7 +89,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     var statusLabel: NSTextField!
     var webView: InteractiveWebView!
     private var truncationNotice: NSTextField?
-    private let errorRegistry = RendererErrorRegistry()
+    private let renderScope = RenderScope()
     private let blockCopyBridge = BlockCopyBridge()
     private var diagnosticAttempt = UUID()
     private func logDiagnosticStage(_ stage: QuickLookDiagnosticStage, error: Error? = nil) {
@@ -103,11 +103,10 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
 
     private func showFailure(_ kind: FailureKind, error: Error? = nil) {
         if kind == .renderer || kind == .rendererResources { logDiagnosticStage(.rendererFailed, error: error) }
-        let incident = errorRegistry.nativeFailure(kind, error: error)
-        IncidentNotice.attach(to: view, incident: incident, recoveryTitle: "Open in FluxMarkdown", recovery: { [weak self] in
+        FailureNotice.attach(to: view, kind: kind, recoveryTitle: "Open in BoaMarkdown", recovery: { [weak self] in
             guard let self, let url = self.currentURL else { return }
             SearchLaunchClient.openForReading(url) { success in
-                if !success { IncidentNotice.fallback(in: self.view, draft: IncidentDraft(incident)) }
+                if !success { FailureNotice.attach(to: self.view, kind: .quickLook) }
             }
         })
     }
@@ -122,7 +121,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             return // TSV carries its bounded notice inside the rendered/exported content.
         }
         if truncationNotice == nil {
-            let label = NSTextField(wrappingLabelWithString: NSLocalizedString("Preview limited to 500 KiB. Use Open with FluxMarkdown above to read the complete document.", comment: "QuickLook truncation notice"))
+            let label = NSTextField(wrappingLabelWithString: NSLocalizedString("Preview limited to 500 KiB. Use Open with BoaMarkdown above to read the complete document.", comment: "QuickLook truncation notice"))
             label.font = .systemFont(ofSize: 12)
             label.textColor = .secondaryLabelColor
             label.setAccessibilityLabel(label.stringValue)
@@ -130,8 +129,8 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             truncationNotice = label
         }
         truncationNotice?.stringValue = truncated
-            ? NSLocalizedString("Preview limited to 500 KiB. Use Open with FluxMarkdown above to read the complete document.", comment: "QuickLook truncation notice")
-            : NSLocalizedString("Some local images could not be read. Use Open with FluxMarkdown above to view the document.", comment: "QuickLook resource notice")
+            ? NSLocalizedString("Preview limited to 500 KiB. Use Open with BoaMarkdown above to read the complete document.", comment: "QuickLook truncation notice")
+            : NSLocalizedString("Some local images could not be read. Use Open with BoaMarkdown above to view the document.", comment: "QuickLook resource notice")
         truncationNotice?.setAccessibilityLabel(truncationNotice?.stringValue)
         truncationNotice?.isHidden = !truncated && !previewHasUnreadableImages
         layoutTruncationNotice()
@@ -230,8 +229,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     private var sawLiveResizeStartForWindow: ObjectIdentifier?
     
     private let renderVersion = RenderVersionCounter()
-    private let usage = UsageTelemetrySession(source: "quicklook")
-    private var usageReady = false
     private let fileReadVersion = RenderVersionCounter()
 
     // MARK: - File Monitoring
@@ -325,13 +322,11 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     public override init(nibName nibNameOrNil: NSNib.Name?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         os_log("🔵 init(nibName:bundle:) called", log: logger, type: .debug)
-        LocalizationManager.bootstrap(initialPreference: AppearancePreference.shared.uiLanguage)
     }
 
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
         os_log("🔵 init(coder:) called", log: logger, type: .debug)
-        LocalizationManager.bootstrap(initialPreference: AppearancePreference.shared.uiLanguage)
     }
     
     private var themeButton: CircularToolbarButton!
@@ -418,19 +413,9 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         
         
         let userContentController = WKUserContentController()
-        errorRegistry.onRecover = { [weak self] incident in
-            guard let self, let url = self.currentURL else { return }
-            SearchLaunchClient.openForReading(url) { success in
-                if !success { IncidentNotice.fallback(in: self.view, draft: IncidentDraft(incident)) }
-            }
-        }
-        errorRegistry.onFailure = { [weak self] draft in
-            guard let self else { return }; IncidentNotice.fallback(in: self.view, draft: draft)
-        }
         userContentController.add(self, name: "logger")
         userContentController.add(self, name: "linkClicked")
         userContentController.add(self, name: "readingToolsLayout")
-        userContentController.add(self, name: "errorFeedback")
         userContentController.add(self, name: "blockCopy")
         webConfiguration.userContentController = userContentController
         
@@ -567,9 +552,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     
     public override func viewDidAppear() {
         super.viewDidAppear()
-        usage.setHostVisible(true)
-        usage.attach(view, document: currentURL)
-        if usageReady { usage.rendered() }
         logScreenEnvironment(context: "viewDidAppear")
         
         updatePreviewMode()
@@ -608,8 +590,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     
     public override func viewWillDisappear() {
         super.viewWillDisappear()
-        usage.setHostVisible(false)
-        usage.stop()
         fileReadVersion.next()
         renderVersion.next()
         webView.evaluateJavaScript("window.invalidateRender && window.invalidateRender();", completionHandler: nil)
@@ -680,7 +660,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "logger")
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "linkClicked")
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "readingToolsLayout")
-        webView.configuration.userContentController.removeScriptMessageHandler(forName: "errorFeedback")
         webView.configuration.userContentController.removeScriptMessageHandler(forName: "blockCopy")
         
         for recognizer in webView.gestureRecognizers where recognizer is NSClickGestureRecognizer {
@@ -868,7 +847,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     }
 
     func makeSearchButton() -> CircularToolbarButton {
-        let title = NSLocalizedString("Search in FluxMarkdown", comment: "Quick Look search handoff button")
+        let title = NSLocalizedString("Search in BoaMarkdown", comment: "Quick Look search handoff button")
         let button = CircularToolbarButton.make(
             systemName: "magnifyingglass",
             accessibilityDescription: title,
@@ -1083,8 +1062,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     private func renderSourceView() {
         logDiagnosticStage(.sourceMode)
         let usageRenderVersion = renderVersion.next()
-        usage.rendering()
-        usageReady = false
         guard let content = pendingMarkdown else {
             os_log("🟡 renderSourceView called but pendingMarkdown is nil", log: logger, type: .debug)
             return
@@ -1111,8 +1088,8 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         let capturedPrevForSource = self.prevMarkdown
         self.prevMarkdown = nil
 
-        let feedbackGeneration = errorRegistry.beginDocument()
-        webView.evaluateJavaScript("window.setFeedbackGeneration && window.setFeedbackGeneration('\(feedbackGeneration)');", completionHandler: nil)
+        let generation = renderScope.beginDocument()
+        webView.evaluateJavaScript("window.setRenderGeneration && window.setRenderGeneration('\(generation)');", completionHandler: nil)
         let sourceOptions = "{format: '\(currentURL?.pathExtension.lowercased() == "tsv" ? "tsv" : "markdown")', isTruncated: \(previewIsTruncated)}"
         var callJs: String
         if let prev = capturedPrevForSource, !prev.isEmpty,
@@ -1144,7 +1121,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
                 os_log("🔴 JS Execution Error (renderSource): %{public}@", log: self.logger, type: .error, innerError.localizedDescription)
                 self.showFailure(.source, error: innerError)
             } else if let res = innerResult as? String {
-                if res == "success" { self.usageReady = true; self.usage.rendered() }
                 os_log("🔵 JS Execution Result (renderSource): %{public}@", log: self.logger, type: .debug, res)
                 self.isSearchReady = true
                 self.completePendingSearchRequest()
@@ -1222,7 +1198,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         if let searchLaunchFailureHandler { searchLaunchFailureHandler(); return }
         showFailure(.search)
         showToast(
-            message: NSLocalizedString("Search in FluxMarkdown", comment: "Search guidance title"),
+            message: NSLocalizedString("Search in BoaMarkdown", comment: "Search guidance title"),
             hint: NSLocalizedString("Double-click the file, then press ⌘F to search.", comment: "Search guidance after host refuses app launch"),
             iconName: "info.circle.fill", duration: 8
         )
@@ -1320,8 +1296,8 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     #endif
 
     public func preparePreviewOfFile(at url: URL, completionHandler handler: @escaping (Error?) -> Void) {
-        _ = errorRegistry.beginDocument()
-        for notice in view.subviews.compactMap({ $0 as? IncidentNotice }) { notice.removeFromSuperview() }
+        _ = renderScope.beginDocument()
+        for notice in view.subviews.compactMap({ $0 as? FailureNotice }) { notice.removeFromSuperview() }
         os_log("🔵 preparePreviewOfFile called for: %{public}@", log: logger, type: .default, url.path)
         renderVersion.next()
         let readVersion = fileReadVersion.next()
@@ -1333,8 +1309,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
         diagnosticAttempt = UUID()
         logDiagnosticStage(.prepared)
         if isWebViewLoaded { logDiagnosticStage(.handshake) }
-        usageReady = false
-        usage.attach(view, document: url)
         
         stopSecurityScopedAccessIfNeeded()
         securityScopedURL = url
@@ -1443,7 +1417,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             localSchemeHandler?.allowedFileURLs = []
         }
 
-        let capturedUILanguage = AppearancePreference.shared.uiLanguage
         let capturedCollapseBlockquotes = AppearancePreference.shared.collapseBlockquotesByDefault
         let capturedContentsSide = AppearancePreference.shared.contentsSide.rawValue
         let capturedShowCopyButtons = AppearancePreference.shared.showCopyButtons
@@ -1454,8 +1427,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             ? AppearancePreference.shared.finderPaneFontSize
             : AppearancePreference.shared.baseFontSize
         self.prevMarkdown = nil
-        usage.rendering()
-        usageReady = false
         let capturedTruncated = previewIsTruncated
         let capturedRenderVersion = renderVersion.next()
         webView.evaluateJavaScript("window.invalidateRender && window.invalidateRender();", completionHandler: nil)
@@ -1464,7 +1435,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             guard let self = self else { return }
             
             let contextValue = capturedPreviewMode == .compact ? "finder" : "quicklook"
-            var options: [String: Any] = ["theme": theme, "context": contextValue, "uiLanguage": capturedUILanguage, "collapseBlockquotes": capturedCollapseBlockquotes, "showLineNumbers": capturedShowLineNumbers, "showCopyButtons": capturedShowCopyButtons, "contentsSide": capturedContentsSide, "fontSize": capturedFontSize, "renderVersion": capturedRenderVersion]
+            var options: [String: Any] = ["theme": theme, "context": contextValue, "collapseBlockquotes": capturedCollapseBlockquotes, "showLineNumbers": capturedShowLineNumbers, "showCopyButtons": capturedShowCopyButtons, "contentsSide": capturedContentsSide, "fontSize": capturedFontSize, "renderVersion": capturedRenderVersion]
             if capturedURL?.pathExtension.lowercased() == "tsv" {
                 options["format"] = "tsv"
                 options["isTruncated"] = capturedTruncated
@@ -1497,9 +1468,8 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
             
             await MainActor.run {
                 guard self.renderVersion.isCurrent(capturedRenderVersion), self.currentURL == capturedURL else { return }
-                let feedbackGeneration = self.errorRegistry.beginDocument()
-                ErrorFeedback.capture(.renderer, phase: .started, scope: self.errorRegistry.scope)
-                self.webView.evaluateJavaScript("window.setFeedbackGeneration && window.setFeedbackGeneration('\(feedbackGeneration)');", completionHandler: nil)
+                let generation = self.renderScope.beginDocument()
+                self.webView.evaluateJavaScript("window.setRenderGeneration && window.setRenderGeneration('\(generation)');", completionHandler: nil)
                 self.logDiagnosticStage(.renderStarted)
                 self.webView.callAsyncJavaScript(
                     callJs,
@@ -1518,8 +1488,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
                             os_log("Quick Look probe did not verify the rendered fixture", log: self.logger, type: .default)
                             break
                         }
-                        self.usageReady = true
-                        self.usage.rendered()
                         os_log("🔵 renderMarkdown completed successfully, result: %{public}@", log: self.logger, type: .debug, String(describing: value))
                         if let token = probeToken, (value as? Bool) == true {
                             self.logDiagnosticStage(.rendered)
@@ -1644,8 +1612,7 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard RendererBridgePolicy.accepts(message) else { return }
-        if message.name == "blockCopy" { blockCopyBridge.handle(message, generation: errorRegistry.scope.uuidString, enabled: AppearancePreference.shared.showCopyButtons && currentPreviewMode != .compact); return }
-        if message.name == "errorFeedback" { errorRegistry.handle(message.body); return }
+        if message.name == "blockCopy" { blockCopyBridge.handle(message, generation: renderScope.scope.uuidString, enabled: AppearancePreference.shared.showCopyButtons && currentPreviewMode != .compact); return }
         if message.name == "logger", let body = message.body as? String {
             os_log("🟢 JS Log: %{public}@", log: logger, type: .debug, body)
             
@@ -1667,19 +1634,6 @@ public class PreviewViewController: NSViewController, QLPreviewingController, WK
     }
     
     private func handleLinkClick(href: String) {
-        if href == GitHubStar.repository.absoluteString {
-            SearchLaunchClient.openGitHubRepository { [weak self] success in
-                guard let self else { return }
-                os_log("GitHub repository browser handoff: %{public}@", log: self.logger,
-                       type: .default, success ? "SUCCESS" : "FAILED")
-                if !success {
-                    self.showFailure(.browser)
-                    self.showToast(message: NSLocalizedString("Could not open GitHub", comment: "GitHub support browser error"),
-                                   hint: GitHubStar.repository.absoluteString, iconName: "info.circle.fill")
-                }
-            }
-            return
-        }
         if href.starts(with: "http://") || href.starts(with: "https://") {
             if let url = URL(string: href) {
                 os_log("🔵 Opening external URL: %{public}@", log: logger, type: .default, href)

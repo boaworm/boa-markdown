@@ -11,7 +11,6 @@ describe('RTL auto-detection in renderMarkdown', () => {
     });
 
     afterEach(() => {
-        delete (window as any).__fluxLang;
         document.documentElement.removeAttribute('dir');
         document.documentElement.removeAttribute('lang');
     });
@@ -83,39 +82,18 @@ This is a standard English markdown document with no RTL content.
         expect(preview?.getAttribute('dir')).toBeNull();
     });
 
-    test('mirrors the interface for Arabic while keeping English content left-to-right', async () => {
-        const englishDoc = '# Hello\n\nThis document has no RTL content.';
-        await window.renderMarkdown(englishDoc, { uiLanguage: 'ar' });
-
-        expect(document.documentElement.getAttribute('dir')).toBe('rtl');
-        expect(document.documentElement.getAttribute('lang')).toBe('ar');
-        expect(document.getElementById('markdown-preview')?.getAttribute('dir')).toBe('ltr');
-    });
-
-    test('keeps Arabic content right-to-left inside the Arabic interface', async () => {
+    test('Arabic content is right-to-left', async () => {
         const arabicDoc = '# مرحبا\n\nهذا نص عربي طويل بما يكفي لكشف الاتجاه تلقائيًا.';
-        await window.renderMarkdown(arabicDoc, { uiLanguage: 'ar' });
+        await window.renderMarkdown(arabicDoc);
 
-        expect(document.documentElement.getAttribute('dir')).toBe('rtl');
         expect(document.getElementById('markdown-preview')?.getAttribute('dir')).toBe('rtl');
-    });
-
-    test('restores the left-to-right interface when another language is selected', async () => {
-        await window.renderMarkdown('# مرحبا\n\nهذا نص عربي طويل بما يكفي للكشف.', { uiLanguage: 'ar' });
-        expect(document.documentElement.getAttribute('dir')).toBe('rtl');
-
-        await window.renderMarkdown('# Hello\n\nEnglish content again.', { uiLanguage: 'en' });
-
-        expect(document.documentElement.getAttribute('dir')).toBeNull();
-        expect(document.documentElement.getAttribute('lang')).toBe('en');
-        expect(document.getElementById('markdown-preview')?.getAttribute('dir')).toBeNull();
     });
 });
 
 
 test('Arabic-only headings have unique navigable contents targets', async () => {
     document.body.innerHTML = '<div id="markdown-preview"></div><div id="toc-container"></div><div id="toc-button-container"></div>';
-    await window.renderMarkdown('# مقدمة\n\n## التفاصيل\n\n## التفاصيل', {uiLanguage:'en'});
+    await window.renderMarkdown('# مقدمة\n\n## التفاصيل\n\n## التفاصيل', {});
     const headings = Array.from(document.querySelectorAll<HTMLElement>('#markdown-preview h1, #markdown-preview h2'));
     expect(headings.every(heading => heading.id.length > 0)).toBe(true);
     expect(new Set(headings.map(heading => heading.id)).size).toBe(3);

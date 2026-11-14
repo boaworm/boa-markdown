@@ -27,7 +27,7 @@ PY
 npm test --prefix web-renderer -- --runInBand --silent > "$ISSUE64_RUN/jest.log" 2>&1
 npm run --prefix web-renderer build > "$ISSUE64_RUN/build.log" 2>&1
 swiftc Tests/Support/TestWindowPolicy.swift Sources/Shared/RendererBundleSchemeHandler.swift scripts/research/issue64-math/main.swift -o "$ISSUE64_RUN/probe"
-FLUX_MATH_PROBE_TRACE_RESOURCES=1 FLUX_MATH_PROBE_MISSING_APIS=1 "$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-first-load-compat.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/first-load-compat.json" 2> "$ISSUE64_RUN/first-load-compat.log"
+BOA_MATH_PROBE_TRACE_RESOURCES=1 BOA_MATH_PROBE_MISSING_APIS=1 "$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-first-load-compat.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/first-load-compat.json" 2> "$ISSUE64_RUN/first-load-compat.log"
 python3 - "$ISSUE64_RUN" <<'PYCOMPAT'
 from pathlib import Path
 import sys
@@ -38,7 +38,7 @@ engine=[i for i,line in enumerate(lines) if line.startswith('RESOURCE_REQUEST ma
 glyph=[i for i,line in enumerate(lines) if line.startswith('RESOURCE_REQUEST double-struck-')]
 assert engine and glyph and removed<ready<min(engine) and ready<min(glyph),'Compatibility/import ordering not proven'
 PYCOMPAT
-"$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-resource-boundary.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/math-resource-boundary.json" 2> "$ISSUE64_RUN/math-resource-boundary.log"
+"$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-resource-boundary.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/math-resource-boundary.json" 2> "$ISSUE64_RUN/math-resource-boundary.log"
 if rg -q 'FORBIDDEN_MATH_RESOURCE_REQUEST' "$ISSUE64_RUN/math-resource-boundary.log"; then
     printf 'Unsupported mathematical image initiated a resource request\n' >&2
     exit 1
@@ -47,12 +47,12 @@ python3 scripts/issue64/verify-math-resource-http.py "$ISSUE64_RUN/probe" "$PROJ
 for ISSUE64_WIDTH in 320 600 960; do
     for ISSUE64_ZOOM in 1 2; do
         for ISSUE64_THEME in light dark; do
-            FLUX_MATH_PROBE_WIDTH="$ISSUE64_WIDTH" FLUX_MATH_PROBE_ZOOM="$ISSUE64_ZOOM" FLUX_MATH_PROBE_THEME="$ISSUE64_THEME" "$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-layout.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/layout-$ISSUE64_WIDTH-$ISSUE64_ZOOM-$ISSUE64_THEME.json" 2> "$ISSUE64_RUN/layout-$ISSUE64_WIDTH-$ISSUE64_ZOOM-$ISSUE64_THEME.log"
+            BOA_MATH_PROBE_WIDTH="$ISSUE64_WIDTH" BOA_MATH_PROBE_ZOOM="$ISSUE64_ZOOM" BOA_MATH_PROBE_THEME="$ISSUE64_THEME" "$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-layout.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/layout-$ISSUE64_WIDTH-$ISSUE64_ZOOM-$ISSUE64_THEME.json" 2> "$ISSUE64_RUN/layout-$ISSUE64_WIDTH-$ISSUE64_ZOOM-$ISSUE64_THEME.log"
         done
     done
 done
 python3 scripts/issue64/asset-closure.py > "$ISSUE64_RUN/asset-closure.json"
-"$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/asset-closure.js" "$ISSUE64_RUN/asset-closure.json" 60 > "$ISSUE64_RUN/asset-runtime.json" 2> "$ISSUE64_RUN/asset-runtime.log"
+"$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/asset-closure.js" "$ISSUE64_RUN/asset-closure.json" 60 > "$ISSUE64_RUN/asset-runtime.json" 2> "$ISSUE64_RUN/asset-runtime.log"
 python3 - "$ISSUE64_RUN" <<'PY'
 from pathlib import Path
 import json, shutil, subprocess, sys
@@ -65,7 +65,7 @@ result=subprocess.run([sys.executable,'scripts/issue64/asset-closure.py',str(fau
 assert result.returncode and 'Missing or escaping bundled resource' in result.stderr,'Missing glyph escaped static verification'
 (out/'asset-fault-static.log').write_text(result.stderr)
 PY
-if "$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$ISSUE64_RUN/missing-glyph-bundle" "$PROJECT_ROOT/scripts/issue64/asset-closure.js" "$ISSUE64_RUN/asset-closure.json" 30 > "$ISSUE64_RUN/asset-fault-runtime.json" 2> "$ISSUE64_RUN/asset-fault-runtime.log"; then
+if "$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$ISSUE64_RUN/missing-glyph-bundle" "$PROJECT_ROOT/scripts/issue64/asset-closure.js" "$ISSUE64_RUN/asset-closure.json" 30 > "$ISSUE64_RUN/asset-fault-runtime.json" 2> "$ISSUE64_RUN/asset-fault-runtime.log"; then
     printf 'Missing glyph escaped native module verification\n' >&2
     exit 1
 fi
@@ -73,9 +73,9 @@ if ! rg -qi 'Importing a module script failed|Failed to fetch dynamically import
     printf 'Native glyph fault failed for an unexpected reason\n' >&2
     exit 1
 fi
-FLUX_MATH_PROBE_FEEDBACK_RECORDING=1 "$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$ISSUE64_RUN/missing-glyph-bundle" "$PROJECT_ROOT/scripts/issue64/resource-failure.js" "$ISSUE64_RUN/asset-closure.json" 30 > "$ISSUE64_RUN/resource-failure.json" 2> "$ISSUE64_RUN/resource-failure.log"
-"$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-reference-geometry.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/reference-geometry.json" 2> "$ISSUE64_RUN/reference-geometry.log"
-"$ISSUE64_RUN/probe" 'flux-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/production-corpus.js" "$ISSUE64_RUN/input.json" 90 > "$ISSUE64_RUN/production.json" 2> "$ISSUE64_RUN/production.log"
+BOA_MATH_PROBE_FEEDBACK_RECORDING=1 "$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$ISSUE64_RUN/missing-glyph-bundle" "$PROJECT_ROOT/scripts/issue64/resource-failure.js" "$ISSUE64_RUN/asset-closure.json" 30 > "$ISSUE64_RUN/resource-failure.json" 2> "$ISSUE64_RUN/resource-failure.log"
+"$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/math-reference-geometry.js" "$ISSUE64_RUN/input.json" 45 > "$ISSUE64_RUN/reference-geometry.json" 2> "$ISSUE64_RUN/reference-geometry.log"
+"$ISSUE64_RUN/probe" 'boa-renderer://bundle/index.html' "$PROJECT_ROOT/web-renderer/dist" "$PROJECT_ROOT/scripts/issue64/production-corpus.js" "$ISSUE64_RUN/input.json" 90 > "$ISSUE64_RUN/production.json" 2> "$ISSUE64_RUN/production.log"
 python3 - "$ISSUE64_RUN" <<'PY'
 from pathlib import Path
 import json,sys
@@ -85,7 +85,7 @@ csp='<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; s
 (out/'offline.html').write_text(html.replace('<head>','<head>'+csp,1))
 (out/'production-summary.json').write_text(json.dumps(result,indent=2)+'\n')
 PY
-"$ISSUE64_RUN/probe" 'flux-renderer://bundle/offline.html' "$ISSUE64_RUN" "$PROJECT_ROOT/scripts/issue64/offline-export.js" "$ISSUE64_RUN/input.json" 30 > "$ISSUE64_RUN/offline.json" 2> "$ISSUE64_RUN/offline.log"
+"$ISSUE64_RUN/probe" 'boa-renderer://bundle/offline.html' "$ISSUE64_RUN" "$PROJECT_ROOT/scripts/issue64/offline-export.js" "$ISSUE64_RUN/input.json" 30 > "$ISSUE64_RUN/offline.json" 2> "$ISSUE64_RUN/offline.log"
 python3 - "$ISSUE64_RUN" <<'PY'
 from pathlib import Path
 import json,sys,subprocess,hashlib
@@ -108,7 +108,7 @@ print('PASS noninteractive renderer and standalone-HTML checks; native interacti
 print('Evidence:',out)
 print('Not covered by this runner:',', '.join(report['notCovered']))
 PY
-if env -u FLUX_WEBKIT_CASE_FILTER scripts/test-renderer-webkit.sh > "$ISSUE64_RUN/native-suite.log" 2>&1; then
+if env -u BOA_WEBKIT_CASE_FILTER scripts/test-renderer-webkit.sh > "$ISSUE64_RUN/native-suite.log" 2>&1; then
     ISSUE64_NATIVE_STATUS=passed
 else
     ISSUE64_NATIVE_STATUS=failed

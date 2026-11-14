@@ -2,9 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Shared counter/opt-out state only; no document write access. -->
-    <key>com.apple.security.temporary-exception.files.home-relative-path.read-write</key>
-    <array><string>/Library/Application Support/FluxMarkdown/Telemetry/</string></array>
     <!-- Quick Look extensions MUST be sandboxed or pkd will reject them. -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
@@ -22,10 +19,6 @@
     <array>
         <string>/</string>
     </array>
-
-    <!-- Allow network access for WebView and remote images. -->
-    <key>com.apple.security.network.client</key>
-    <true/>
 
     <!-- Allow JIT for WKWebView rendering performance. -->
     <key>com.apple.security.cs.allow-jit</key>

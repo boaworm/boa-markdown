@@ -12,11 +12,7 @@ export function headingPath(headings: HTMLElement[], active: HTMLElement): strin
 export function scrollProgress(y: number, height: number, viewport: number): number | null {
     return height <= viewport + 1 ? null : Math.round(Math.max(0, Math.min(1, y / (height - viewport))) * 100);
 }
-const labels = {
-    en: ['Position', 'Document updated'], zh: ['位置', '文档已更新'],
-    de: ['Position', 'Dokument aktualisiert'], fr: ['Position', 'Document actualisé'],
-    es: ['Posición', 'Documento actualizado'], ar: ['الموضع', 'تم تحديث المستند']
-};
+const labels = { en: ['Position', 'Document updated'] };
 export class ReadingStatus {
     private lastText: string | undefined;
     private headings: HTMLElement[] = [];
@@ -75,8 +71,7 @@ export class ReadingStatus {
         this.update();
     }
     private strings(): string[] {
-        const lang = (window.__fluxLang || navigator.language || 'en').split('-')[0];
-        return labels[lang as keyof typeof labels] || labels.en;
+        return labels.en;
     }
     private update(): void {
         const value = scrollProgress(window.scrollY, document.documentElement.scrollHeight, window.innerHeight);

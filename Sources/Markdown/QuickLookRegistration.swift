@@ -14,7 +14,7 @@ struct QuickLookRepairResult {
 }
 
 enum QuickLookRegistration {
-    static let identifier = "com.xykong.Markdown.QuickLook"
+    static let identifier = "io.github.boaworm.Markdown.QuickLook"
     static let types = ["net.daringfireball.markdown", "public.markdown", "net.ia.markdown"]
     typealias Runner = (String, [String]) -> RegistrationCommandResult
 
@@ -25,7 +25,7 @@ enum QuickLookRegistration {
     static func editorState(current: (String) -> String? = currentEditor,
                             handlers: [[String: Any]] = savedEditorHandlers()) -> [String: String] {
         var state: [String: String] = [:]
-        let appIdentifier = "com.xykong.Markdown"
+        let appIdentifier = "io.github.boaworm.Markdown"
         for type in types {
             // Homebrew removes the old app before invoking the installer. During
             // that gap LaunchServices resolves a fallback (e.g. Xcode), although
@@ -197,7 +197,7 @@ final class QuickLookRepairController {
             DispatchQueue.main.async {
                 self.running = false
                 if !result.succeeded {
-                    ErrorFeedback.present(ErrorFeedback.capture(.quickLook), recoveryTitle: "Try Again", recovery: { self.show() })
+                    FailureNotice.alert(.quickLook, recoveryTitle: "Try Again", recovery: { self.show() })
                     return
                 }
                 let alert = NSAlert()
@@ -210,7 +210,7 @@ final class QuickLookRepairController {
                     alert.addButton(withTitle: NSLocalizedString("Cancel", comment: "Cancel"))
                 }
                 if alert.runModal() == .alertFirstButtonReturn, result.succeeded {
-                    NotificationCenter.default.post(name: Notification.Name("FluxMarkdown.TestQuickLook"), object: nil)
+                    NotificationCenter.default.post(name: Notification.Name("BoaMarkdown.TestQuickLook"), object: nil)
                 }
             }
         }

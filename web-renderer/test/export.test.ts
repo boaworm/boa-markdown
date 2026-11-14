@@ -17,11 +17,11 @@ describe('Export HTML', () => {
     });
     test('SVG math export omits unused webfont rules but retains document styles', () => {
         const style=document.createElement('style');
-        style.textContent='@font-face { font-family: KaTeX_Test; src: url("flux-renderer://bundle/test.woff2"); } .export-test { color: red; }';
+        style.textContent='@font-face { font-family: KaTeX_Test; src: url("boa-renderer://bundle/test.woff2"); } .export-test { color: red; }';
         document.head.append(style);
         try {
             const html=window.exportHTML();
-            expect(html).not.toContain('flux-renderer://bundle/test.woff2');
+            expect(html).not.toContain('boa-renderer://bundle/test.woff2');
             expect(html).toContain('.export-test');
         } finally {style.remove();}
     });

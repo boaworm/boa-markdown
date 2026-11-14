@@ -2,9 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Shared counter/opt-out state only; no document write access. -->
-    <key>com.apple.security.temporary-exception.files.home-relative-path.read-write</key>
-    <array><string>/Library/Application Support/FluxMarkdown/Telemetry/</string></array>
     <!-- Quick Look extensions MUST be sandboxed or pkd will reject them -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
@@ -27,10 +24,6 @@
     <key>com.apple.security.get-task-allow</key>
     <true/>
 
-    <!-- Allow network access for WebView -->
-    <key>com.apple.security.network.client</key>
-    <true/>
-
     <!-- Allow JIT (Recommended for WebView performance/stability) -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
@@ -44,8 +37,8 @@
     <true/>
 
     <!-- App Groups removed: macOS 26 (Tahoe) rejects App Group containers for ad-hoc signed apps.
-         Settings from the main app are read via a plist file in ~/Library/Application Support/FluxMarkdown/.
-         See: https://github.com/xykong/flux-markdown/issues/13 -->
+         Settings from the main app are read via a plist file in ~/Library/Application Support/BoaMarkdown/.
+         See: upstream issue #13 -->
 </dict>
 </plist>
 

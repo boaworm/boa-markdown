@@ -17,7 +17,7 @@ try:
  control=out/'control.js';control.write_text("const input=JSON.parse(source); for(let i=0;i<150&&typeof window.renderMarkdown!=='function';i++)await new Promise(r=>setTimeout(r,20)); await window.renderMarkdown('![control]('+input.url+')',{context:'app'}); await window.waitForExportReady(); if(document.querySelector('#markdown-preview img').naturalWidth!==1)throw new Error('Control image did not load'); return {loaded:true};")
  for name,script,data in [('control',control,{'url':origin+'/control.svg'}),('math',root/'scripts/issue64/math-resource-boundary.js',{'mathResourceURL':origin+'/issue64-forbidden-math-glyph.svg'})]:
   (out/(name+'.json')).write_text(json.dumps(data))
-  result=subprocess.run([str(probe),'flux-renderer://bundle/index.html',str(bundle),str(script),str(out/(name+'.json')),'45'],capture_output=True,text=True,timeout=50)
+  result=subprocess.run([str(probe),'boa-renderer://bundle/index.html',str(bundle),str(script),str(out/(name+'.json')),'45'],capture_output=True,text=True,timeout=50)
   (out/(name+'-result.json')).write_text(result.stdout);(out/(name+'.log')).write_text(result.stderr)
   assert result.returncode==0,(name,str(out))
  assert '/control.svg' in requests,requests

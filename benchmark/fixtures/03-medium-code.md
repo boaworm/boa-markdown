@@ -544,7 +544,7 @@ build_target() {
     log "Building $target ($config)..."
     
     xcodebuild \
-        -project FluxMarkdown.xcodeproj \
+        -project BoaMarkdown.xcodeproj \
         -scheme "$target" \
         -configuration "$config" \
         -destination 'platform=macOS,arch=arm64' \
@@ -561,7 +561,7 @@ build_target() {
 run_tests() {
     log "Running test suite..."
     xcodebuild test \
-        -project FluxMarkdown.xcodeproj \
+        -project BoaMarkdown.xcodeproj \
         -scheme Markdown \
         -destination 'platform=macOS,arch=arm64' \
         2>&1 | xcpretty --color
@@ -664,16 +664,16 @@ ORDER BY month DESC, revenue_rank;
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: flux-markdown
+  name: boa-markdown
   namespace: production
   labels:
-    app: flux-markdown
+    app: boa-markdown
     version: "1.13"
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: flux-markdown
+      app: boa-markdown
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -682,11 +682,11 @@ spec:
   template:
     metadata:
       labels:
-        app: flux-markdown
+        app: boa-markdown
     spec:
       containers:
         - name: app
-          image: ghcr.io/xykong/flux-markdown:1.13
+          image: ghcr.io/example/app:1.13
           resources:
             requests:
               memory: "64Mi"

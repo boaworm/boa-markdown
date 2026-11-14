@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 WORK=$(mktemp -d)
-ID="com.xykong.history-test.$(uuidgen)"
+ID="io.github.boaworm.history-test.$(uuidgen)"
 trap 'defaults delete "$ID" 2>/dev/null || true; defaults delete "$ID.system" 2>/dev/null || true; rm -rf "$WORK"' EXIT
 APP="$WORK/HistoryProbe.app"
 mkdir -p "$APP/Contents/MacOS"

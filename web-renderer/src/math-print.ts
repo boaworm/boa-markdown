@@ -7,8 +7,8 @@ export function prepareMathPrint(root: HTMLElement): () => void {
             if (text.length > 200 || !/[:：]$/.test(text) || heading.querySelector('mjx-container')) return;
         }
         const next = heading.nextElementSibling;
-        if (!next?.matches('div.flux-math-source, .block-copy-host')) return;
-        if (next.classList.contains('block-copy-host') && !next.querySelector('div.flux-math-source')) return;
+        if (!next?.matches('div.boa-math-source, .block-copy-host')) return;
+        if (next.classList.contains('block-copy-host') && !next.querySelector('div.boa-math-source')) return;
         const group = document.createElement('div');
         group.className = 'math-print-group';
         heading.before(group);group.append(heading,next);groups.push(group);

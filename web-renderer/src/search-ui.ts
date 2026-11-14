@@ -1,20 +1,12 @@
 import { updateReadingControlsLayout } from './reading-controls';
 import type { SearchEngine, SearchOptions } from "./search";
 
-declare global { interface Window { __fluxLang?: string; } }
-
 const searchLabels = {
 	en: { find: 'Find in page', query: 'Search query', previous: 'Previous match', next: 'Next match', close: 'Close', case: 'Match case', word: 'Match whole word', regex: 'Use regular expression', invalidRegex: 'Invalid regular expression' },
-	zh: { find: '在页面中查找', query: '搜索内容', previous: '上一个匹配项', next: '下一个匹配项', close: '关闭', case: '区分大小写', word: '匹配整个单词', regex: '使用正则表达式', invalidRegex: '正则表达式无效' },
-	de: { find: 'Auf der Seite suchen', query: 'Suchanfrage', previous: 'Vorheriger Treffer', next: 'Nächster Treffer', close: 'Schließen', case: 'Groß-/Kleinschreibung beachten', word: 'Ganzes Wort suchen', regex: 'Regulären Ausdruck verwenden', invalidRegex: 'Ungültiger regulärer Ausdruck' },
-	fr: { find: 'Rechercher dans la page', query: 'Requête de recherche', previous: 'Résultat précédent', next: 'Résultat suivant', close: 'Fermer', case: 'Respecter la casse', word: 'Mot entier', regex: 'Utiliser une expression régulière', invalidRegex: 'Expression régulière non valide' },
-	es: { find: 'Buscar en la página', query: 'Consulta de búsqueda', previous: 'Coincidencia anterior', next: 'Coincidencia siguiente', close: 'Cerrar', case: 'Distinguir mayúsculas', word: 'Coincidir palabra completa', regex: 'Usar expresión regular', invalidRegex: 'Expresión regular no válida' },
-	ar: { find: 'البحث في الصفحة', query: 'نص البحث', previous: 'المطابقة السابقة', next: 'المطابقة التالية', close: 'إغلاق', case: 'مطابقة حالة الأحرف', word: 'مطابقة الكلمة كاملة', regex: 'استخدام تعبير نمطي', invalidRegex: 'تعبير نمطي غير صالح' },
 } as const;
 
 function localizedSearchLabels() {
-	const language = (window.__fluxLang || navigator.language || 'en').split('-')[0] as keyof typeof searchLabels;
-	return searchLabels[language] || searchLabels.en;
+	return searchLabels.en;
 }
 
 export class SearchUI {

@@ -3,7 +3,7 @@ import CoreFoundation
 
 /// Bounded transient layout data; never persisted or included in diagnostics.
 enum ReadingToolbarLayout {
-    static let notification = Notification.Name("FluxMarkdown.readingToolbarInset")
+    static let notification = Notification.Name("BoaMarkdown.readingToolbarInset")
     static func trailingInset(body: Any, zoom: CGFloat) -> CGFloat {
         guard let payload = body as? [String: Any],
               let number = payload["rightInset"] as? NSNumber,

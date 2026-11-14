@@ -1,15 +1,14 @@
-const FIRST_RUN_KEY = 'fluxmd-help-shown-v1';
+const FIRST_RUN_KEY = 'boamd-help-shown-v1';
 const CMD_HOLD_DELAY_MS = 2000;
-const CMD_HOLD_ENABLED_KEY = 'fluxmd-cmd-hold-enabled';
+const CMD_HOLD_ENABLED_KEY = 'boamd-cmd-hold-enabled';
 
 declare global {
     interface Window {
-        __fluxContext?: string;
-        __fluxLang?: string;
+        __boaContext?: string;
     }
 }
 
-type Lang = 'zh' | 'en' | 'de' | 'fr' | 'ar';
+type Lang = 'en';
 
 interface I18n {
     title: string;
@@ -22,8 +21,6 @@ interface I18n {
     toastText: string;
     closeLabel: string;
     cmdHoldCheckboxLabel: string;
-    starLabel: string;
-    starHint: string;
     groups: {
         searchNav: { title: string; items: string[] };
         zoom: { title: string; items: string[] };
@@ -34,48 +31,10 @@ interface I18n {
 }
 
 const STRINGS: Record<Lang, I18n> = {
-    zh: {
-        starLabel: "在 GitHub 点个 Star",
-        starHint: "打开 GitHub，点击 Star 支持 FluxMarkdown。",
-        title: '⌨️ FluxMarkdown 功能指南',
-        contextBadgeQL: 'QuickLook 预览',
-        contextBadgeApp: 'FluxMarkdown App',
-        badgeApp: 'App',
-        qlBannerText: 'QuickLook 系统会拦截键盘事件。仅 <strong>Cmd+滚轮</strong> 和<strong>捏合手势</strong>可用；其余操作请点击右上角按钮，或双击文件用 App 打开。',
-        footerQL: '点击遮罩或右上角 <kbd>✕</kbd> 关闭',
-        footerApp: '按 <kbd>?</kbd> 或 <kbd>Esc</kbd> 关闭 · 按住 <kbd>⌘</kbd> 2秒再次打开',
-        toastText: '💡 按 <kbd>?</kbd> 或点击右上角 <strong>?</strong> 查看所有功能快捷键',
-        closeLabel: '关闭',
-        cmdHoldCheckboxLabel: '按住 ⌘ 2 秒自动打开此面板',
-        groups: {
-            searchNav: {
-                title: '搜索与导航',
-                items: ['打开 / 关闭搜索', '下一个匹配', '上一个匹配', '关闭搜索', '右上角目录按钮打开 TOC'],
-            },
-            zoom: {
-                title: '缩放',
-                items: ['放大', '缩小', '重置缩放', '滚动缩放', '触控板缩放'],
-            },
-            view: {
-                title: '视图',
-                items: ['切换渲染 / 源码视图', '右上角 </> 按钮切换源码视图', '右上角 ☀/🌙 切换主题'],
-            },
-            export: {
-                title: '导出',
-                items: ['导出为 HTML', '导出为 PDF'],
-            },
-            settings: {
-                title: '设置',
-                items: ['打开偏好设置', '检查更新', '右上角 ? 按钮显示此帮助', '显示此帮助面板'],
-            },
-        },
-    },
     en: {
-        starLabel: "Star on GitHub",
-        starHint: "Open GitHub and click Star to support FluxMarkdown.",
-        title: '⌨️ FluxMarkdown Feature Guide',
+        title: '⌨️ BoaMarkdown Feature Guide',
         contextBadgeQL: 'QuickLook Preview',
-        contextBadgeApp: 'FluxMarkdown App',
+        contextBadgeApp: 'BoaMarkdown App',
         badgeApp: 'App',
         qlBannerText: 'QuickLook intercepts keyboard events. Only <strong>Cmd+scroll</strong> and <strong>pinch gesture</strong> work; use toolbar buttons or double-click to open in App for full access.',
         footerQL: 'Click backdrop or <kbd>✕</kbd> to close',
@@ -103,114 +62,6 @@ const STRINGS: Record<Lang, I18n> = {
             settings: {
                 title: 'Settings',
                 items: ['Open preferences', 'Check for updates', 'Help button (? top-right)', 'Show this help panel'],
-            },
-        },
-    },
-    de: {
-        starLabel: "Stern auf GitHub geben",
-        starHint: "GitHub öffnen und FluxMarkdown mit einem Stern unterstützen.",
-        title: '⌨️ FluxMarkdown Funktionsübersicht',
-        contextBadgeQL: 'QuickLook-Vorschau',
-        contextBadgeApp: 'FluxMarkdown-App',
-        badgeApp: 'App',
-        qlBannerText: 'QuickLook fängt Tastatureingaben ab. Nur <strong>Cmd+Scrollen</strong> und <strong>Pinch-Geste</strong> funktionieren; benutze die Symbolleisten-Buttons oder öffne die Datei per Doppelklick in der App, um auf alle Funktionen zuzugreifen.',
-        footerQL: 'Klick auf den Hintergrund oder <kbd>✕</kbd>, um zu schließen',
-        footerApp: '<kbd>?</kbd> oder <kbd>Esc</kbd> zum Schließen · <kbd>⌘</kbd> 2 Sek. halten zum erneuten Öffnen',
-        toastText: '💡 Drücke <kbd>?</kbd> oder klicke auf <strong>?</strong> in der Symbolleiste, um alle Shortcuts zu sehen',
-        closeLabel: 'Schließen',
-        cmdHoldCheckboxLabel: 'Dieses Panel automatisch öffnen, wenn ⌘ 2 Sek. gehalten wird',
-        groups: {
-            searchNav: {
-                title: 'Suche & Navigation',
-                items: ['Suche öffnen / schließen', 'Nächster Treffer', 'Vorheriger Treffer', 'Suche schließen', 'TOC-Button (oben rechts)'],
-            },
-            zoom: {
-                title: 'Zoom',
-                items: ['Vergrößern', 'Verkleinern', 'Zoom zurücksetzen', 'Scroll-Zoom', 'Pinch-to-Zoom'],
-            },
-            view: {
-                title: 'Ansicht',
-                items: ['Vorschau / Quelltext umschalten', 'Quelltext-Button (oben rechts </>)', 'Theme umschalten (☀/🌙 oben rechts)'],
-            },
-            export: {
-                title: 'Exportieren',
-                items: ['Als HTML exportieren', 'Als PDF exportieren'],
-            },
-            settings: {
-                title: 'Einstellungen',
-                items: ['Einstellungen öffnen', 'Nach Updates suchen', 'Hilfe-Button (? oben rechts)', 'Dieses Hilfe-Panel anzeigen'],
-            },
-        },
-    },
-    fr: {
-        starLabel: "Soutenir sur GitHub",
-        starHint: "Ouvrez GitHub et cliquez sur Star pour soutenir FluxMarkdown.",
-        title: '⌨️ Guide des fonctionnalités de FluxMarkdown',
-        contextBadgeQL: 'Aperçu Coup d’œil',
-        contextBadgeApp: 'FluxMarkdown App',
-        badgeApp: 'App',
-        qlBannerText: 'Coup d’œil intercepte les événements clavier. Seuls <strong>Cmd+défilement</strong> et le <strong>geste de pincement</strong> fonctionnent ; utilisez les boutons de la barre d’outils ou double-cliquez pour ouvrir dans l’app et accéder à toutes les fonctions.',
-        footerQL: 'Cliquer sur le fond ou <kbd>✕</kbd> pour fermer',
-        footerApp: '<kbd>?</kbd> ou <kbd>Esc</kbd> pour fermer · Maintenir <kbd>⌘</kbd> 2 s pour rouvrir',
-        toastText: '💡 Appuyez sur <kbd>?</kbd> ou cliquez sur <strong>?</strong> dans la barre d’outils pour voir tous les raccourcis',
-        closeLabel: 'Fermer',
-        cmdHoldCheckboxLabel: 'Ouvrir automatiquement ce panneau en maintenant ⌘ pendant 2 s',
-        groups: {
-            searchNav: {
-                title: 'Recherche & Navigation',
-                items: ['Ouvrir / fermer la recherche', 'Résultat suivant', 'Résultat précédent', 'Fermer la recherche', 'Bouton TOC (en haut à droite)'],
-            },
-            zoom: {
-                title: 'Zoom',
-                items: ['Zoom avant', 'Zoom arrière', 'Réinitialiser le zoom', 'Zoom par défilement', 'Zoom par pincement'],
-            },
-            view: {
-                title: 'Affichage',
-                items: ['Basculer aperçu / source', 'Bouton source (en haut à droite </>)', 'Basculer le thème (☀/🌙 en haut à droite)'],
-            },
-            export: {
-                title: 'Exporter',
-                items: ['Exporter en HTML', 'Exporter en PDF'],
-            },
-            settings: {
-                title: 'Réglages',
-                items: ['Ouvrir les réglages', 'Rechercher les mises à jour', 'Bouton aide (? en haut à droite)', 'Afficher ce panneau d’aide'],
-            },
-        },
-    },
-    ar: {
-        starLabel: "أضف نجمة على GitHub",
-        starHint: "افتح GitHub وانقر Star لدعم FluxMarkdown.",
-        title: '⌨️ دليل ميزات FluxMarkdown',
-        contextBadgeQL: 'معاينة نظرة سريعة',
-        contextBadgeApp: 'تطبيق FluxMarkdown',
-        badgeApp: 'تطبيق',
-        qlBannerText: 'تعترض «نظرة سريعة» أحداث لوحة المفاتيح. يعمل فقط <strong>Cmd+التمرير</strong> و<strong>إيماءة الضغط</strong>؛ استخدم أزرار شريط الأدوات أو انقر نقرًا مزدوجًا لفتح الملف في التطبيق للوصول الكامل.',
-        footerQL: 'انقر على الخلفية أو <kbd>✕</kbd> للإغلاق',
-        footerApp: 'اضغط <kbd>?</kbd> أو <kbd>Esc</kbd> للإغلاق · استمر بالضغط على <kbd>⌘</kbd> لثانيتين لإعادة الفتح',
-        toastText: '💡 اضغط <kbd>?</kbd> أو انقر على <strong>?</strong> في شريط الأدوات لعرض كل الاختصارات',
-        closeLabel: 'إغلاق',
-        cmdHoldCheckboxLabel: 'فتح هذه اللوحة تلقائيًا بالضغط على ⌘ لثانيتين',
-        groups: {
-            searchNav: {
-                title: 'البحث والتنقل',
-                items: ['فتح / إغلاق البحث', 'المطابقة التالية', 'المطابقة السابقة', 'إغلاق البحث', 'زر المحتويات (أعلى اليمين)'],
-            },
-            zoom: {
-                title: 'التكبير',
-                items: ['تكبير', 'تصغير', 'إعادة ضبط التكبير', 'التكبير بالتمرير', 'التكبير بالضغط'],
-            },
-            view: {
-                title: 'العرض',
-                items: ['تبديل المعاينة / المصدر', 'زر المصدر (أعلى اليمين </>)', 'تبديل المظهر (☀/🌙 أعلى اليمين)'],
-            },
-            export: {
-                title: 'التصدير',
-                items: ['تصدير بصيغة HTML', 'تصدير بصيغة PDF'],
-            },
-            settings: {
-                title: 'الإعدادات',
-                items: ['فتح التفضيلات', 'التحقق من التحديثات', 'زر المساعدة (? أعلى اليمين)', 'عرض لوحة المساعدة هذه'],
             },
         },
     },
@@ -275,13 +126,6 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
 ];
 
 function detectLang(): Lang {
-    const stored = window.__fluxLang;
-    if (stored === 'zh' || stored === 'en' || stored === 'de' || stored === 'fr' || stored === 'ar') return stored;
-    const sys = (navigator.language || '').toLowerCase();
-    if (sys.startsWith('zh')) return 'zh';
-    if (sys.startsWith('de')) return 'de';
-    if (sys.startsWith('fr')) return 'fr';
-    if (sys.startsWith('ar')) return 'ar';
     return 'en';
 }
 
@@ -333,7 +177,7 @@ export class HelpOverlay {
     }
 
     private buildOverlayHTML(): string {
-        const isQuickLook = window.__fluxContext === 'quicklook';
+        const isQuickLook = window.__boaContext === 'quicklook';
         const lang = detectLang();
         const s = STRINGS[lang];
 
@@ -402,9 +246,6 @@ export class HelpOverlay {
                 <div class="help-footer">
                     ${footerText}
                     ${cmdHoldCheckbox}
-                    <a class="help-github-star" href="https://github.com/xykong/flux-markdown" title="${s.starHint}">
-                        <span aria-hidden="true">☆</span> ${s.starLabel}
-                    </a>
                 </div>
             </div>
         `;

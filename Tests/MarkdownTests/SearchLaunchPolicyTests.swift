@@ -18,25 +18,23 @@ final class SearchLaunchPolicyTests: XCTestCase {
 
     func testAnUnverifiedPeerCannotUseTheBroker() {
         XCTAssertTrue(SearchLaunchPolicy.acceptsPeer(sameUser: true, validSignature: true,
-            identifier: "com.xykong.Markdown.QuickLook", expectedExecutable: true))
+            identifier: "io.github.boaworm.Markdown.QuickLook", expectedExecutable: true))
         XCTAssertFalse(SearchLaunchPolicy.acceptsPeer(sameUser: false, validSignature: true,
-            identifier: "com.xykong.Markdown.QuickLook", expectedExecutable: true))
+            identifier: "io.github.boaworm.Markdown.QuickLook", expectedExecutable: true))
         XCTAssertFalse(SearchLaunchPolicy.acceptsPeer(sameUser: true, validSignature: false,
-            identifier: "com.xykong.Markdown.QuickLook", expectedExecutable: true))
+            identifier: "io.github.boaworm.Markdown.QuickLook", expectedExecutable: true))
         XCTAssertFalse(SearchLaunchPolicy.acceptsPeer(sameUser: true, validSignature: true,
             identifier: "com.apple.finder", expectedExecutable: true))
         XCTAssertFalse(SearchLaunchPolicy.acceptsPeer(sameUser: true, validSignature: true,
-            identifier: "com.xykong.Markdown.QuickLook", expectedExecutable: false))
+            identifier: "io.github.boaworm.Markdown.QuickLook", expectedExecutable: false))
     }
 }
 
 extension SearchLaunchPolicyTests {
-    func testTelemetryBrokerHasOnlyScopedStorageAndNetworkPermissions() throws {
+    func testLaunchBrokerHasNoNetworkOrStorageExceptions() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         let data = try Data(contentsOf: root.appendingPathComponent("Sources/SearchLauncher/SearchLauncher.entitlements"))
         let p = try XCTUnwrap(PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any])
-        XCTAssertEqual(Set(p.keys), ["com.apple.security.app-sandbox", "com.apple.security.files.user-selected.read-only", "com.apple.security.network.client", "com.apple.security.temporary-exception.files.home-relative-path.read-write"])
-        XCTAssertEqual(p["com.apple.security.temporary-exception.files.home-relative-path.read-write"] as? [String], ["/Library/Application Support/FluxMarkdown/Telemetry/"])
-        XCTAssertEqual(p["com.apple.security.network.client"] as? Bool, true)
+        XCTAssertEqual(Set(p.keys), ["com.apple.security.app-sandbox", "com.apple.security.files.user-selected.read-only"])
     }
 }

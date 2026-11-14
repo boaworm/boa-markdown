@@ -21,10 +21,10 @@ function escaped(source: string, position: number): boolean {
 export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSource[] {
     const sources: MathSource[] = [];
     let originalLines: string[] = [];
-    md.core.ruler.before('normalize', 'flux_math_original_lines', state => {
+    md.core.ruler.before('normalize', 'boa_math_original_lines', state => {
         originalLines = state.src.match(/[^\r\n]*(?:\r\n|\r|\n|$)/g) || [];
     });
-    md.inline.ruler.before('escape', 'flux_math_inline', (state, silent) => {
+    md.inline.ruler.before('escape', 'boa_math_inline', (state, silent) => {
         const start = state.pos;
         // Raw HTML code containers are separate html_inline tokens. Respect
         // their boundaries before accepting delimiters inside their text.
@@ -41,7 +41,7 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
         const reference = /^\\(?:eqref|ref)\{[^{}\n]+\}/.exec(state.src.slice(start));
         if (reference) {
             if (!silent) {
-                const token = state.push('flux_math_inline', 'math', 0);
+                const token = state.push('boa_math_inline', 'math', 0);
                 token.content = reference[0];
                 token.meta = { raw: reference[0], payload: reference[0], display: false, localOffset: start,
                     localLine: state.src.slice(0, start).split('\n').length - 1 } satisfies MathMeta;
@@ -61,7 +61,7 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
         const payload = state.src.slice(start + open.length, end);
         if (!payload || /\n\s*\n/.test(payload)) return false;
         if (!silent) {
-            const token = state.push('flux_math_inline', 'math', 0);
+            const token = state.push('boa_math_inline', 'math', 0);
             token.content = payload;
             token.meta = { raw: state.src.slice(start, end + close.length), payload, display: false, localOffset: start,
                 localLine: state.src.slice(0, start).split('\n').length - 1 } satisfies MathMeta;
@@ -70,7 +70,7 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
         return true;
     });
 
-    md.block.ruler.before('fence', 'flux_math_block', (state, start, end, silent) => {
+    md.block.ruler.before('fence', 'boa_math_block', (state, start, end, silent) => {
         if (state.sCount[start] - state.blkIndent >= 4) return false;
         const line = state.src.slice(state.bMarks[start] + state.tShift[start], state.eMarks[start]).trim();
         const environment = /^\\begin\{((?:equation|align|gather)\*?)\}/.exec(line);
@@ -97,7 +97,7 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
         }
         if (silent) return true;
         if (environment) payload = state.getLines(start, last + 1, state.blkIndent, false);
-        const token = state.push('flux_math_block', 'math', 0);
+        const token = state.push('boa_math_block', 'math', 0);
         token.block = true;
         token.map = [start, last + 1];
         token.meta = { payload, raw: state.getLines(start, last + 1, state.blkIndent, false), display: true } satisfies MathMeta;
@@ -105,7 +105,7 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
         return true;
     }, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
 
-    md.core.ruler.after('inline', 'flux_math_sources', state => {
+    md.core.ruler.after('inline', 'boa_math_sources', state => {
         sources.length = 0;
         const ranges: Array<[number, number] | null> = [];
         let table: { original: string; normalized: string; offsets: number[]; cursor: number } | null = null;
@@ -130,12 +130,12 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
                 if (tableStart >= 0) table.cursor = tableStart + token.content.length;
             }
             if (token.type === 'fence' && token.info.trim().split(/\s+/)[0] === 'math') {
-                token.type = 'flux_math_block';
+                token.type = 'boa_math_block';
                 const range = token.map!;
                 token.meta = { payload: token.content, raw: state.src.split('\n').slice(range[0], range[1]).join('\n'), display: true } satisfies MathMeta;
             }
             for (const child of token.type === 'inline' ? token.children || [] : [token]) {
-                if (!child.type.startsWith('flux_math_')) continue;
+                if (!child.type.startsWith('boa_math_')) continue;
                 const meta = child.meta as MathMeta;
                 if (table && tableStart >= 0 && meta.localOffset !== undefined) {
                     const first = table.offsets[tableStart + meta.localOffset];
@@ -163,9 +163,9 @@ export function installMathSyntax(md: MarkdownIt, namespace = 'math'): MathSourc
     const render: NonNullable<typeof md.renderer.rules.text> = (tokens, index) => {
         const meta = tokens[index].meta as MathMeta;
         const tag = meta.display ? 'div' : 'span';
-        return `<${tag} class="flux-math-source" data-math-id="${meta.source!.id}">${md.utils.escapeHtml(meta.raw)}</${tag}>`;
+        return `<${tag} class="boa-math-source" data-math-id="${meta.source!.id}">${md.utils.escapeHtml(meta.raw)}</${tag}>`;
     };
-    md.renderer.rules.flux_math_inline = render;
-    md.renderer.rules.flux_math_block = render;
+    md.renderer.rules.boa_math_inline = render;
+    md.renderer.rules.boa_math_block = render;
     return sources;
 }

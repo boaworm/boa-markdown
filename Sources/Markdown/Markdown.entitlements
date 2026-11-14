@@ -17,10 +17,6 @@
     <key>com.apple.security.get-task-allow</key>
     <true/>
 
-    <!-- Allow network access for WebView -->
-    <key>com.apple.security.network.client</key>
-    <true/>
-
     <!-- Allow JIT (Recommended for WebView performance/stability) -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
@@ -29,15 +25,9 @@
     <key>com.apple.security.print</key>
     <true/>
 
-    <!-- Allow access to downloads (Sparkle needs read-write for installing updates) -->
-    <key>com.apple.security.files.downloads.read-write</key>
-    <true/>
-
-    <!-- The host is not sandboxed; Sparkle uses its direct installer launcher. -->
-
     <!-- App Groups removed: macOS 26 (Tahoe) rejects App Group containers for ad-hoc signed apps.
-         Settings are now shared via a plist file in ~/Library/Application Support/FluxMarkdown/.
-         See: https://github.com/xykong/flux-markdown/issues/13 -->
+         Settings are now shared via a plist file in ~/Library/Application Support/BoaMarkdown/.
+         See: upstream issue #13 -->
 </dict>
 </plist>
 

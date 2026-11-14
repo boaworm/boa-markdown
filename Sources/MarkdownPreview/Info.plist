@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>FluxMarkdown</string>
+	<string>BoaMarkdown</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>FluxMarkdown</string>
+	<string>BoaMarkdown</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
@@ -29,19 +29,19 @@
 				<string>net.daringfireball.markdown</string>
 				<string>public.markdown</string>
 				<string>net.ia.markdown</string>
-				<string>com.fluxmarkdown.mdx</string>
-				<string>com.fluxmarkdown.rmd</string>
-				<string>com.fluxmarkdown.qmd</string>
-				<string>com.fluxmarkdown.mdoc</string>
-				<string>com.fluxmarkdown.mdc</string>
-				<string>com.fluxmarkdown.mmd</string>
-				<string>com.fluxmarkdown.livemd</string>
-				<string>com.fluxmarkdown.markdown</string>
-				<string>com.fluxmarkdown.mdown</string>
-				<string>com.fluxmarkdown.mkd</string>
-				<string>com.fluxmarkdown.mkdn</string>
-				<string>com.fluxmarkdown.mkdown</string>
-				<string>com.fluxmarkdown.mdwn</string>
+				<string>io.github.boaworm.mdx</string>
+				<string>io.github.boaworm.rmd</string>
+				<string>io.github.boaworm.qmd</string>
+				<string>io.github.boaworm.mdoc</string>
+				<string>io.github.boaworm.mdc</string>
+				<string>io.github.boaworm.mmd</string>
+				<string>io.github.boaworm.livemd</string>
+				<string>io.github.boaworm.markdown</string>
+				<string>io.github.boaworm.mdown</string>
+				<string>io.github.boaworm.mkd</string>
+				<string>io.github.boaworm.mkdn</string>
+				<string>io.github.boaworm.mkdown</string>
+				<string>io.github.boaworm.mdwn</string>
 				<string>public.tab-separated-values-text</string>
 			</array>
 			<key>QLSupportsSearchableItems</key>

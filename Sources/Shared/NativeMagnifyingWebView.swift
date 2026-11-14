@@ -5,7 +5,7 @@ class NativeMagnifyingWebView: WKWebView {
     override func accessibilityChildren() -> [Any]? {
         var children = super.accessibilityChildren() ?? []
         // WebKit normally exposes its remote document tree, omitting native overlays.
-        for notice in subviews.compactMap({ $0 as? IncidentNotice }) where !notice.isHidden {
+        for notice in subviews.compactMap({ $0 as? FailureNotice }) where !notice.isHidden {
             if !children.contains(where: { ($0 as? NSView) === notice }) { children.append(notice) }
         }
         return children

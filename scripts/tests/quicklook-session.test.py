@@ -5,11 +5,11 @@ ROOT = Path(__file__).resolve().parents[2]
 TOOL = ROOT / 'scripts/diagnose-quicklook-session.sh'
 SELF = '11111111-1111-4111-8111-111111111111'
 FINDER = '22222222-2222-4222-8222-222222222222'
-EXE = '/Applications/FluxMarkdown.app/Contents/PlugIns/MarkdownPreview.appex/Contents/MacOS/MarkdownPreview'
+EXE = '/Applications/BoaMarkdown.app/Contents/PlugIns/MarkdownPreview.appex/Contents/MacOS/MarkdownPreview'
 
 def event(stage, token=FINDER, path=EXE, version='1.44.761', build='761', error='none', code='0', attempt='33333333-3333-4333-8333-333333333333', context='quicklook'):
     return {'subsystem':'com.markdownquicklook.app', 'processImagePath':path, 'processID':42,
-            'eventMessage':f'FluxQuickLookStage schema=2 token={token} version={version} build={build} attempt={attempt} context={context} stage={stage} error={error} code={code}'}
+            'eventMessage':f'BoaQuickLookStage schema=2 token={token} version={version} build={build} attempt={attempt} context={context} stage={stage} error={error} code={code}'}
 
 class EvidenceTests(unittest.TestCase):
     def summarize(self, entries, **changes):
@@ -35,7 +35,7 @@ class EvidenceTests(unittest.TestCase):
         self.assertEqual(x['finder']['attempts'][1]['status'],'unconfirmed')
         self.assertEqual(x['finder']['actualHost'],'not-verified')
     def test_other_copy_version_build_and_unrelated_token(self):
-        for e in [event('rendered',path='/tmp/secret/FluxMarkdown.app/Contents/PlugIns/MarkdownPreview.appex/Contents/MacOS/MarkdownPreview'),event('rendered',build='762'),event('rendered',version='old')]:
+        for e in [event('rendered',path='/tmp/secret/BoaMarkdown.app/Contents/PlugIns/MarkdownPreview.appex/Contents/MacOS/MarkdownPreview'),event('rendered',build='762'),event('rendered',version='old')]:
             x=self.summarize([e]);self.assertEqual(x['finder']['status'],'identity-mismatch');self.assertNotIn('secret',json.dumps(x))
         x=self.summarize([event('rendered',token='33333333-3333-4333-8333-333333333333')]);self.assertEqual(x['finder']['status'],'unconfirmed')
     def test_explicit_failures_not_inferred_from_absence(self):
@@ -64,8 +64,8 @@ class EvidenceTests(unittest.TestCase):
 class LifecycleTests(unittest.TestCase):
     def app(self, p, body):
         app=p/'Mock.app';(app/'Contents/MacOS').mkdir(parents=True)
-        (app/'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':'com.xykong.Markdown'}))
-        exe=app/'Contents/MacOS/FluxMarkdown';exe.write_text('#!/bin/bash\n'+body);exe.chmod(0o700)
+        (app/'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleIdentifier':'io.github.boaworm.Markdown'}))
+        exe=app/'Contents/MacOS/BoaMarkdown';exe.write_text('#!/bin/bash\n'+body);exe.chmod(0o700)
         ext=app/'Contents/PlugIns/MarkdownPreview.appex';(ext/'Contents/MacOS').mkdir(parents=True)
         (ext/'Contents/Info.plist').write_bytes(plistlib.dumps({'CFBundleShortVersionString':'1.44.761','CFBundleVersion':'761'}))
         (ext/'Contents/MacOS/MarkdownPreview').write_text('fixture');(ext/'Contents/MacOS/MarkdownPreview').chmod(0o700)
@@ -73,7 +73,7 @@ class LifecycleTests(unittest.TestCase):
     def command(self,p,app,duration='1'):
         return ['bash',str(TOOL),'--no-ui','--duration',duration,'--app',str(app),'--output',str(p)]
     def check_zip(self,p):
-        folders=list(p.glob('flux-quicklook-session.*'));self.assertEqual(len(folders),1);folder=folders[0]
+        folders=list(p.glob('boa-quicklook-session.*'));self.assertEqual(len(folders),1);folder=folders[0]
         self.assertEqual(folder.stat().st_mode & 0o777,0o700)
         with zipfile.ZipFile(folder/'shareable.zip') as z:
             payload=''.join(z.read(n).decode() for n in z.namelist() if not n.endswith('/'))
@@ -93,7 +93,7 @@ class LifecycleTests(unittest.TestCase):
             proc=subprocess.Popen(self.command(p,a,'60'),stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True,start_new_session=True)
             try:
                 deadline=time.time()+10
-                while not any('installedCopyEnabled' in f.read_text() for f in p.glob('flux-quicklook-session.*/raw/baseline.txt')) and time.time()<deadline:time.sleep(.05)
+                while not any('installedCopyEnabled' in f.read_text() for f in p.glob('boa-quicklook-session.*/raw/baseline.txt')) and time.time()<deadline:time.sleep(.05)
                 proc.send_signal(signal.SIGINT);out,err=proc.communicate(timeout=10)
                 self.assertEqual(proc.returncode,130,out+err)
                 folder,report=self.check_zip(p);self.assertEqual(report['finder']['status'],'unconfirmed')

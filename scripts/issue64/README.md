@@ -22,14 +22,14 @@ The mathematical layout matrix uses actual WKWebView widths of 320/600/960 point
 
 Against that damaged copy, `resource-failure.js` checks the actual renderer in all six languages and app/quicklook/finder rendering contexts: preserved source and following content, failed-export rejection, recovery on the next valid document, named feedback actions, incident identity, allowlisted diagnostic fields and detached-control rejection. An opt-in Swift message receiver records the real WK bridge delivery and acknowledges barriers without background timer polling. It never executes recovery or opens/submits feedback. Context options are not proof that the system selected the new QuickLook extension, and synthetic action activation is not a native keyboard/VoiceOver acceptance test.
 
-`report.json` describes only the checks actually performed. It explicitly lists the remaining actual host UI, minimum-platform, VoiceOver, PDF visual, memory and human-review gates. This runner does not install or replace FluxMarkdown, send feedback, change file associations or declare the full feature accepted. The native suite briefly uses its own window and isolated test pasteboard, restoring the prior foreground application afterward.
+`report.json` describes only the checks actually performed. It explicitly lists the remaining actual host UI, minimum-platform, VoiceOver, PDF visual, memory and human-review gates. This runner does not install or replace BoaMarkdown, send feedback, change file associations or declare the full feature accepted. The native suite briefly uses its own window and isolated test pasteboard, restoring the prior foreground application afterward.
 
 Do not edit the immutable original fixture to make an expectation pass. Document the line-132 parenthesis-escape/math ambiguity separately from the dedicated 13-item corpus; the full original currently has 14 mathematical items including that ambiguous example and the one intentional error.
 
 After building the actual native application, validate its CLI export separately:
 
 ```sh
-scripts/test-issue64-product-export.sh /path/to/FluxMarkdown.app /tmp/new-issue64-export-evidence
+scripts/test-issue64-product-export.sh /path/to/BoaMarkdown.app /tmp/new-issue64-export-evidence
 ```
 
 The output directory must be new. This checks the app signature, all manifest-declared renderer resources against the current build, mathematical resource/license closure, actual valid and invalid CLI exports, and the two-page PDF's internal equation-reference destination using PDFKit. Render and visually inspect both pages afterward; the script explicitly does not claim visual or PDF-viewer/VoiceOver acceptance. It neither installs the app nor changes the selected QuickLook provider.
@@ -45,6 +45,6 @@ Each creates an isolated `bundle` and `profile.json`. Current mode uses the work
 
 Use the existing native research probe with `backend-profile.js` and the generated `profile.json`. The smoke fixture deliberately distinguishes the profiles: current yields three MathJax outputs; legacy yields one KaTeX output and retains the math fence as code. Full feature acceptance still uses the current production runner above.
 
-The complete runner clears `FLUX_WEBKIT_CASE_FILTER` for its native suite; use the separate native script for focused debugging. Interactive cases require an unlocked graphical session and wait for `document.hasFocus()` before checking keyboard-dependent behavior. Missing focus fails explicitly as an environment condition; it is not silently skipped or counted as a passing UI check.
+The complete runner clears `BOA_WEBKIT_CASE_FILTER` for its native suite; use the separate native script for focused debugging. Interactive cases require an unlocked graphical session and wait for `document.hasFocus()` before checking keyboard-dependent behavior. Missing focus fails explicitly as an environment condition; it is not silently skipped or counted as a passing UI check.
 
 Supplemental x86_64 validation on Apple silicon can compile the research probe with `swiftc -target x86_64-apple-macos12.0` and run it under an already installed Rosetta environment. The native bridge/preference suites can be built with `xcodebuild test -destination 'platform=macOS,arch=x86_64' ARCHS=x86_64 ONLY_ACTIVE_ARCH=YES`, isolated derived-data/result paths, and the explicitly required local deployment override. Inspect the xcresult test counts and the app/extension/test-bundle architectures; a successful build alone is insufficient. The recorded run uses target 12.0 because the local SDK requires it, and `CODE_SIGNING_ALLOWED=NO` for tests. It is not a distributable build or proof of macOS 11/physical Intel compatibility. No Rosetta installation or developer-directory switch is performed by these checks. See `docs/research/issue64/x86-rosetta-validation.json` for the measured scope.

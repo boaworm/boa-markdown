@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 PROJECT_ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
-MATH_LAB=$(mktemp -d "${TMPDIR:-/tmp}/flux-issue64-math.XXXXXX")
+MATH_LAB=$(mktemp -d "${TMPDIR:-/tmp}/boa-issue64-math.XXXXXX")
 cp "$PROJECT_ROOT/scripts/research/issue64-math/"{package.json,package-lock.json,semantic-probe.mjs,candidate.html,candidate-probe.js,main.swift} "$MATH_LAB/"
 cp "$PROJECT_ROOT/docs/research/issue64/math-cases.json" "$MATH_LAB/cases.json"
 (cd "$MATH_LAB" && npm ci --ignore-scripts --no-audit --no-fund)
 node "$MATH_LAB/semantic-probe.mjs"
 swiftc "$PROJECT_ROOT/Tests/Support/TestWindowPolicy.swift" "$PROJECT_ROOT/Sources/Shared/RendererBundleSchemeHandler.swift" "$MATH_LAB/main.swift" -o "$MATH_LAB/probe"
-"$MATH_LAB/probe" 'flux-renderer://bundle/candidate.html' "$MATH_LAB" "$MATH_LAB/candidate-probe.js" "$MATH_LAB/cases.json" > "$MATH_LAB/webkit-results.json" 2> "$MATH_LAB/webkit.log"
+"$MATH_LAB/probe" 'boa-renderer://bundle/candidate.html' "$MATH_LAB" "$MATH_LAB/candidate-probe.js" "$MATH_LAB/cases.json" > "$MATH_LAB/webkit-results.json" 2> "$MATH_LAB/webkit.log"
 node - "$MATH_LAB" <<'JS'
 const fs = require('node:fs');
 const assert = require('node:assert/strict');

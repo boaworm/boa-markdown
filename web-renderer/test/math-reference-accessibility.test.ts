@@ -39,7 +39,7 @@ test('reference navigation scrolls the complete formula rather than an inner SVG
     await window.renderMarkdown(String.raw`\(\eqref{x}\)`+'\n\n'+String.raw`\[x=1\tag{A}\label{x}\]`,{showCopyButtons:false});
     const link=document.querySelector<HTMLAnchorElement>('a.math-reference-link')!;
     const target=document.getElementById(decodeURIComponent(link.hash.slice(1)))!;
-    const formula=target.closest<HTMLElement>('.flux-math-source')!;
+    const formula=target.closest<HTMLElement>('.boa-math-source')!;
     formula.scrollIntoView=jest.fn();target.scrollIntoView=jest.fn();
     link.click();
     expect(formula.scrollIntoView).toHaveBeenCalledWith({behavior:'smooth',block:'start'});

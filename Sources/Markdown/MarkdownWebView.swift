@@ -25,7 +25,6 @@ struct MarkdownWebView: NSViewRepresentable {
     var showLineNumbers: Bool = true
     var showCopyButtons: Bool = true
     var contentsSide: ContentsSidebarSide = .right
-    var starReminder: StarReminderSession? = nil
     
     private let localSchemeHandler = LocalSchemeHandler()
     
@@ -45,7 +44,6 @@ struct MarkdownWebView: NSViewRepresentable {
         userContentController.add(coordinator, name: "logger")
         userContentController.add(coordinator, name: "linkClicked")
         userContentController.add(coordinator, name: "readingToolsLayout")
-        userContentController.add(coordinator, name: "errorFeedback")
         userContentController.add(coordinator, name: "blockCopy")
         
         let debugSource = """
@@ -88,11 +86,6 @@ struct MarkdownWebView: NSViewRepresentable {
         webView.appearance = NSAppearance(named: .aqua)
         webView.navigationDelegate = coordinator
         coordinator.currentWebView = webView
-        coordinator.errorRegistry.onRecover = { [weak coordinator] incident in
-            guard let coordinator else { return }
-            if incident.reason == .moduleUnavailable || [.renderer, .source].contains(incident.kind) { coordinator.retryPreview() }
-            else { coordinator.handleOpenInExternalEditor() }
-        }
         coordinator.armRendererTimeout()
         
         if coordinator.rendererBundleSchemeHandler != nil {
@@ -101,14 +94,7 @@ struct MarkdownWebView: NSViewRepresentable {
             webView.load(URLRequest(url: url))
         } else {
             os_log("Failed to find index.html in bundle", log: coordinator.logger, type: .error)
-            coordinator.showFailure(.rendererResources, recoveryTitle: "Download Latest Version", recovery: { [weak coordinator] in
-                let url = URL(string: "https://github.com/xykong/flux-markdown/releases/latest")!
-                if !NSWorkspace.shared.open(url) {
-                    coordinator?.showFailure(.browser, recoveryTitle: "Copy Link", recovery: {
-                        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(url.absoluteString, forType: .string)
-                    })
-                }
-            })
+            coordinator.showFailure(.rendererResources)
         }
         
         return webView
@@ -123,9 +109,6 @@ struct MarkdownWebView: NSViewRepresentable {
         }
 
         context.coordinator.modelIsTruncated = isTruncated
-        context.coordinator.usage.attach(webView, document: fileURL)
-        context.coordinator.starReminder = starReminder
-        starReminder?.attach(webView, url: fileURL, preview: viewMode == .preview)
         context.coordinator.updateContentsSide(webView: webView, side: contentsSide)
         context.coordinator.render(webView: webView, content: content, fileURL: fileURL, viewMode: viewMode, appearanceMode: appearanceMode, baseFontSize: baseFontSize, enableMermaid: enableMermaid, enableKatex: enableKatex, enableEmoji: enableEmoji, enableTypst: enableTypst, codeHighlightTheme: codeHighlightTheme, collapseBlockquotesByDefault: collapseBlockquotesByDefault, showLineNumbers: showLineNumbers, showCopyButtons: showCopyButtons)
     }
@@ -135,19 +118,18 @@ struct MarkdownWebView: NSViewRepresentable {
         private var lastRenderedTruncated = false
         private var diskIsTruncated: Bool?
         let logger = OSLog(subsystem: "com.markdownquicklook.app", category: "MarkdownWebView")
-        let errorRegistry = RendererErrorRegistry()
+        let renderScope = RenderScope()
         private let blockCopyBridge = BlockCopyBridge()
-        let usage = UsageTelemetrySession(source: "app")
         func showFailure(_ kind: FailureKind, error: Error? = nil, renderingBlocker: FailureKind? = nil, recoveryTitle: String = "Reload", recovery: (() -> Void)? = nil) {
             guard let view = currentWebView else { return }
-            let incident = errorRegistry.nativeFailure(kind, error: error, renderingBlocker: renderingBlocker)
-            IncidentNotice.attach(to: view, incident: incident, recoveryTitle: recoveryTitle,
-                                  recovery: recovery ?? { [weak self] in self?.retryPreview() })
+            if let error { os_log("Failure %{public}@: %{public}@", log: logger, type: .error, kind.rawValue, error.localizedDescription) }
+            FailureNotice.attach(to: view, kind: renderingBlocker ?? kind, recoveryTitle: recoveryTitle,
+                                 recovery: recovery ?? { [weak self] in self?.retryPreview() })
         }
         private func showMathematicalExportFailure(_ kind: FailureKind, scope: UUID) {
-            guard errorRegistry.scope == scope else { return }
+            guard renderScope.scope == scope else { return }
             showFailure(kind, renderingBlocker: .math, recoveryTitle: "Open in External Editor", recovery: { [weak self] in
-                guard self?.errorRegistry.scope == scope else { return }
+                guard self?.renderScope.scope == scope else { return }
                 self?.handleOpenInExternalEditor()
             })
         }
@@ -179,7 +161,6 @@ struct MarkdownWebView: NSViewRepresentable {
             }
             armRendererTimeout(); webView.reload()
         }
-        weak var starReminder: StarReminderSession?
         var isWebViewLoaded = false
         var pendingRender: (() -> Void)?
         weak var currentWebView: WKWebView?
@@ -394,11 +375,10 @@ struct MarkdownWebView: NSViewRepresentable {
             guard let webView = currentWebView,
                   let win = webView.window,
                   win.isKeyWindow || win.windowController?.document === NSDocumentController.shared.currentDocument else { return }
-            starReminder?.cancelOpportunity()
-            let exportScope = errorRegistry.scope
+            let exportScope = renderScope.scope
             exportHTML(webView: webView) { [weak self] result in
                 DispatchQueue.main.async {
-                    guard self?.errorRegistry.scope == exportScope else { return }
+                    guard self?.renderScope.scope == exportScope else { return }
                     let htmlString: String
                     switch result {
                     case .success(let html): htmlString = html
@@ -431,7 +411,6 @@ struct MarkdownWebView: NSViewRepresentable {
                   let win = webView.window,
                   win.isKeyWindow || win.windowController?.document === NSDocumentController.shared.currentDocument else { return }
 
-            starReminder?.cancelOpportunity()
             let effectiveFontSize = AppearancePreference.shared.baseFontSize * webView.pageZoom
 
             let panel = NSSavePanel()
@@ -557,10 +536,9 @@ struct MarkdownWebView: NSViewRepresentable {
 
             let safeContentArg = String(contentJsonArray.dropFirst().dropLast())
 
-            let feedbackGeneration = errorRegistry.beginDocument()
-            ErrorFeedback.capture(.renderer, phase: .started, scope: errorRegistry.scope)
-            webView.evaluateJavaScript("window.setFeedbackGeneration && window.setFeedbackGeneration('\(feedbackGeneration)');", completionHandler: nil)
-            for notice in webView.subviews.compactMap({ $0 as? IncidentNotice }) { notice.removeFromSuperview() }
+            let documentGeneration = renderScope.beginDocument()
+            webView.evaluateJavaScript("window.setRenderGeneration && window.setRenderGeneration('\(documentGeneration)');", completionHandler: nil)
+            for notice in webView.subviews.compactMap({ $0 as? FailureNotice }) { notice.removeFromSuperview() }
             var options: [String: Any] = ["context": "app"]
 
             if let url = fileURL {
@@ -594,7 +572,6 @@ struct MarkdownWebView: NSViewRepresentable {
             options["showLineNumbers"] = showLineNumbers
             options["showCopyButtons"] = showCopyButtons
             options["contentsSide"] = AppearancePreference.shared.contentsSide.rawValue
-            options["uiLanguage"] = AppearancePreference.shared.uiLanguage
             options["renderVersion"] = renderVersion.next()
             if fileURL?.pathExtension.lowercased() == "tsv" {
                 options["format"] = "tsv"
@@ -637,8 +614,6 @@ struct MarkdownWebView: NSViewRepresentable {
             navigationRenderVersion += 1
             let generation = navigationRenderVersion
             renderingPositionContent = true
-            starReminder?.rendering()
-            usage.rendering()
             webView.callAsyncJavaScript("return " + js, arguments: [:], in: nil, in: .page) { [weak self] result in
                 guard let self, generation == self.navigationRenderVersion,
                       self.currentFileURL == fileURL else { return }
@@ -649,8 +624,6 @@ struct MarkdownWebView: NSViewRepresentable {
                         self.showFailure(.renderer, error: error)
                     return
                 }
-                self.starReminder?.rendered()
-                self.usage.rendered()
                 if let fileURL { self.applyPendingPosition(in: webView, for: fileURL) }
             }
         }
@@ -711,8 +684,7 @@ struct MarkdownWebView: NSViewRepresentable {
         
         func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard RendererBridgePolicy.accepts(message) else { return }
-            if message.name == "blockCopy" { blockCopyBridge.handle(message, generation: errorRegistry.scope.uuidString, enabled: AppearancePreference.shared.showCopyButtons); return }
-            if message.name == "errorFeedback" { errorRegistry.handle(message.body); return }
+            if message.name == "blockCopy" { blockCopyBridge.handle(message, generation: renderScope.scope.uuidString, enabled: AppearancePreference.shared.showCopyButtons); return }
             if message.name == "logger", let body = message.body as? String {
                 os_log("JS Log: %{public}@", log: logger, type: .debug, body)
                 
@@ -798,9 +770,9 @@ struct MarkdownWebView: NSViewRepresentable {
             }
 
             let resolvedSize = fontSize ?? (AppearancePreference.shared.baseFontSize * webView.pageZoom)
-            let exportScope = errorRegistry.scope
+            let exportScope = renderScope.scope
             webView.callAsyncJavaScript(RendererExportPreparation.pdfScript, arguments: ["fontSize":resolvedSize], in: nil, in: .page) { [weak self] result in
-                guard self?.errorRegistry.scope == exportScope else { return }
+                guard self?.renderScope.scope == exportScope else { return }
                 if case .failure(let error) = result {
                     os_log("exportPDF: failed to inject font-size variable: %{public}@",
                            log: self?.logger ?? .default, type: .error, error.localizedDescription)
@@ -1005,10 +977,6 @@ struct MarkdownWebView: NSViewRepresentable {
             })
         }
         private func handleLinkClick(href: String) {
-            if href == GitHubStar.repository.absoluteString {
-                GitHubStar.showRepository()
-                return
-            }
             if href.starts(with: "http://") || href.starts(with: "https://") {
                 if let url = URL(string: href) {
                     os_log("🔵 Opening external URL: %{public}@", log: logger, type: .default, href)
@@ -1033,7 +1001,7 @@ struct MarkdownWebView: NSViewRepresentable {
                    link.line.map(String.init) ?? "(none)", href)
             
             switch LinkNavigation.action(for: link) {
-            case .openFluxMarkdown(let position):
+            case .openBoaMarkdown(let position):
                 let id = position.map { DocumentPositionStore.shared.set($0, for: targetURL) }
                 NSDocumentController.shared.openDocument(withContentsOf: targetURL, display: true) { _, _, error in
                     if error != nil {

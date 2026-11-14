@@ -3,15 +3,10 @@ import { originalMathSource } from './math-source-store';
 export interface CopyRequest { id: string; generation: string; text: string }
 export interface CopyController { copy(block: HTMLElement): Promise<void>; dispose(): void }
 const snapshots = new WeakMap<Element, string>();
-const ignored = '.diagram-tools, .mermaid-tools, .block-copy-tools, .error-feedback-controls, .blockquote-placeholder, svg, script, style';
+const ignored = '.diagram-tools, .mermaid-tools, .block-copy-tools, .blockquote-placeholder, svg, script, style';
 const blocks = new Set(['P', 'DIV', 'BLOCKQUOTE', 'PRE', 'UL', 'OL', 'TABLE', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
 const labels: Record<string, [string, string, string, string, string]> = {
     en: ['Copy', 'Copied', 'Copy failed. Select the text to copy it manually, or retry.', 'Select Text', 'Copying…'],
-    zh: ['复制', '已复制', '复制失败。可选择文本手动复制，或重试。', '选择文本', '正在复制…'],
-    de: ['Kopieren', 'Kopiert', 'Kopieren fehlgeschlagen. Text zum manuellen Kopieren auswählen oder erneut versuchen.', 'Text auswählen', 'Wird kopiert…'],
-    fr: ['Copier', 'Copié', 'Échec de la copie. Sélectionnez le texte pour le copier manuellement ou réessayez.', 'Sélectionner le texte', 'Copie…'],
-    es: ['Copiar', 'Copiado', 'No se pudo copiar. Selecciona el texto para copiarlo manualmente o inténtalo de nuevo.', 'Seleccionar texto', 'Copiando…'],
-    ar: ['نسخ', 'تم النسخ', 'تعذر النسخ. حدد النص لنسخه يدويًا أو أعد المحاولة.', 'تحديد النص', 'جارٍ النسخ…'],
 };
 
 export function blockPlainText(element: Element): string {
@@ -58,7 +53,7 @@ function nativeCopy(request: CopyRequest): Promise<boolean> {
 }
 
 export function installBlockCopy(root: HTMLElement, generation: string, send = nativeCopy): CopyController {
-    const strings = labels[(window.__fluxLang || navigator.language).split('-')[0]] || labels.en;
+    const strings = labels.en;
     const entries = new Map<HTMLElement, { tools: HTMLElement; button: HTMLButtonElement; status: HTMLElement; wrapper?: HTMLElement; busy: boolean; timer?: ReturnType<typeof setTimeout> }>();
     const requestIDs = new Set<string>();
     const timers = new Set<ReturnType<typeof setTimeout>>();
@@ -120,9 +115,9 @@ export function installBlockCopy(root: HTMLElement, generation: string, send = n
             entries.clear();
         },
     };
-    root.querySelectorAll<HTMLElement>('pre, blockquote, .markdown-alert, .flux-math-source').forEach(block => {
+    root.querySelectorAll<HTMLElement>('pre, blockquote, .markdown-alert, .boa-math-source').forEach(block => {
         const math = originalMathSource(block);
-        if (block.classList.contains('flux-math-source') && math === undefined) return;
+        if (block.classList.contains('boa-math-source') && math === undefined) return;
         if (block.tagName === 'PRE' && (!block.querySelector('code') || block.querySelector('.typst-placeholder, .language-vega, .language-vega-lite, .language-dot, .language-graphviz'))) return;
         const inlineMath = math !== undefined && block.tagName === 'SPAN';
         const tools = document.createElement(inlineMath ? 'span' : 'div'); tools.className = 'block-copy-tools';

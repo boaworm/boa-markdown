@@ -6,7 +6,6 @@ import './styles/mermaid-layout.css';
 import { preserveLetterSequences } from './typography';
 import { installBlockCopy, blockCopyResult, CopyController } from './block-copy';
 import './styles/block-copy.css';
-import { installErrorFeedback, setFeedbackGeneration, feedbackGeneration } from './error-feedback';
 import { waitForExportReady, prepareExport, ExportPreparation } from './export-readiness';
 import { sanitizeDocumentFragment, sanitizeDiagramHTML } from './safe-html';
 import { renderTSVTable } from './tsv';
@@ -431,7 +430,7 @@ function buildMd(enableTypst = true): MarkdownIt {
     instance.use(sup);
     instance.use(anchor, {
         permalink: false,
-        getTokensText: (tokens: Array<{type:string;content:string}>) => tokens.filter(token => ['text', 'code_inline', 'flux_math_inline'].includes(token.type)).map(token => token.content).join(''),
+        getTokensText: (tokens: Array<{type:string;content:string}>) => tokens.filter(token => ['text', 'code_inline', 'boa_math_inline'].includes(token.type)).map(token => token.content).join(''),
         slugify: headingSlug
     });
     instance.use(githubAlerts);
@@ -531,7 +530,6 @@ interface RenderOptions {
     enableTypst?: boolean;
     enableEmoji?: boolean;
     context?: 'quicklook' | 'app' | 'finder';
-    uiLanguage?: string;
     contentsSide?: string;
     collapseBlockquotes?: boolean;
     prevContent?: string;
@@ -793,7 +791,6 @@ window.exportHTML = function(): string {
     
     clone.querySelectorAll('.block-copy-tools, .mermaid-tools, .diagram-tools').forEach(control => control.remove());
     clone.querySelectorAll('.block-copy-host').forEach(host => host.replaceWith(...Array.from(host.childNodes)));
-    clone.querySelectorAll('.error-feedback-controls').forEach(control => control.remove());
     clone.querySelectorAll('.search-highlight').forEach(mark => mark.replaceWith(document.createTextNode(mark.textContent || '')));
     clone.querySelectorAll('.math-search-highlight, .search-highlight-active').forEach(node => node.classList.remove('math-search-highlight', 'search-highlight-active'));
     clone.querySelectorAll<HTMLElement>('.blockquote-placeholder').forEach(placeholder => {
@@ -868,16 +865,6 @@ window.setContentsSide = function(side: string) {
     restoreReadingAnchor(anchor);
 };
 
-function applyInterfaceDirection(language?: string): boolean {
-    const effective = (language || (window as any).__fluxLang || navigator.language || 'en')
-        .split('-')[0].toLowerCase();
-    const isRtl = effective === 'ar';
-    document.documentElement.setAttribute('lang', effective);
-    if (isRtl) document.documentElement.setAttribute('dir', 'rtl');
-    else document.documentElement.removeAttribute('dir');
-    return isRtl;
-}
-
 // A resolved JS call alone does not prove that Markdown was rendered.
 window.verifyQuickLookProbe = (heading, boldText) => {
     const root = document.getElementById('markdown-preview');
@@ -943,16 +930,12 @@ window.renderMarkdown = async function (text: string, options: RenderOptions = {
 
     if (options.context) {
         currentContext = options.context;
-        (window as any).__fluxContext = currentContext;
+        (window as any).__boaContext = currentContext;
         document.documentElement.setAttribute('data-context', currentContext);
     }
 
     if (options.contentsSide !== undefined) window.setContentsSide(options.contentsSide);
 
-    if (options.uiLanguage) {
-        (window as any).__fluxLang = options.uiLanguage === 'system' ? undefined : options.uiLanguage;
-    }
-    const interfaceIsRtl = applyInterfaceDirection();
 
     let currentTheme = options.theme || 'default';
     if (currentTheme === 'system') {
@@ -1053,7 +1036,7 @@ window.renderMarkdown = async function (text: string, options: RenderOptions = {
                 const id = `${mathNamespace}-mml-${mathSources.length}`;
                 mathSources.push({ id, kind: 'mathml', raw, payload: raw, display, firstLine, lastLine: firstLine });
                 const holder = document.createElement(display ? 'div' : 'span');
-                holder.className = 'flux-math-source';
+                holder.className = 'boa-math-source';
                 holder.dataset.mathId = id;
                 math.replaceWith(holder);
                 holder.textContent = raw;
@@ -1068,14 +1051,14 @@ window.renderMarkdown = async function (text: string, options: RenderOptions = {
                 if (!isCurrent()) return;
                 const result = await renderMathSources(mathSources, mathNamespace, outputDiv, isCurrent);
                 if (!isCurrent()) return;
-                let style = document.getElementById('flux-math-styles');
-                if (!style) { style = document.createElement('style'); style.id = 'flux-math-styles'; document.head.appendChild(style); }
+                let style = document.getElementById('boa-math-styles');
+                if (!style) { style = document.createElement('style'); style.id = 'boa-math-styles'; document.head.appendChild(style); }
                 style.textContent = result.css;
                 for (const item of result.items) {
                     const target = placeholders.get(item.id);
                     if (!target) continue;
                     target.innerHTML = item.html;
-                    target.classList.add('flux-math');
+                    target.classList.add('boa-math');
                     separateMathLinks(target);
                     const failure = result.errors.find(error => error.sourceId === item.id);
                     if (failure) {
@@ -1129,7 +1112,7 @@ window.renderMarkdown = async function (text: string, options: RenderOptions = {
         logToSwift(`[renderMarkdown:${callId}] DOM UPDATED successfully`);
 
         if (options.showCopyButtons === true && currentContext !== 'finder') {
-            blockCopy = installBlockCopy(outputDiv, feedbackGeneration());
+            blockCopy = installBlockCopy(outputDiv, renderGeneration);
         }
 
         if (showLineNumbers) {
@@ -1147,9 +1130,6 @@ window.renderMarkdown = async function (text: string, options: RenderOptions = {
 
         if (detectRtlContent(renderBody)) {
             outputDiv.setAttribute('dir', 'rtl');
-        } else if (interfaceIsRtl) {
-            // Keep the document left-to-right when only the interface is Arabic.
-            outputDiv.setAttribute('dir', 'ltr');
         } else {
             outputDiv.removeAttribute('dir');
         }
@@ -1267,8 +1247,6 @@ window.renderMarkdown = (text, options) => {
 
 window.renderSource = function(text: string, theme: string, prevContent?: string, options: RenderOptions = {}) {
     disposeMathLayout?.(); disposeMathLayout = undefined;
-    window.__fluxLang = options.uiLanguage === "system" ? undefined : options.uiLanguage ?? window.__fluxLang;
-    applyInterfaceDirection();
     disposeBlockCopy();
     disposeMermaidLayout?.(); disposeMermaidLayout = undefined;
     disposeSVGZoom?.(); disposeSVGZoom = undefined;
@@ -1434,7 +1412,7 @@ function handleAnchorClick(e: Event) {
             // MathJax labels live inside SVG groups; scroll the complete formula so
             // its source wrapper's reading-toolbar clearance applies to navigation.
             const scrollTarget = anchor.classList.contains('math-reference-link')
-                ? targetElement.closest<HTMLElement>('.flux-math-source') || targetElement
+                ? targetElement.closest<HTMLElement>('.boa-math-source') || targetElement
                 : targetElement;
             scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
@@ -1604,6 +1582,6 @@ window.navigateDocumentPosition = function(position: DocumentPosition): boolean 
     return true;
 };
 
-Object.assign(window, { blockCopyResult, setFeedbackGeneration: (value: string) => { disposeBlockCopy(); setFeedbackGeneration(value); } });
-if (document.body) installErrorFeedback(document.body);
-else document.addEventListener("DOMContentLoaded", () => installErrorFeedback(document.body), { once: true });
+// The native host sets this per document; block-copy requests carry it so stale ones are rejected.
+let renderGeneration = '';
+Object.assign(window, { blockCopyResult, setRenderGeneration: (value: string) => { disposeBlockCopy(); renderGeneration = value; } });

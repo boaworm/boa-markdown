@@ -7,7 +7,7 @@ final class RecentDocumentHistory: ObservableObject {
     static let shared = RecentDocumentHistory()
     private let defaults: UserDefaults
     private let limit: Int
-    private let key = "FluxRecentDocumentPaths.v1"
+    private let key = "BoaRecentDocumentPaths.v1"
 
     init(defaults: UserDefaults = .standard, limit: Int = 20) {
         self.defaults = defaults

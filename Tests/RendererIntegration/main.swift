@@ -12,7 +12,6 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
     private var failNextMathCopy = false
     private var started = false
     private var index = 0
-    private var feedbackEvents: [[String: Any]] = []
     private var cases: [(String, String)] = [
         ("SVG and Mermaid shared zoom controls", """
         for(const context of ['app','quicklook']) {
@@ -137,8 +136,8 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         window.hideSearch();await window.renderMarkdown('# Reset');return true;
         """),
         ("mixed-language contents direction and targets", """
-        for(const uiLanguage of ['en','ar']) for(const contentsSide of ['left','right']) {
-          await window.renderMarkdown('# مقدمة\\n\\n## שלום עולם\\n\\n## English title\\n\\n## التفاصيل\\n\\n## التفاصيل',{context:'app',uiLanguage,contentsSide});
+        for(const uiLanguage of ['en']) for(const contentsSide of ['left','right']) {
+          await window.renderMarkdown('# مقدمة\\n\\n## שלום עולם\\n\\n## English title\\n\\n## التفاصيل\\n\\n## التفاصيل',{context:'app',contentsSide});
           const links=[...document.querySelectorAll('.toc-link')];
           if(links.length!==5)throw new Error('missing headings');
           if(new Set(links.map(a=>a.hash)).size!==5)throw new Error('duplicate anchors');
@@ -157,10 +156,10 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
           }
           if(document.documentElement.dataset.tocSide!==contentsSide)throw new Error('physical side changed');
         }
-        await window.renderMarkdown('# Reset',{uiLanguage:'en',contentsSide:'right'}); return true;
+        await window.renderMarkdown('# Reset',{contentsSide:'right'}); return true;
         """),
         ("Quick Look probe requires completed visible current fixture", """
-        const heading='FluxMarkdown Quick Look Test', bold='Rendered Markdown';
+        const heading='BoaMarkdown Quick Look Test', bold='Rendered Markdown';
         const fixture='# '+heading+'\\n\\n**'+bold+'** confirms the extension was selected.';
         const verify=()=>window.verifyQuickLookProbe(heading,bold);
         await window.renderMarkdown(fixture,{context:'quicklook'});
@@ -225,13 +224,13 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         await window.renderMarkdown('# Reset',{showCopyButtons:false}); return true;
         """),
         ("block copy contexts, accessibility, export and synthetic-event rejection", """
-        window.setFeedbackGeneration('33333333-3333-3333-3333-333333333333');
+        window.setRenderGeneration('33333333-3333-3333-3333-333333333333');
         const sample='```sh\\n\\techo "中文 & 😀"\\n\\n```\\n\\n> Quote\\n>\\n> > Nested\\n\\n> [!NOTE]\\n> Body';
         let writes=0;
         const original=window.webkit.messageHandlers.blockCopy;
         window.webkit.messageHandlers.blockCopy={postMessage:()=>{writes++}};
         for (const context of ['app','quicklook','finder']) {
-          await window.renderMarkdown(sample,{context,showCopyButtons:true,showLineNumbers:true,uiLanguage:'en'});
+          await window.renderMarkdown(sample,{context,showCopyButtons:true,showLineNumbers:true});
           const buttons=[...document.querySelectorAll('.block-copy-tools > button')];
           if(context==='finder') {if(buttons.length) return false;continue;}
           if(buttons.length!==4 || buttons.some(b=>!b.getAttribute('aria-label')||b.type!=='button')) return false;
@@ -248,8 +247,8 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         return !document.querySelector('.block-copy-tools,.block-copy-host');
         """),
         ("block copy narrow RTL geometry", """
-        for(const uiLanguage of ['en','ar']) for(const theme of ['light','dark']) {
-          await window.renderMarkdown('```\\n'+'LongCode'.repeat(400)+'\\n```\\n\\n> Quote',{context:'app',showCopyButtons:true,uiLanguage,theme});
+        for(const uiLanguage of ['en']) for(const theme of ['light','dark']) {
+          await window.renderMarkdown('```\\n'+'LongCode'.repeat(400)+'\\n```\\n\\n> Quote',{context:'app',showCopyButtons:true,theme});
           for(const button of document.querySelectorAll('.block-copy-tools > button')) {
             const rect=button.getBoundingClientRect();
             if(rect.width<20 || rect.left<0 || rect.right>window.innerWidth+1) return false;
@@ -258,7 +257,7 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
           const pre=document.querySelector('pre');
           if(pre.scrollWidth<=pre.clientWidth || document.documentElement.scrollWidth>window.innerWidth+1)return false;
         }
-        await window.renderMarkdown('# Reset',{context:'app',uiLanguage:'en',theme:'light'});return true;
+        await window.renderMarkdown('# Reset',{context:'app',theme:'light'});return true;
         """),
         ("block copy large document timing", """
         const text=Array(300).fill('```sh\\n  echo hello\\n```\\n\\n> A quoted paragraph.\\n').join('\\n');
@@ -275,27 +274,15 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         ("TSV safe bounded table and source", """
         const row=Array(100).fill('<img src=x>').join('\\t');
         const start=performance.now();
-        await window.renderMarkdown(Array(201).fill(row).join('\\n'),{format:'tsv',context:'app',theme:'dark',uiLanguage:'en'});
+        await window.renderMarkdown(Array(201).fill(row).join('\\n'),{format:'tsv',context:'app',theme:'dark'});
         const elapsed=performance.now()-start;
         window.webkit.messageHandlers.logger.postMessage('TSV 20,000 cells render ms: '+elapsed);
         if(elapsed>1000 || document.querySelectorAll('td').length!==20000 || document.querySelector('#markdown-preview img')) return false;
         if(!window.exportHTML().includes('tsv-truncated')) return false;
         window.renderSource('a\\tb\\npartial','dark',undefined,{format:'tsv',isTruncated:true});
         if(!document.querySelector('.tsv-truncated'))return false;
-        await window.renderMarkdown('# Restored',{uiLanguage:'en'});
+        await window.renderMarkdown('# Restored',{});
         return document.querySelector('h1').textContent==='Restored'&&!document.querySelector('.tsv-truncated');
-        """),
-        ("contextual feedback bridge", """
-        window.setFeedbackGeneration('11111111-1111-1111-1111-111111111111');
-        await window.renderMarkdown('```mermaid\\nSAMPLE-DO-NOT-INCLUDE ! invalid\\n```');
-        await new Promise(resolve=>setTimeout(resolve,20));
-        const button=document.querySelector('.mermaid-error [data-feedback-action="report"]');
-        if(!button)return false;
-        button.click();
-        const exported=window.exportHTML();
-        window.setFeedbackGeneration('22222222-2222-2222-2222-222222222222');
-        button.click();
-        return !exported.includes('data-feedback-action=');
         """),
         ("passive HTML", "await window.renderMarkdown('<img src=\"missing.png\" onerror=\"window.pwned=true\"><details><summary>ok</summary></details>'); return !document.querySelector('[onerror]') && !window.pwned && !!document.querySelector('details');"),
         ("new render wins", "const a=window.renderMarkdown('# OLD\\n\\n$x$'); const b=window.renderMarkdown('# NEW',{enableKatex:false}); await Promise.all([a,b]); return document.querySelector('h1').textContent==='NEW';"),
@@ -305,7 +292,7 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
           let plain;
           for(const showCopyButtons of [false,true]) {
             await window.renderMarkdown(source,{context,showCopyButtons});
-            const math=document.querySelector('.flux-math-source');
+            const math=document.querySelector('.boa-math-source');
             const host=math.closest('.math-copy-inline') || math;
             const text=host.nextSibling;
             const range=document.createRange();range.setStart(text,1);range.setEnd(text,2);
@@ -323,7 +310,7 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         return true;
         """),
         ("math native keyboard copy and reference", """
-        window.setFeedbackGeneration('math-keyboard');
+        window.setRenderGeneration('math-keyboard');
         const source=String.raw`\\(\\frac{x}{2}\\)`;
         await window.renderMarkdown(source+'\\n\\n'+String.raw`\\(\\eqref{x}\\)`+'\\n\\n'+Array(60).fill('Spacer paragraph.').join('\\n\\n')+'\\n\\n'+String.raw`\\[x=1\\tag{A}\\label{x}\\]`,{context:'app',showCopyButtons:true});
         const nativeFocusDeadline=performance.now()+4000;
@@ -356,8 +343,8 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         const narrowDeadline=performance.now()+3000;
         while(window.innerWidth>160 && performance.now()<narrowDeadline)await new Promise(r=>setTimeout(r,30));
         if(window.innerWidth>160)throw new Error('Native narrow zoom did not settle');
-        for(const uiLanguage of ['en','de','ar']) for(const failedSource of [source, '$$'+String.fromCharCode(10)+String.raw`\\frac{x}{2}`+String.fromCharCode(10)+'$$']) {
-          await window.renderMarkdown(failedSource,{context:'app',showCopyButtons:true,uiLanguage});
+        for(const uiLanguage of ['en']) for(const failedSource of [source, '$$'+String.fromCharCode(10)+String.raw`\\frac{x}{2}`+String.fromCharCode(10)+'$$']) {
+          await window.renderMarkdown(failedSource,{context:'app',showCopyButtons:true});
           document.querySelector('.math-copy-host .block-copy-tools > button').focus();
           window.webkit.messageHandlers.nativeMathKey.postMessage('failed-space');
           const failureDeadline=performance.now()+3000;
@@ -379,13 +366,13 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
           if(document.activeElement!==recovery || recovery.selectionStart!==0 || recovery.selectionEnd!==failedSource.length)throw new Error('Native select-source recovery failed');
           await window.waitForExportReady();
           const exported=new DOMParser().parseFromString(window.exportHTML(),'text/html');
-          if(exported.querySelector('.math-copy-source,.block-copy-error,.error-feedback-controls,.math-copy-host') || exported.querySelectorAll('mjx-container').length!==1)throw new Error('Copy failure polluted mathematical export');
+          if(exported.querySelector('.math-copy-source,.block-copy-error,.math-copy-host') || exported.querySelectorAll('mjx-container').length!==1)throw new Error('Copy failure polluted mathematical export');
         }
         window.webkit.messageHandlers.nativeMathKey.postMessage('restore-size');
         const restoreDeadline=performance.now()+3000;
         while(window.innerWidth<800 && performance.now()<restoreDeadline)await new Promise(r=>setTimeout(r,30));
         if(window.innerWidth<800)throw new Error('Native view size was not restored');
-        await window.renderMarkdown('# Restored',{context:'app',uiLanguage:'en',showCopyButtons:false});
+        await window.renderMarkdown('# Restored',{context:'app',showCopyButtons:false});
         return true;
         """),
         ("math baseline API compatibility and reference export", """
@@ -481,8 +468,8 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         """),
         ("RTL wide geometry", """
         for (const context of ['app','quicklook']) for (const contentsSide of ['left','right']) {
-          for (const uiLanguage of ['ar','en','ar']) {
-            await window.renderMarkdown('# One\\n\\n## Two\\n\\nEnglish text and `code`.',{context,contentsSide,uiLanguage});
+          for (const uiLanguage of ['en']) {
+            await window.renderMarkdown('# One\\n\\n## Two\\n\\nEnglish text and `code`.',{context,contentsSide});
             await new Promise(resolve=>setTimeout(resolve,30));
             const toggle=document.querySelector('.toc-toggle');
             if (toggle.getAttribute('aria-expanded')!=='true') toggle.click();
@@ -491,7 +478,7 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
             const nav=document.querySelector('.toc-nav').getBoundingClientRect();
             const button=toggle.getBoundingClientRect();
             const left=contentsSide==='left';
-            if (left ? nav.right>doc.left+2 : nav.left<doc.right-2) throw new Error(JSON.stringify({context,contentsSide,uiLanguage,doc:doc.toJSON(),nav:nav.toJSON()}));
+            if (left ? nav.right>doc.left+2 : nav.left<doc.right-2) throw new Error(JSON.stringify({context,contentsSide,doc:doc.toJSON(),nav:nav.toJSON()}));
             if (left ? button.left>window.innerWidth/2 : button.right<window.innerWidth/2) throw new Error('Contents entrance on wrong side');
             const controls=document.getElementById('reading-controls').getBoundingClientRect();
             const reserve=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--reading-native-reserve'));
@@ -504,11 +491,11 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
             }
           }
         }
-        await window.renderMarkdown('# Reset',{uiLanguage:'en'}); return true;
+        await window.renderMarkdown('# Reset',{}); return true;
         """),
         ("RTL narrow geometry", """
         for (const context of ['app','quicklook']) for (const contentsSide of ['left','right']) {
-          await window.renderMarkdown('# One\\n\\n## Two',{context,contentsSide,uiLanguage:'ar'});
+          await window.renderMarkdown('# One\\n\\n## Two',{context,contentsSide});
           await new Promise(resolve=>setTimeout(resolve,30));
           const toggle=document.querySelector('.toc-toggle');
           if(toggle.getAttribute('aria-expanded')!=='true') toggle.click();
@@ -518,7 +505,7 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
           if(panel.dataset.layout!=='overlay' || (contentsSide==='left' ? Math.abs(rect.left-16)>2 : Math.abs(rect.right-(window.innerWidth-16))>2)) throw new Error(JSON.stringify({contentsSide,rect:rect.toJSON()}));
           document.querySelector('.toc-close').click();
         }
-        await window.renderMarkdown('# Reset',{uiLanguage:'en'}); return true;
+        await window.renderMarkdown('# Reset',{}); return true;
         """),
     ]
     let svgMarkdown = """
@@ -532,12 +519,12 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
     var sizingSVGData = ""
 
     func run() {
-        if let filter = ProcessInfo.processInfo.environment["FLUX_WEBKIT_CASE_FILTER"] {
+        if let filter = ProcessInfo.processInfo.environment["BOA_WEBKIT_CASE_FILTER"] {
             cases = cases.filter { $0.0.localizedCaseInsensitiveContains(filter) }
             guard !cases.isEmpty else { fputs("FAIL no matching integration cases\n", stderr); exit(1) }
         }
         let sizingSVG: Data
-        if let fixture = ProcessInfo.processInfo.environment["FLUX_SVG_SIZING_FIXTURE"] {
+        if let fixture = ProcessInfo.processInfo.environment["BOA_SVG_SIZING_FIXTURE"] {
             sizingSVG = try! BoundedFileReader.read(URL(fileURLWithPath: fixture), maxBytes: 8 * 1024 * 1024)
         } else {
             sizingSVG = Data(#"<svg xmlns="http://www.w3.org/2000/svg" width="100%" style="max-width:586.5px" viewBox="4 4 586.5 1088"><style>text {font-size:16px}</style><rect x="4" y="4" width="586.5" height="1088" fill="lightgray"/><text x="20" y="40">Diagram label</text></svg>"#.utf8)
@@ -552,7 +539,6 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
         config.userContentController.add(self, name: "logger")
         config.userContentController.add(self, name: "blockCopy")
         config.userContentController.add(self, name: "nativeMathKey")
-        config.userContentController.add(self, name: "errorFeedback")
         config.setURLSchemeHandler(RendererBundleSchemeHandler(rootDirectory: URL(fileURLWithPath: CommandLine.arguments[1])), forURLScheme: RendererBundleSchemeHandler.scheme)
         let imageDirectory = URL(fileURLWithPath: CommandLine.arguments[2])
         let imageURL = imageDirectory.appendingPathComponent("pixel.png")
@@ -604,7 +590,6 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
             }
             return
         }
-        if message.name == "errorFeedback", let body = message.body as? [String: Any] { feedbackEvents.append(body); return }
         guard let text = message.body as? String else { return }
         if text.contains("Error") || text.contains("fallback") || text.hasPrefix("TSV 20,000") || text.hasPrefix("COPY performance") { print(text) }
         if text == "rendererReady" && !started { started = true; next() }
@@ -639,12 +624,6 @@ final class RendererIntegration: NSObject, WKScriptMessageHandler {
                 if name == "math native keyboard copy and reference" {
                     guard self.mathPasteboard.string(forType: .string) == #"\(\frac{x}{2}\)"# else { print("FAIL mathematical clipboard source"); exit(1) }
                     self.mathPasteboard.releaseGlobally()
-                }
-                if name == "contextual feedback bridge" {
-                    let reports = self.feedbackEvents.filter { $0["action"] as? String == "report" }
-                    guard reports.count == 1, reports[0]["kind"] as? String == "mermaid",
-                          reports[0]["generation"] as? String == "11111111-1111-1111-1111-111111111111",
-                          !String(describing: self.feedbackEvents).contains("SAMPLE-DO-NOT-INCLUDE") else { print("FAIL feedback payload or stale action"); exit(1) }
                 }
                 if name == "inline math copy controls preserve text spacing" || name == "block copy delayed visibility and focus" || name == "math native keyboard copy and reference" || (name.hasPrefix("Mermaid body-size") || name.hasPrefix("SVG and Mermaid")) {
                     self.focusWindow?.contentView = nil

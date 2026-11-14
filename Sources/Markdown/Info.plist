@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>FluxMarkdown</string>
+	<string>BoaMarkdown</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundleIconName</key>
@@ -14,7 +14,7 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>com.xykong.Markdown</string>
+			<string>io.github.boaworm.Markdown</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>markdownpreview</string>
@@ -35,19 +35,19 @@
 				<string>net.daringfireball.markdown</string>
 				<string>public.markdown</string>
 				<string>net.ia.markdown</string>
-				<string>com.fluxmarkdown.mdx</string>
-				<string>com.fluxmarkdown.rmd</string>
-				<string>com.fluxmarkdown.qmd</string>
-				<string>com.fluxmarkdown.mdoc</string>
-				<string>com.fluxmarkdown.mdc</string>
-				<string>com.fluxmarkdown.mmd</string>
-				<string>com.fluxmarkdown.livemd</string>
-				<string>com.fluxmarkdown.markdown</string>
-				<string>com.fluxmarkdown.mdown</string>
-				<string>com.fluxmarkdown.mkd</string>
-				<string>com.fluxmarkdown.mkdn</string>
-				<string>com.fluxmarkdown.mkdown</string>
-				<string>com.fluxmarkdown.mdwn</string>
+				<string>io.github.boaworm.mdx</string>
+				<string>io.github.boaworm.rmd</string>
+				<string>io.github.boaworm.qmd</string>
+				<string>io.github.boaworm.mdoc</string>
+				<string>io.github.boaworm.mdc</string>
+				<string>io.github.boaworm.mmd</string>
+				<string>io.github.boaworm.livemd</string>
+				<string>io.github.boaworm.markdown</string>
+				<string>io.github.boaworm.mdown</string>
+				<string>io.github.boaworm.mkd</string>
+				<string>io.github.boaworm.mkdn</string>
+				<string>io.github.boaworm.mkdown</string>
+				<string>io.github.boaworm.mdwn</string>
 			</array>
 		</dict>
 		<dict>
@@ -64,7 +64,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>FluxMarkdown</string>
+	<string>BoaMarkdown</string>
 	<key>CFBundlePackageType</key>
 	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
 	<key>CFBundleShortVersionString</key>
@@ -83,7 +83,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown Document (markdown)</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.markdown</string>
+			<string>io.github.boaworm.markdown</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -100,7 +100,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown Document (mdown)</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mdown</string>
+			<string>io.github.boaworm.mdown</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -117,7 +117,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown Document (mkd)</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mkd</string>
+			<string>io.github.boaworm.mkd</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -134,7 +134,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown Document (mkdn)</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mkdn</string>
+			<string>io.github.boaworm.mkdn</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -151,7 +151,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown Document (mkdown)</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mkdown</string>
+			<string>io.github.boaworm.mkdown</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -168,7 +168,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdown Document (mdwn)</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mdwn</string>
+			<string>io.github.boaworm.mdwn</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -206,7 +206,7 @@
 			<key>UTTypeDescription</key>
 			<string>MDX Document</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mdx</string>
+			<string>io.github.boaworm.mdx</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -223,7 +223,7 @@
 			<key>UTTypeDescription</key>
 			<string>R Markdown Document</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.rmd</string>
+			<string>io.github.boaworm.rmd</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -240,7 +240,7 @@
 			<key>UTTypeDescription</key>
 			<string>Quarto Document</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.qmd</string>
+			<string>io.github.boaworm.qmd</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -257,7 +257,7 @@
 			<key>UTTypeDescription</key>
 			<string>Markdoc Document</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mdoc</string>
+			<string>io.github.boaworm.mdoc</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -274,7 +274,7 @@
 			<key>UTTypeDescription</key>
 			<string>MDC Document</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mdc</string>
+			<string>io.github.boaworm.mdc</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -291,7 +291,7 @@
 			<key>UTTypeDescription</key>
 			<string>Mermaid Diagram</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.mmd</string>
+			<string>io.github.boaworm.mmd</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -308,7 +308,7 @@
 			<key>UTTypeDescription</key>
 			<string>Livebook Notebook</string>
 			<key>UTTypeIdentifier</key>
-			<string>com.fluxmarkdown.livemd</string>
+			<string>io.github.boaworm.livemd</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>public.filename-extension</key>
@@ -318,20 +318,5 @@
 			</dict>
 		</dict>
 	</array>
-	<key>SUFeedURL</key>
-	<string>https://raw.githubusercontent.com/xykong/flux-markdown/master/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>BDhsLBTgtRax5K78RrmvkB2wCcLeKM7FxsuHu47soaU=</string>
-	<key>SUPublicEDKeyChain</key>
-	<array>
-		<string>6SVanhzrlDTTBpWI4kYycYh05QUI0lbkZg/LyOQCO8A=</string>
-		<string>BDhsLBTgtRax5K78RrmvkB2wCcLeKM7FxsuHu47soaU=</string>
-	</array>
-	<key>SUEnableAutomaticChecks</key>
-	<true/>
-	<key>SUScheduledCheckInterval</key>
-	<integer>86400</integer>
-	<key>SUAllowsAutomaticUpdates</key>
-	<true/>
 </dict>
 </plist>

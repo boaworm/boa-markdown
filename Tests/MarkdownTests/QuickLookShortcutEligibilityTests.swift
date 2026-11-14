@@ -6,7 +6,7 @@ final class QuickLookShortcutEligibilityTests: XCTestCase {
         QuickLookShortcutEvidence(permissionGranted: true, finderFrontmost: true,
             focusedWindow: true, identifier: QuickLookShortcutIdentity.identifier(for: UUID()),
             buttonRole: true, pressAction: true, extensionSignatureValid: true,
-            extensionIdentifier: "com.xykong.Markdown.QuickLook", expectedExecutable: true)
+            extensionIdentifier: "io.github.boaworm.Markdown.QuickLook", expectedExecutable: true)
     }
 
     func testVerifiedPreviewIsEligible() {

@@ -1,15 +1,11 @@
-name: FluxMarkdown
+name: BoaMarkdown
 options:
-  bundleIdPrefix: com.xykong
+  bundleIdPrefix: io.github.boaworm
   deploymentTarget:
     macOS: "11.0"
 settings:
   MARKETING_VERSION: ${MARKETING_VERSION}
   CURRENT_PROJECT_VERSION: ${CURRENT_PROJECT_VERSION}
-packages:
-  Sparkle:
-    url: https://github.com/sparkle-project/Sparkle
-    exactVersion: 2.9.3
 targets:
   Markdown:
     type: application
@@ -23,8 +19,8 @@ targets:
     settings:
       base:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        PRODUCT_NAME: "FluxMarkdown"
-        PRODUCT_BUNDLE_IDENTIFIER: com.xykong.Markdown
+        PRODUCT_NAME: "BoaMarkdown"
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.boaworm.Markdown
         INFOPLIST_FILE: Sources/Markdown/Info.plist
         INFOPLIST_KEY_NSMainStoryboardFile: ""
         ENABLE_PREVIEWS: NO
@@ -39,8 +35,6 @@ targets:
     dependencies:
       - target: MarkdownPreview
         embed: true
-      - package: Sparkle
-        product: Sparkle
 
   MarkdownPreview:
     type: app-extension
@@ -53,7 +47,7 @@ targets:
         type: folder
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.xykong.Markdown.QuickLook
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.boaworm.Markdown.QuickLook
         INFOPLIST_FILE: Sources/MarkdownPreview/Info.plist
         SKIP_INSTALL: YES
         MARKETING_VERSION: ${MARKETING_VERSION}
@@ -74,19 +68,16 @@ targets:
     platform: macOS
     sources:
       - Sources/SearchLauncher
-      - Sources/Shared/UsageTelemetry.swift
-      - Sources/Shared/UsageTelemetryState.swift
       - Sources/Shared/SharedPreferenceStore.swift
       - Sources/Shared/BoundedFileReader.swift
       - Sources/Shared/SearchLaunchClient.swift
       - Sources/Shared/SearchLaunchProtocol.swift
-      - Sources/Shared/ErrorIncident.swift
       - Sources/Shared/DocumentPosition.swift
       - Sources/Shared/SearchWindowPlacement.swift
     settings:
       base:
-        PRODUCT_NAME: FluxMarkdownSearchLauncher
-        PRODUCT_BUNDLE_IDENTIFIER: com.xykong.Markdown.SearchLauncher
+        PRODUCT_NAME: BoaMarkdownSearchLauncher
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.boaworm.Markdown.SearchLauncher
         INFOPLIST_FILE: Sources/SearchLauncher/Info.plist
         CODE_SIGN_ENTITLEMENTS: Sources/SearchLauncher/SearchLauncher.entitlements
         SKIP_INSTALL: YES
@@ -102,8 +93,8 @@ targets:
       - Sources/Shared/QuickLookShortcutIdentity.swift
     settings:
       base:
-        PRODUCT_NAME: FluxMarkdownShortcutProbe
-        PRODUCT_BUNDLE_IDENTIFIER: com.xykong.Markdown.ShortcutProbe
+        PRODUCT_NAME: BoaMarkdownShortcutProbe
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.boaworm.Markdown.ShortcutProbe
         INFOPLIST_FILE: Sources/ShortcutProbe/Info.plist
         MARKETING_VERSION: ${MARKETING_VERSION}
         CURRENT_PROJECT_VERSION: ${CURRENT_PROJECT_VERSION}
@@ -115,13 +106,9 @@ targets:
     platform: macOS
     sources:
       - Tests/MarkdownTests
-      - Sources/Markdown/StarReminder.swift
       - Sources/Markdown/WindowAccessor.swift
       - Sources/Markdown/ResourceLoader.swift
       - Sources/Markdown/QuickLookRegistration.swift
-      - Sources/Markdown/AppUpdaterController.swift
-      - Sources/Markdown/UpdateDelegate.swift
-      - Sources/Markdown/InterfaceLayoutDirection.swift
       - Sources/MarkdownPreview
       - Sources/Shared
       - benchmark/swift-bench/RenderBenchmarkTests.swift
@@ -130,12 +117,9 @@ targets:
         type: folder
     settings:
       GENERATE_INFOPLIST_FILE: YES
-      PRODUCT_BUNDLE_IDENTIFIER: com.xykong.Markdown.Tests
+      PRODUCT_BUNDLE_IDENTIFIER: io.github.boaworm.Markdown.Tests
       MARKETING_VERSION: ${MARKETING_VERSION}
       CURRENT_PROJECT_VERSION: ${CURRENT_PROJECT_VERSION}
-    dependencies:
-      - package: Sparkle
-        product: Sparkle
 schemes:
   Markdown:
     build:

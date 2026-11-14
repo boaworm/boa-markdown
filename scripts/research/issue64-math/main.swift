@@ -6,7 +6,7 @@ final class ProbeSchemeHandler: NSObject, WKURLSchemeHandler {
     let base: RendererBundleSchemeHandler
     init(root: URL) { base = RendererBundleSchemeHandler(rootDirectory: root) }
     func webView(_ webView: WKWebView, start task: WKURLSchemeTask) {
-        if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_TRACE_RESOURCES"] == "1",
+        if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_TRACE_RESOURCES"] == "1",
            let name = task.request.url?.lastPathComponent {
             fputs("RESOURCE_REQUEST \(name)\n", stderr)
         }
@@ -26,7 +26,7 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .nonPersistent()
         config.userContentController.add(self, name: "trace")
-        if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_MISSING_APIS"] == "1" {
+        if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_MISSING_APIS"] == "1" {
             config.userContentController.addUserScript(WKUserScript(source: """
                 const targets=[[Object,'hasOwn','Object.hasOwn'],[Array.prototype,'at','Array.at'],[String.prototype,'at','String.at'],[Object.getPrototypeOf(Uint8Array.prototype),'at','TypedArray.at']];
                 for(const [owner,key,name] of targets) {
@@ -36,35 +36,35 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
                 window.webkit.messageHandlers.trace.postMessage('COMPAT_APIS_REMOVED_AT_DOCUMENT_START');
                 """, injectionTime: .atDocumentStart, forMainFrameOnly: true))
         }
-        if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_FEEDBACK_RECORDING"] == "1" {
+        if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_FEEDBACK_RECORDING"] == "1" {
             config.userContentController.add(self, name: "errorFeedback")
         }
         config.userContentController.addUserScript(WKUserScript(source: "window.addEventListener('error',e=>window.webkit.messageHandlers.trace.postMessage(String(e.message)));window.addEventListener('securitypolicyviolation',e=>window.webkit.messageHandlers.trace.postMessage('CSP '+e.blockedURI+' '+e.violatedDirective));window.addEventListener('unhandledrejection',e=>window.webkit.messageHandlers.trace.postMessage(String(e.reason)));console.warn=console.error=(...x)=>window.webkit.messageHandlers.trace.postMessage(x.map(String).join(' '));", injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        config.setURLSchemeHandler(ProbeSchemeHandler(root: URL(fileURLWithPath: CommandLine.arguments[2])), forURLScheme: "flux-renderer")
-        let width = Double(ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_WIDTH"] ?? "960") ?? 0
+        config.setURLSchemeHandler(ProbeSchemeHandler(root: URL(fileURLWithPath: CommandLine.arguments[2])), forURLScheme: "boa-renderer")
+        let width = Double(ProcessInfo.processInfo.environment["BOA_MATH_PROBE_WIDTH"] ?? "960") ?? 0
         guard width.isFinite, (240...1920).contains(width) else {
             fputs("Probe width must be between 240 and 1920 points\n", stderr)
             exit(2)
         }
         view = WKWebView(frame: NSRect(x: 0, y: 0, width: width, height: 900), configuration: config)
-        let zoom = Double(ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_ZOOM"] ?? "1") ?? 0
+        let zoom = Double(ProcessInfo.processInfo.environment["BOA_MATH_PROBE_ZOOM"] ?? "1") ?? 0
         guard zoom.isFinite, (0.5...3).contains(zoom) else {
             fputs("Probe zoom must be between 0.5 and 3\n", stderr)
             exit(2)
         }
         view.pageZoom = zoom
-        let theme = ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_THEME"] ?? "system"
+        let theme = ProcessInfo.processInfo.environment["BOA_MATH_PROBE_THEME"] ?? "system"
         guard ["system", "light", "dark"].contains(theme) else { exit(2) }
         if theme != "system" { view.appearance = NSAppearance(named: theme == "dark" ? .darkAqua : .aqua) }
         view.navigationDelegate = self
-        if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_WINDOW"] == "1" {
+        if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_WINDOW"] == "1" {
             let window = NSWindow(contentRect: view.frame, styleMask: [.titled], backing: .buffered, defer: false)
             guard let policy = TestWindowPolicy(environment: ProcessInfo.processInfo.environment),
                   let frame = policy.frame(size: window.frame.size, screens: NSScreen.screens.map({ $0.visibleFrame })) else {
                 fputs("Probe required test display is unavailable or too small\n", stderr); exit(2)
             }
             window.setFrame(frame, display: false)
-            window.title = "FluxMarkdown mathematical memory probe"
+            window.title = "BoaMarkdown mathematical memory probe"
             window.contentView = view
             if policy.allowsFocus {
                 app.setActivationPolicy(.regular)
@@ -93,7 +93,7 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         fputs("JS: \(message.body)\n",stderr)
     }
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_REPORT_PROCESS"] == "1" {
+        if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_REPORT_PROCESS"] == "1" {
             // Test-only WebKit SPI. Never guess another application's process if unavailable.
             guard webView.responds(to: NSSelectorFromString("_webProcessIdentifier")),
                   let pid = webView.value(forKey: "_webProcessIdentifier") as? NSNumber,
@@ -104,12 +104,12 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         }
         fputs("Page loaded\n",stderr)
         webView.callAsyncJavaScript(script, arguments: ["source":source, "probeZoom":webView.pageZoom,
-            "probeTheme":ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_THEME"] ?? "system"], in: nil, in: .page) { result in
+            "probeTheme":ProcessInfo.processInfo.environment["BOA_MATH_PROBE_THEME"] ?? "system"], in: nil, in: .page) { result in
             switch result {
             case .success(let value):
                 if JSONSerialization.isValidJSONObject(value), let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]) { print(String(data: data, encoding: .utf8)!) }
                 else { print(String(describing:value)) }
-                if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_CLOSE_WAIT"] == "1" {
+                if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_CLOSE_WAIT"] == "1" {
                     self.view.configuration.userContentController.removeScriptMessageHandler(forName: "trace")
                     self.view.navigationDelegate = nil
                     self.hostWindow?.contentView = nil
@@ -118,7 +118,7 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
                     self.view = nil
                     fputs("JS: MEMPHASE webview-released\n", stderr)
                     DispatchQueue.main.asyncAfter(deadline: .now() + 15) { exit(0) }
-                } else if let path = ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_SNAPSHOT"] {
+                } else if let path = ProcessInfo.processInfo.environment["BOA_MATH_PROBE_SNAPSHOT"] {
                     webView.takeSnapshot(with: nil) { image, error in
                         guard error == nil, let tiff = image?.tiffRepresentation,
                               let bitmap = NSBitmapImageRep(data: tiff),

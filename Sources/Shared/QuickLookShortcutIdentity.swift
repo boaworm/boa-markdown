@@ -13,7 +13,7 @@ struct QuickLookShortcutEvidence {
 }
 
 enum QuickLookShortcutIdentity {
-    static let prefix = "com.xykong.Markdown.QuickLook.search."
+    static let prefix = "io.github.boaworm.Markdown.QuickLook.search."
 
     static func identifier(for viewID: UUID) -> String { prefix + viewID.uuidString }
 
@@ -26,7 +26,7 @@ enum QuickLookShortcutIdentity {
         evidence.permissionGranted && evidence.finderFrontmost && evidence.focusedWindow
             && viewID(from: evidence.identifier) != nil && evidence.buttonRole
             && evidence.pressAction && evidence.extensionSignatureValid
-            && evidence.extensionIdentifier == "com.xykong.Markdown.QuickLook"
+            && evidence.extensionIdentifier == "io.github.boaworm.Markdown.QuickLook"
             && evidence.expectedExecutable
     }
 }

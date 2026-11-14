@@ -1,11 +1,8 @@
 import SwiftUI
 import AppKit
-import Sparkle
 import os.log
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    let updaterController = AppUpdaterController()
-
     private var preferenceObservationTimer: Timer?
 
     func applicationDidBecomeActive(_ notification: Notification) {
@@ -24,34 +21,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        ErrorFeedback.supplementProvider = { incident, completion in
-            DispatchQueue.global(qos: .utility).async {
-                let summary = QuickLookRegistration.diagnosticSummary()
-                var fields: [String: String] = [:]
-                for line in summary.components(separatedBy: "\n") where line.hasPrefix("- ") {
-                    let parts = line.dropFirst(2).components(separatedBy: ": ")
-                    if parts.count == 2 { fields[parts[0]] = parts[1] }
-                }
-                var enriched = incident
-                enriched.quickLookCheck = IncidentQuickLookCheck(date: Date(), fields: IncidentQuickLookCheck.sanitize(fields))
-                completion(enriched)
-            }
-        }
-        _ = StarReminderStore.shared
-        NotificationCenter.default.addObserver(forName: Notification.Name("FluxMarkdown.TestQuickLook"), object: nil, queue: .main) { _ in
+        NotificationCenter.default.addObserver(forName: Notification.Name("BoaMarkdown.TestQuickLook"), object: nil, queue: .main) { _ in
             QuickLookSelfTest.shared.show()
         }
         preferenceObservationTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
             AppearancePreference.shared.observePreferenceChanges()
         }
-        print("✅ Sparkle updater controller initialized")
 
         if CommandLine.arguments.contains("--register-only") {
             NSApplication.shared.terminate(nil)
         }
 
         RecentDocumentHistory.shared.migrate(NSDocumentController.shared.recentDocumentURLs)
-        UpdateRestorationManager.shared.restoreLastOpenedFile()
     }
 
     @objc func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
@@ -60,9 +41,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             print("❌ Invalid URL event")
             return
         }
-
-        if PromotionAttributionController.shared.receive(url) { return }
-        if ErrorFeedback.receive(url) { return }
 
         guard let request = DocumentOpenRequest(url: url) else { return }
         os_log("Document URL request received; position=%{public}@ placement=%{public}d", type: .info,
@@ -82,12 +60,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             NotificationCenter.default.post(name: DocumentPositionStore.notification, object: request.fileURL)
         }
-    }
-
-    func application(_ application: NSApplication, openFile filename: String) -> Bool {
-        let fileURL = URL(fileURLWithPath: filename)
-        UpdateRestorationManager.shared.saveLastOpenedFile(url: fileURL)
-        return false
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -142,10 +114,6 @@ struct MarkdownApp: App {
                 .keyboardShortcut("p", modifiers: [.command, .shift])
             }
             
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updaterController: appDelegate.updaterController)
-            }
-
             CommandGroup(after: .textEditing) {
                 Divider()
                 Button(action: {
@@ -157,48 +125,13 @@ struct MarkdownApp: App {
             }
 
             CommandGroup(replacing: .help) {
-                Button(NSLocalizedString("FluxMarkdown Help", comment: "Help menu item")) {
-                    if let url = URL(string: "https://github.com/xykong/flux-markdown/blob/master/docs/user/HELP.md") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-                .keyboardShortcut("?", modifiers: [.command])
-                
-                Divider()
-                
-                Button(NSLocalizedString("README", comment: "README menu item")) {
-                    if let url = URL(string: "https://github.com/xykong/flux-markdown#readme") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-                
                 Button(NSLocalizedString("Repair Quick Look…", comment: "QuickLook recovery menu")) {
                     QuickLookRepairController.shared.show()
-                }
-                Button(NSLocalizedString("Report an Issue", comment: "Report issue menu item")) {
-                    FeedbackWindowController.shared.show()
-                }
-                Button(ErrorFeedback.text("Review Last Error…")) { ErrorFeedback.showLatest() }
-                Button(ErrorFeedback.text("Clear Error History")) { ErrorFeedback.clearHistory() }
-                Button(NSLocalizedString("Suggest a Feature…", comment: "Feature feedback menu")) {
-                    if !NSWorkspace.shared.open(FeedbackIssueLink.feature) {
-                        FeedbackWindowController.shared.showFeatureFallback()
-                    }
                 }
                 
                 Divider()
                 
                 Button(NSLocalizedString("Test Quick Look", comment: "QuickLook self-test")) { QuickLookSelfTest.shared.show() }
-
-                Button(action: GitHubStar.showRepository) {
-                    Label(NSLocalizedString("Star on GitHub", comment: "Support project"), systemImage: "star")
-                }
-
-                Button(NSLocalizedString("Release Notes", comment: "Release notes menu item")) {
-                    if let url = URL(string: "https://github.com/xykong/flux-markdown/releases") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
             }
             CommandGroup(after: .toolbar) {
                 Button(action: {
@@ -230,7 +163,7 @@ struct MarkdownApp: App {
                 Menu(NSLocalizedString("Appearance", comment: "Appearance submenu")) {
                     ForEach(AppearanceMode.allCases) { mode in
                         Button(action: {
-                            preference.setAppearance(mode, source: .toolbar)
+                            preference.setAppearance(mode)
                         }) {
                             HStack {
                                 Text(mode.displayName)
@@ -254,7 +187,6 @@ private struct DocumentPreviewScene: View {
     let file: FileDocumentConfiguration<MarkdownDocument>
     @ObservedObject var preference: AppearancePreference
     @Binding var viewMode: ViewMode
-    @StateObject private var starReminder = StarReminderSession()
     @State private var toolbarToast: ToolbarToastState?
     @State private var nativeToolbarTrailingInset: CGFloat = 10
 
@@ -289,8 +221,7 @@ private struct DocumentPreviewScene: View {
                 collapseBlockquotesByDefault: preference.collapseBlockquotesByDefault,
                 showLineNumbers: preference.showLineNumbers,
                 showCopyButtons: preference.showCopyButtons,
-                contentsSide: preference.contentsSide,
-                starReminder: starReminder
+                contentsSide: preference.contentsSide
             )
 
             if let version = DisplayVersion.text(in: .main) {
@@ -367,9 +298,9 @@ private struct DocumentPreviewScene: View {
                     appearance: preference.currentMode.nsAppearance
                 ) {
                     switch preference.currentMode {
-                    case .system: preference.setAppearance(.light, source: .toolbar)
-                    case .light:  preference.setAppearance(.dark, source: .toolbar)
-                    case .dark:   preference.setAppearance(.system, source: .toolbar)
+                    case .system: preference.setAppearance(.light)
+                    case .light:  preference.setAppearance(.dark)
+                    case .dark:   preference.setAppearance(.system)
                     }
                 }
             }
@@ -382,10 +313,7 @@ private struct DocumentPreviewScene: View {
         }
         // Match the renderer's physical right-edge reservation in every language.
         .environment(\.layoutDirection, .leftToRight)
-        StarReminderCard(session: starReminder)
-            .preferredColorScheme(preference.currentMode == .system ? nil : (preference.currentMode == .dark ? .dark : .light))
         }
-        .onDisappear { starReminder.invalidate() }
         .onChange(of: file.fileURL) { url in
             if let url { RecentDocumentHistory.shared.record(url) }
         }
@@ -397,7 +325,6 @@ private struct DocumentPreviewScene: View {
         .onAppear {
             if let fileURL = file.fileURL {
                 RecentDocumentHistory.shared.record(fileURL)
-                UpdateRestorationManager.shared.saveLastOpenedFile(url: fileURL)
             }
         }
         .frame(
@@ -421,7 +348,6 @@ private struct DocumentPreviewScene: View {
                 showToolbarToast(resetZoomToastMessage)
             }
         })
-        .interfaceLayoutDirection(for: preference.uiLanguage)
     }
 
     private func showToolbarToast(_ message: String) {
@@ -635,19 +561,5 @@ private final class WindowObservingToolbarFeedbackView: NSView {
         guard let window, attachedWindow !== window else { return }
         attachedWindow = window
         onWindowAttach?(window)
-    }
-}
-
-struct CheckForUpdatesView: View {
-    @ObservedObject var updaterController: AppUpdaterController
-
-    var body: some View {
-        Button(NSLocalizedString("Check for Updates...", comment: "Check for updates menu item")) {
-            print("🔍 [DEBUG] Triggering update check...")
-            updaterController.checkForUpdates()
-        }
-        .disabled(!updaterController.canCheckForUpdates)
-        .keyboardShortcut("u", modifiers: [.command])
-        Divider()
     }
 }

@@ -6,7 +6,7 @@ final class QuickLookDiagnosticStageTests: XCTestCase {
         let attempt = UUID()
         let error = NSError(domain: "private/path?credential=SECRET", code: 513, userInfo: [NSLocalizedDescriptionKey: "private document SECRET"])
         let event = QuickLookProbeEvidence.diagnosticMarker(token: token, version: "1.44.761", build: "761", stage: .fileReadFailed, attempt: attempt, context: .quicklook, error: error)
-        XCTAssertEqual(event, "FluxQuickLookStage schema=2 token=\(token) version=1.44.761 build=761 attempt=\(attempt.uuidString) context=quicklook stage=fileReadFailed error=other code=513")
+        XCTAssertEqual(event, "BoaQuickLookStage schema=2 token=\(token) version=1.44.761 build=761 attempt=\(attempt.uuidString) context=quicklook stage=fileReadFailed error=other code=513")
         XCTAssertFalse(event?.contains("SECRET") ?? true)
         XCTAssertNil(QuickLookProbeEvidence.diagnosticMarker(token: "bad", version: "1.44.761", build: "761", stage: .prepared, attempt: attempt, context: .quicklook))
         XCTAssertNil(QuickLookProbeEvidence.diagnosticMarker(token: token, version: "SECRET\n", build: "761", stage: .prepared, attempt: attempt, context: .quicklook))

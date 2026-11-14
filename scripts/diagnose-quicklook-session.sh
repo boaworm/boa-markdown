@@ -28,11 +28,11 @@ function run(args){
     function empty(){return {status:'unconfirmed',lastStage:null,identityMismatches:0,actualHost:'not-verified',attempts:[],events:[]};}
     var out={schema:1,selfTest:empty(),finder:empty(),observed:choice(cfg.observed,['rendered','plain-text','blank','error','not-checked'],'not-reported'),capture:{stream:choice(cfg.stream,['completed','stopped','unavailable','exited-early','output-limit'],'unknown'),logRead:input.state,invalidRecords:invalid,eventLimitReached:records.length>1000,selfTestCommand:choice(cfg.selfTest,['rendered','unconfirmed','failed','timed-out','skipped'],'unknown')},visibleOutcomeMismatch:false,absenceIsNotProof:true,systemCandidateRecords:0};
     var stages=['prepared','fileRead','fileReadFailed','handshake','handshakeTimeout','renderStarted','rendered','rendererFailed','renderUnverified','sourceMode'];
-    var re=/^FluxQuickLookStage schema=2 token=([A-F0-9-]{36}) version=([A-Za-z0-9._-]{1,64}) build=([A-Za-z0-9._-]{1,32}) attempt=([A-F0-9-]{36}) context=(compact|quicklook|unknown) stage=([A-Za-z]+) error=(none|NSCocoaErrorDomain|NSPOSIXErrorDomain|NSURLErrorDomain|WKErrorDomain|other) code=(-?\d{1,10})$/;
+    var re=/^BoaQuickLookStage schema=2 token=([A-F0-9-]{36}) version=([A-Za-z0-9._-]{1,64}) build=([A-Za-z0-9._-]{1,32}) attempt=([A-F0-9-]{36}) context=(compact|quicklook|unknown) stage=([A-Za-z]+) error=(none|NSCocoaErrorDomain|NSPOSIXErrorDomain|NSURLErrorDomain|WKErrorDomain|other) code=(-?\d{1,10})$/;
     records.slice(0,1000).forEach(function(e){
         if(!e||typeof e!=='object')return;
         var m=typeof e.eventMessage==='string'?e.eventMessage.match(re):null;
-        if(!m){if(typeof e.eventMessage==='string' && e.eventMessage.indexOf('com.xykong.Markdown')>=0 && /\/(pkd|sandboxd|amfid|syspolicyd)$/.test(e.processImagePath||''))out.systemCandidateRecords++;return;}
+        if(!m){if(typeof e.eventMessage==='string' && e.eventMessage.indexOf('io.github.boaworm.Markdown')>=0 && /\/(pkd|sandboxd|amfid|syspolicyd)$/.test(e.processImagePath||''))out.systemCandidateRecords++;return;}
         if(e.subsystem!=='com.markdownquicklook.app'||stages.indexOf(m[6])<0||!uuid.test(m[4]))return;
         var target=m[1]===cfg.selfToken?out.selfTest:m[1]===cfg.finderToken?out.finder:null;
         if(!target)return;
@@ -63,7 +63,7 @@ JXA
 if [ "${1:-}" = --summarize ]; then [ "$#" = 3 ] || exit 2; summarize "$2" "$3"; exit; fi
 if [ "${1:-}" = --help ]; then
 cat <<'HELP'
-Usage: bash diagnose-quicklook-session.sh [--duration 90] [--app /Applications/FluxMarkdown.app] [--output DIR]
+Usage: bash diagnose-quicklook-session.sh [--duration 90] [--app /Applications/BoaMarkdown.app] [--output DIR]
 Capture starts before one self-test and one Finder preview. Return to this Terminal
 and choose 1 rendered / 2 plain text / 3 blank / 4 error / 5 not checked.
 Ctrl+C or the time limit preserves partial results. Share only shareable.zip after
@@ -75,7 +75,7 @@ setup/self-test/packaging are separately bounded. Output directory must exist.
 HELP
 exit
 fi
-app=/Applications/FluxMarkdown.app
+app=/Applications/BoaMarkdown.app
 parent=.
 duration=90
 observed=not-reported
@@ -96,17 +96,17 @@ case "$observed" in not-reported|rendered|plain-text|blank|error|not-checked) :;
 [ -d "$app" ] && [ -d "$parent" ] || { echo 'Choose an existing app and output folder with --app / --output.' >&2;exit 2; }
 app=$(cd "$app" && pwd -P) || exit 2
 bundle=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$app/Contents/Info.plist" 2>/dev/null)
-[ "$bundle" = com.xykong.Markdown ] || { echo 'Choose the FluxMarkdown application with --app.' >&2;exit 2; }
-exe="$app/Contents/MacOS/FluxMarkdown"
+[ "$bundle" = io.github.boaworm.Markdown ] || { echo 'Choose the BoaMarkdown application with --app.' >&2;exit 2; }
+exe="$app/Contents/MacOS/BoaMarkdown"
 ext="$app/Contents/PlugIns/MarkdownPreview.appex/Contents/MacOS/MarkdownPreview"
 [ -x "$exe" ] && [ -x "$ext" ] || { echo 'Application is incomplete; install the current DMG before this diagnostic.' >&2;exit 2; }
-output=$(/usr/bin/mktemp -d "$parent/flux-quicklook-session.XXXXXX") || { echo 'Cannot create session folder; choose another --output directory.' >&2;exit 1; }
+output=$(/usr/bin/mktemp -d "$parent/boa-quicklook-session.XXXXXX") || { echo 'Cannot create session folder; choose another --output directory.' >&2;exit 1; }
 output=$(cd "$output" && pwd -P)
 raw="$output/raw";safe="$output/shareable"
 mkdir "$raw" "$safe" || exit 1
 self_token=$(/usr/bin/uuidgen);finder_token=$(/usr/bin/uuidgen)
-fixture="$output/flux-quicklook-probe-$finder_token.md"
-printf '# FluxMarkdown Quick Look Test\n\n**Rendered Markdown** confirms the extension was selected.\n\nThis temporary document contains no personal data.\n' > "$fixture"
+fixture="$output/boa-quicklook-probe-$finder_token.md"
+printf '# BoaMarkdown Quick Look Test\n\n**Rendered Markdown** confirms the extension was selected.\n\nThis temporary document contains no personal data.\n' > "$fixture"
 version=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/PlugIns/MarkdownPreview.appex/Contents/Info.plist" 2>/dev/null || echo unknown)
 build=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$app/Contents/PlugIns/MarkdownPreview.appex/Contents/Info.plist" 2>/dev/null || echo unknown)
 stream_state=unavailable;self_state=skipped;stream_pid=;samples_pid=;capture_pid=;watchdog_pid=;finished=0;stop_reason=duration
@@ -167,7 +167,7 @@ TXT
 trap 'stop_reason=interrupted;finish;exit 130' INT
 trap 'stop_reason=terminated;finish;exit 143' TERM
 trap finish EXIT
-predicate="(subsystem == 'com.markdownquicklook.app' AND (eventMessage CONTAINS '$self_token' OR eventMessage CONTAINS '$finder_token')) OR ((process == 'pkd' OR process == 'sandboxd' OR process == 'amfid' OR process == 'syspolicyd') AND eventMessage CONTAINS 'com.xykong.Markdown')"
+predicate="(subsystem == 'com.markdownquicklook.app' AND (eventMessage CONTAINS '$self_token' OR eventMessage CONTAINS '$finder_token')) OR ((process == 'pkd' OR process == 'sandboxd' OR process == 'amfid' OR process == 'syspolicyd') AND eventMessage CONTAINS 'io.github.boaworm.Markdown')"
 (ulimit -f 4096;exec /usr/bin/log stream --style ndjson --level debug --predicate "$predicate") > "$raw/events.jsonl" 2> "$raw/stream.stderr" & stream_pid=$!
 (
  ulimit -f 1024

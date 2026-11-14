@@ -14,12 +14,12 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         config.websiteDataStore = .nonPersistent()
         config.userContentController.add(self, name: "trace")
         config.userContentController.addUserScript(WKUserScript(source: "window.addEventListener('error',e=>window.webkit.messageHandlers.trace.postMessage(String(e.message)));window.addEventListener('securitypolicyviolation',e=>window.webkit.messageHandlers.trace.postMessage('CSP '+e.blockedURI+' '+e.violatedDirective));window.addEventListener('unhandledrejection',e=>window.webkit.messageHandlers.trace.postMessage(String(e.reason)));console.warn=console.error=(...x)=>window.webkit.messageHandlers.trace.postMessage(x.map(String).join(' '));", injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        config.setURLSchemeHandler(RendererBundleSchemeHandler(rootDirectory: URL(fileURLWithPath: CommandLine.arguments[2])), forURLScheme: "flux-renderer")
+        config.setURLSchemeHandler(RendererBundleSchemeHandler(rootDirectory: URL(fileURLWithPath: CommandLine.arguments[2])), forURLScheme: "boa-renderer")
         view = WKWebView(frame: NSRect(x: 0, y: 0, width: 960, height: 900), configuration: config)
         view.navigationDelegate = self
-        if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_WINDOW"] == "1" {
+        if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_WINDOW"] == "1" {
             let window = NSWindow(contentRect: view.frame, styleMask: [.titled], backing: .buffered, defer: false)
-            window.title = "FluxMarkdown mathematical memory probe"
+            window.title = "BoaMarkdown mathematical memory probe"
             window.contentView = view
             window.orderBack(nil)
             hostWindow = window
@@ -47,7 +47,7 @@ final class Probe: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
                 }
                 if JSONSerialization.isValidJSONObject(value), let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]) { print(String(data: data, encoding: .utf8)!) }
                 else { print(String(describing:value)) }
-                if ProcessInfo.processInfo.environment["FLUX_MATH_PROBE_CLOSE_WAIT"] == "1" {
+                if ProcessInfo.processInfo.environment["BOA_MATH_PROBE_CLOSE_WAIT"] == "1" {
                     self.view.configuration.userContentController.removeScriptMessageHandler(forName: "trace")
                     self.view.navigationDelegate = nil
                     self.hostWindow?.contentView = nil

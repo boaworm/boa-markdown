@@ -144,7 +144,7 @@ export class SearchEngine {
                 acceptNode: (node) => {
                     // Skip script, style, and other non-visible elements
                     const parent = node.parentElement;
-                    if (!parent || parent.closest('.diagram-tools, .mermaid-tools, .block-copy-tools, .flux-math-source, mjx-assistive-mml, .error-feedback-controls')) return NodeFilter.FILTER_REJECT;
+                    if (!parent || parent.closest('.diagram-tools, .mermaid-tools, .block-copy-tools, .boa-math-source, mjx-assistive-mml')) return NodeFilter.FILTER_REJECT;
 
                     const tagName = parent.tagName.toLowerCase();
                     if (['script', 'style', 'noscript'].includes(tagName)) {
@@ -194,7 +194,7 @@ export class SearchEngine {
             node = walker.nextNode();
         }
 
-        root.querySelectorAll<HTMLElement>('.flux-math-source').forEach(element => {
+        root.querySelectorAll<HTMLElement>('.boa-math-source').forEach(element => {
             const source = originalMathSource(element);
             if (source === undefined) return;
             regex.lastIndex = 0;

@@ -1,17 +1,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "FluxMarkdown",
+    name: "BoaMarkdown",
     platforms: [.macOS(.v11)],
-    dependencies: [
-        .package(url: "https://github.com/sparkle-project/Sparkle", exact: "2.9.3"),
-    ],
     targets: [
         .target(
             name: "Markdown",
-            dependencies: [
-                .product(name: "Sparkle", package: "Sparkle"),
-            ],
             path: "Sources/Markdown",
             sources: [
                 "MarkdownApp.swift",

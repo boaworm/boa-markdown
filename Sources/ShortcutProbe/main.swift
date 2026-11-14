@@ -29,7 +29,7 @@ guard let appIndex = args.firstIndex(of: "--app"), args.indices.contains(appInde
     report(["status": "absolute-app-path-required"], exitCode: 2)
 }
 let appURL = URL(fileURLWithPath: args[appIndex + 1]).standardizedFileURL.resolvingSymlinksInPath()
-guard Bundle(url: appURL)?.bundleIdentifier == "com.xykong.Markdown" else {
+guard Bundle(url: appURL)?.bundleIdentifier == "io.github.boaworm.Markdown" else {
     report(["status": "invalid-app"], exitCode: 2)
 }
 let expectedExecutable = appURL.appendingPathComponent("Contents/PlugIns/MarkdownPreview.appex/Contents/MacOS/MarkdownPreview")

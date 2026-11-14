@@ -130,8 +130,8 @@ describe('Issue 64 mathematical input contracts', () => {
     });
     test('formula navigation retains original source lines after CRLF front matter',async()=>{
         await render('---\r\ntitle: Test\r\n---\r\n\r\nText\r\n\r\n\\[\r\nx=1\r\n\\]');
-        expect(preview().querySelector('.flux-math-source')?.getAttribute('data-source-line')).toBe('7');
-        expect(preview().querySelector('.flux-math-source')?.getAttribute('data-source-line-end')).toBe('9');
+        expect(preview().querySelector('.boa-math-source')?.getAttribute('data-source-line')).toBe('7');
+        expect(preview().querySelector('.boa-math-source')?.getAttribute('data-source-line-end')).toBe('9');
     });
     test('GFM table escaping preserves mathematical vertical bars',async()=>{
         await render('| Formula | Result |\n| --- | --- |\n| $a\\|b$ | **$x^2$** |');

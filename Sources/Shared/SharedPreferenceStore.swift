@@ -8,7 +8,7 @@ import Foundation
 /// `UserDefaults(suiteName:)` with a plist file at a known location.
 ///
 /// - The main app (unsandboxed) writes to:
-///   `~/Library/Application Support/FluxMarkdown/shared-preferences.plist`
+///   `~/Library/Application Support/BoaMarkdown/shared-preferences.plist`
 /// - The QuickLook extension (sandboxed) reads from that file via a read-only
 ///   temporary exception for the app's Application Support directory.
 ///
@@ -23,21 +23,21 @@ import Foundation
 /// so the I/O cost is negligible and avoids stale-cache issues from same-second writes.
 /// The main app skips redundant reloads using file modification date checks.
 ///
-/// See: https://github.com/xykong/flux-markdown/issues/13
+/// See: upstream issue #13
 public class SharedPreferenceStore {
 
-    private static let relativePath = "Library/Application Support/FluxMarkdown/shared-preferences.plist"
+    private static let relativePath = "Library/Application Support/BoaMarkdown/shared-preferences.plist"
 
     /// Legacy App Group identifier — used for one-time migration of preferences
     /// from pre-Tahoe versions that used App Group UserDefaults.
-    static let legacyAppGroupIdentifier = "group.com.xykong.Markdown"
+    static let legacyAppGroupIdentifier = "group.io.github.boaworm.Markdown"
     private static let migrationDoneKey = "_didMigrateFromAppGroup"
 
     private var cache: [String: Any]
     private let fileURL: URL
     private let canWrite: Bool
     private var lastModificationDate: Date?
-    private let queue = DispatchQueue(label: "com.xykong.Markdown.SharedPreferenceStore")
+    private let queue = DispatchQueue(label: "io.github.boaworm.Markdown.SharedPreferenceStore")
 
     /// If true, always re-reads from disk on every read (for the extension).
     /// If false, uses modification-date caching (for the main app).
@@ -100,7 +100,6 @@ public class SharedPreferenceStore {
                 "enableKatex",
                 "enableEmoji",
                 "enableTypst",
-                "uiLanguage",
                 "collapseBlockquotesByDefault"
             ]
 
@@ -219,7 +218,7 @@ public class SharedPreferenceStore {
     }
 
     static func applicationSupportDirectory() -> URL {
-        realHomeDirectory().appendingPathComponent("Library/Application Support/FluxMarkdown", isDirectory: true)
+        realHomeDirectory().appendingPathComponent("Library/Application Support/BoaMarkdown", isDirectory: true)
     }
 
     private static func defaultFileURL() -> URL {

@@ -4,7 +4,7 @@
     "timestamp": "2026-02-21T17:13:59.870Z",
     "warmup_runs": 3,
     "bench_runs": 10,
-    "renderer_path": "/Users/xykong/workspace/xykong/quicklook-project/flux-markdown/web-renderer/dist/index.html",
+    "renderer_path": "/Users/example/workspace/boa-markdown/web-renderer/dist/index.html",
     "node_version": "v25.5.0",
     "platform": "darwin",
     "arch": "arm64"

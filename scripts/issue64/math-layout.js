@@ -13,7 +13,7 @@ for (const context of ['app','quicklook','finder']) for (const uiLanguage of ['e
     const background=getComputedStyle(root).backgroundColor;
     const rgb=background.match(/\d+/g).slice(0,3).map(Number);
     assert(theme==='dark' ? Math.max(...rgb)<100 : Math.min(...rgb)>200,'Native appearance and mathematical document colors disagree');
-    const formulas = [...root.querySelectorAll('.flux-math-source')];
+    const formulas = [...root.querySelectorAll('.boa-math-source')];
     assert(formulas.length===13 && root.querySelectorAll('mjx-container').length===13 && !root.querySelector('.math-error'), 'Mathematical layout lost output');
     assert(formulas.every(node=>getComputedStyle(node).direction==='ltr'), 'Math inherited RTL ordering');
     assert(document.documentElement.scrollWidth <= window.innerWidth+1, 'Mathematics causes whole-page horizontal overflow: '+JSON.stringify({width:innerWidth,scroll:document.documentElement.scrollWidth,uiLanguage,theme,zoom:probeZoom}));

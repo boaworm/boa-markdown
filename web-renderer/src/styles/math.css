@@ -1,16 +1,16 @@
 /* Mathematical order is independent of the surrounding document's direction. */
-.flux-math-source {
+.boa-math-source {
     direction: ltr;
     unicode-bidi: isolate;
 }
-div.flux-math-source {
+div.boa-math-source {
     max-width: 100%;
     min-width: 0;
     overflow-x: auto;
     overflow-y: hidden;
     text-align: center;
 }
-.flux-math mjx-container {
+.boa-math mjx-container {
     direction: ltr;
     color: inherit;
 }
@@ -20,9 +20,9 @@ span.math-inline-overflow {
     overflow-x: auto;
     vertical-align: middle;
 }
-.flux-math mjx-container:focus-visible,
-.flux-math-source:focus-visible,
-.flux-math a:focus-visible {
+.boa-math mjx-container:focus-visible,
+.boa-math-source:focus-visible,
+.boa-math a:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 3px;
 }
@@ -92,13 +92,13 @@ span.math-inline-overflow {
         overflow: visible;
         vertical-align: baseline;
     }
-    div.flux-math-source {
+    div.boa-math-source {
         break-inside: avoid;
         page-break-inside: avoid;
         overflow: visible !important;
     }
-    .flux-math mjx-container,
-    .flux-math mjx-container > svg {
+    .boa-math mjx-container,
+    .boa-math mjx-container > svg {
         overflow: visible !important;
     }
 }

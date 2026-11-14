@@ -30,9 +30,8 @@ struct RecentDocumentCommands: Commands {
 
     private func open(_ url: URL) {
         NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, error in
-            if let error {
-                let incident = ErrorFeedback.capture(.fileRead, error: error)
-                ErrorFeedback.present(incident, recoveryTitle: "Choose Another File", recovery: {
+            if error != nil {
+                FailureNotice.alert(.fileRead, recoveryTitle: "Choose Another File", recovery: {
                     NSDocumentController.shared.openDocument(nil)
                 })
             } else { history.record(url) }

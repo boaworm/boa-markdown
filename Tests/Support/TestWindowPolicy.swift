@@ -8,7 +8,7 @@ enum TestWindowPolicy: String {
     case ciForeground = "ci-foreground"
 
     init?(environment: [String: String]) {
-        self.init(rawValue: environment["FLUX_TEST_WINDOW_POLICY"] ?? "secondary-background")
+        self.init(rawValue: environment["BOA_TEST_WINDOW_POLICY"] ?? "secondary-background")
     }
 
     var allowsFocus: Bool { self != .secondaryBackground }

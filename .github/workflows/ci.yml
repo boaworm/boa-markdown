@@ -8,8 +8,8 @@ permissions:
   contents: read
 
 jobs:
-  docs-and-renderer:
-    name: Docs links + renderer tests
+  renderer:
+    name: Renderer tests
     runs-on: ubuntu-latest
     env:
       CI: true
@@ -26,15 +26,6 @@ jobs:
           cache: npm
           cache-dependency-path: web-renderer/package-lock.json
 
-      - name: Check internal Markdown links
-        run: bash scripts/check-links.sh
-
-      - name: Test Feishu notification payloads
-        run: node --test scripts/tests/feishu-notify.test.cjs scripts/tests/workflow-security.test.cjs
-
-      - name: Test release failure and retry behavior
-        run: python3 scripts/tests/release-publication.test.py
-
       - name: Install renderer dependencies
         working-directory: web-renderer
         run: npm ci
@@ -45,9 +36,6 @@ jobs:
           npm run typecheck
           npm test
           npm run build
-
-      - name: Test appcast generation and reporter credits
-        run: python3 scripts/tests/appcast-generation.test.py
 
   macos-build-test:
     name: macOS build + XCTest
@@ -80,11 +68,11 @@ jobs:
           npm run build
 
       - name: Test production renderer in WebKit
-        run: FLUX_TEST_WINDOW_POLICY=ci-foreground scripts/test-renderer-webkit.sh
+        run: BOA_TEST_WINDOW_POLICY=ci-foreground scripts/test-renderer-webkit.sh
 
       - name: Generate Xcode project
         run: |
-          rm -rf FluxMarkdown.xcodeproj
+          rm -rf BoaMarkdown.xcodeproj
           FULL_V="$(cat .version)"
           BUILD="$(echo "$FULL_V" | cut -d'.' -f3)"
           MARKETING_VERSION="$FULL_V" CURRENT_PROJECT_VERSION="$BUILD" xcodegen generate --quiet
@@ -92,7 +80,7 @@ jobs:
       - name: Run Swift tests (skip benchmarks)
         run: |
           xcodebuild test \
-            -project FluxMarkdown.xcodeproj \
+            -project BoaMarkdown.xcodeproj \
             -scheme Markdown \
             -configuration Debug \
             -destination 'platform=macOS' \

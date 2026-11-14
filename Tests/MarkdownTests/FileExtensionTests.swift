@@ -262,8 +262,8 @@ final class FileExtensionTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Markdown/Info.plist")
         let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("com.fluxmarkdown.mmd"),
-                      "App Info.plist must declare com.fluxmarkdown.mmd UTI")
+        XCTAssertTrue(plistContent.contains("io.github.boaworm.mmd"),
+                      "App Info.plist must declare io.github.boaworm.mmd UTI")
         XCTAssertTrue(plistContent.contains("<string>mmd</string>"),
                       "App Info.plist must map .mmd extension to UTI")
     }
@@ -275,8 +275,8 @@ final class FileExtensionTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Markdown/Info.plist")
         let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("com.fluxmarkdown.livemd"),
-                      "App Info.plist must declare com.fluxmarkdown.livemd UTI")
+        XCTAssertTrue(plistContent.contains("io.github.boaworm.livemd"),
+                      "App Info.plist must declare io.github.boaworm.livemd UTI")
         XCTAssertTrue(plistContent.contains("<string>livemd</string>"),
                       "App Info.plist must map .livemd extension to UTI")
     }
@@ -288,8 +288,8 @@ final class FileExtensionTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/Markdown/Info.plist")
         let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("com.fluxmarkdown.mdc"),
-                      "App Info.plist must declare com.fluxmarkdown.mdc UTI")
+        XCTAssertTrue(plistContent.contains("io.github.boaworm.mdc"),
+                      "App Info.plist must declare io.github.boaworm.mdc UTI")
         XCTAssertTrue(plistContent.contains("<string>mdc</string>"),
                       "App Info.plist must map .mdc extension to UTI")
     }
@@ -316,7 +316,7 @@ final class FileExtensionTests: XCTestCase {
                       "App Info.plist must use UTExportedTypeDeclarations for unknown extensions")
         let exportedExtensions = ["markdown", "mdown", "mkd", "mkdn", "mkdown", "mdwn"]
         for ext in exportedExtensions {
-            XCTAssertTrue(plistContent.contains("com.fluxmarkdown.\(ext)"),
+            XCTAssertTrue(plistContent.contains("io.github.boaworm.\(ext)"),
                           "App Info.plist must export UTI for .\(ext)")
         }
     }
@@ -328,8 +328,8 @@ final class FileExtensionTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
         let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("com.fluxmarkdown.mmd"),
-                      "Extension Info.plist QLSupportedContentTypes must include com.fluxmarkdown.mmd")
+        XCTAssertTrue(plistContent.contains("io.github.boaworm.mmd"),
+                      "Extension Info.plist QLSupportedContentTypes must include io.github.boaworm.mmd")
     }
 
     func testUTIDeclarations_extensionPlistContainsLivemdUTI() throws {
@@ -339,8 +339,8 @@ final class FileExtensionTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
         let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("com.fluxmarkdown.livemd"),
-                      "Extension Info.plist QLSupportedContentTypes must include com.fluxmarkdown.livemd")
+        XCTAssertTrue(plistContent.contains("io.github.boaworm.livemd"),
+                      "Extension Info.plist QLSupportedContentTypes must include io.github.boaworm.livemd")
     }
 
     func testUTIDeclarations_extensionPlistContainsMdcUTI() throws {
@@ -350,8 +350,8 @@ final class FileExtensionTests: XCTestCase {
             .deletingLastPathComponent()
             .appendingPathComponent("Sources/MarkdownPreview/Info.plist")
         let plistContent = try String(contentsOf: plistURL, encoding: .utf8)
-        XCTAssertTrue(plistContent.contains("com.fluxmarkdown.mdc"),
-                      "Extension Info.plist QLSupportedContentTypes must include com.fluxmarkdown.mdc")
+        XCTAssertTrue(plistContent.contains("io.github.boaworm.mdc"),
+                      "Extension Info.plist QLSupportedContentTypes must include io.github.boaworm.mdc")
     }
 
     func testUTIDeclarations_extensionPlistContainsIAWriterMarkdownUTI() throws {
@@ -377,19 +377,19 @@ final class FileExtensionTests: XCTestCase {
             "net.daringfireball.markdown",
             "public.markdown",
             "net.ia.markdown",
-            "com.fluxmarkdown.mdx",
-            "com.fluxmarkdown.rmd",
-            "com.fluxmarkdown.qmd",
-            "com.fluxmarkdown.mdoc",
-            "com.fluxmarkdown.mmd",
-            "com.fluxmarkdown.livemd",
-            "com.fluxmarkdown.mdc",
-            "com.fluxmarkdown.markdown",
-            "com.fluxmarkdown.mdown",
-            "com.fluxmarkdown.mkd",
-            "com.fluxmarkdown.mkdn",
-            "com.fluxmarkdown.mkdown",
-            "com.fluxmarkdown.mdwn",
+            "io.github.boaworm.mdx",
+            "io.github.boaworm.rmd",
+            "io.github.boaworm.qmd",
+            "io.github.boaworm.mdoc",
+            "io.github.boaworm.mmd",
+            "io.github.boaworm.livemd",
+            "io.github.boaworm.mdc",
+            "io.github.boaworm.markdown",
+            "io.github.boaworm.mdown",
+            "io.github.boaworm.mkd",
+            "io.github.boaworm.mkdn",
+            "io.github.boaworm.mkdown",
+            "io.github.boaworm.mdwn",
             "public.tab-separated-values-text",
         ]
         for uti in requiredUTIs {

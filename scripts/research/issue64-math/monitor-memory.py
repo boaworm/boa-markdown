@@ -18,9 +18,9 @@ def processes():
 
 samples = []
 with (out / 'stdout.json').open('w') as stdout, (out / 'stderr.log').open('w') as stderr:
-    env = dict(os.environ, FLUX_MATH_PROBE_REPORT_PROCESS='1')
-    env.pop('FLUX_MATH_PROBE_WINDOW', None)
-    p = subprocess.Popen([sys.argv[1], 'flux-renderer://bundle/index.html', str(bundle), str(workload),
+    env = dict(os.environ, BOA_MATH_PROBE_REPORT_PROCESS='1')
+    env.pop('BOA_MATH_PROBE_WINDOW', None)
+    p = subprocess.Popen([sys.argv[1], 'boa-renderer://bundle/index.html', str(bundle), str(workload),
                           str(root / 'Tests/fixtures/issues/64/markdown-preview-test.md'), '175'],
                          stdout=stdout, stderr=stderr, env=env)
     start = time.monotonic(); webpid = None

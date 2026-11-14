@@ -17,7 +17,7 @@ final class QuickLookSelfTest {
         self.completion = completion
         generation = UUID(); token = probeToken.uuidString; attempts = 0
         do {
-            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("FluxMarkdown-QuickLook-\(token)")
+            let directory = FileManager.default.temporaryDirectory.appendingPathComponent("BoaMarkdown-QuickLook-\(token)")
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             self.directory = directory
             let file = directory.appendingPathComponent("\(QuickLookProbeEvidence.prefix)\(token).md")
@@ -77,7 +77,7 @@ final class QuickLookSelfTest {
     func show() {
         start { passed in
             if !passed {
-                ErrorFeedback.present(ErrorFeedback.capture(.quickLook), recoveryTitle: "Try Again", recovery: { self.show() })
+                FailureNotice.alert(.quickLook, recoveryTitle: "Try Again", recovery: { self.show() })
                 return
             }
             let alert = NSAlert()

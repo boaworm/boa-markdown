@@ -121,7 +121,6 @@ struct SettingsView: View {
         }
         .frame(minWidth: Self.preferredWidth, minHeight: Self.preferredHeight)
         .background(SettingsWindowSizer(minSize: NSSize(width: Self.preferredWidth, height: Self.preferredHeight)))
-        .interfaceLayoutDirection(for: preference.uiLanguage)
     }
 
     private func SidebarRow(title: String, icon: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
@@ -207,101 +206,8 @@ struct AppearanceSettingsView: View {
             .padding(12)
             .background(Color(NSColor.controlBackgroundColor))
             .cornerRadius(8)
-
-            SettingsSectionHeader(
-                title: NSLocalizedString("Language", comment: "Language section title"),
-                description: NSLocalizedString("Interface language for the entire app", comment: "Language section description")
-            )
-
-            VStack(spacing: 0) {
-                LanguageOptionRow(label: NSLocalizedString("System Default", comment: "Follow OS language"),
-                                  value: "system", current: preference.uiLanguage) {
-                    preference.uiLanguage = "system"
-                }
-                Divider().padding(.leading, 12)
-                LanguageOptionRow(label: "English", value: "en", current: preference.uiLanguage) {
-                    preference.uiLanguage = "en"
-                }
-                Divider().padding(.leading, 12)
-                LanguageOptionRow(label: "Deutsch", value: "de", current: preference.uiLanguage) {
-                    preference.uiLanguage = "de"
-                }
-                Divider().padding(.leading, 12)
-                LanguageOptionRow(label: "Français", value: "fr", current: preference.uiLanguage) {
-                    preference.uiLanguage = "fr"
-                }
-                Divider().padding(.leading, 12)
-                LanguageOptionRow(label: "中文", value: "zh", current: preference.uiLanguage) {
-                    preference.uiLanguage = "zh"
-                }
-                Divider().padding(.leading, 12)
-                LanguageOptionRow(label: "العربية", value: "ar", current: preference.uiLanguage) {
-                    preference.uiLanguage = "ar"
-                }
-            }
-            .background(Color(NSColor.controlBackgroundColor))
-            .cornerRadius(8)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(NSColor.separatorColor), lineWidth: 1)
-            )
-
-            if preference.uiLanguage != LocalizationManager.launchPreference {
-                HStack(spacing: 10) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                        .foregroundColor(.accentColor)
-                    Text(NSLocalizedString("Some menus update only after restarting the app.", comment: "Restart hint"))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                    Button(NSLocalizedString("Restart Now", comment: "Restart now button")) {
-                        relaunchApp()
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .padding(.top, 6)
-            }
-
-            Divider()
-            UsageTelemetrySetting()
-            StarReminderSetting()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func relaunchApp() {
-        // Force-flush both the shared preference store (0.3s debounced) and the
-        // standard user defaults (where AppleLanguages lives) so the spawned
-        // instance reads the current picker selection, not a stale value.
-        AppearancePreference.shared.flushSharedPreferences()
-        UserDefaults.standard.synchronize()
-
-        let bundleURL = Bundle.main.bundleURL
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        task.arguments = ["-n", "-a", bundleURL.path]
-        try? task.run()
-        NSApp.terminate(nil)
-    }
-
-    private func LanguageOptionRow(label: String, value: String, current: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                Text(label)
-                    .font(.system(size: 13))
-                    .foregroundColor(.primary)
-                Spacer()
-                if current == value {
-                    Image(systemName: "checkmark")
-                        .foregroundColor(.accentColor)
-                        .font(.system(size: 11, weight: .semibold))
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(PlainButtonStyle())
     }
 
     private func ThemeOptionButton(mode: AppearanceMode, icon: String, label: String, current: AppearanceMode, action: @escaping () -> Void) -> some View {
@@ -600,18 +506,5 @@ struct SettingsSectionHeader: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-    }
-}
-
-
-struct UsageTelemetrySetting: View {
-    @State private var enabled = UsageTelemetry.shared.enabled
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Toggle(NSLocalizedString("Share Usage Statistics", comment: "Telemetry setting"),
-                isOn: Binding(get: { enabled }, set: { if UsageTelemetry.shared.setEnabled($0) { enabled = $0 } else { UsageTelemetry.showPreferenceFailure() } }))
-            Text(NSLocalizedString("Share system/app versions, system timezone, daily reading time and view counts. No document names or contents. Uploads occur at most hourly while in use.", comment: "Telemetry disclosure"))
-                .font(.caption).foregroundColor(.secondary)
-        }.onAppear { enabled = UsageTelemetry.shared.enabled }
     }
 }
