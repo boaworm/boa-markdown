@@ -22,13 +22,13 @@ This is a fork of [xykong/flux-markdown](https://github.com/xykong/flux-markdown
 | Upstream links and docs | Help-menu and Welcome-screen links to the upstream repo, the `docs/` tree, translated READMEs, upstream agent/process files |
 | Outbound notifications | The Feishu workflows and scripts |
 | npm renderer | The `web-renderer/` Vite project, its Node dependencies and the CI jobs that built it. Markdown is parsed in Swift by cmark-gfm |
-| Diagram and chart engines | Mermaid, Vega, Vega-Lite, Graphviz and Typst lived in the npm renderer. Fenced `mermaid`, `vega`, `dot` and `typst` blocks now render as code, and `.mmd` files open as a ```mermaid code block |
+| Diagram and chart engines | Vega, Vega-Lite, Graphviz and Typst lived in the npm renderer. Fenced `vega`, `dot` and `typst` blocks now render as code. Mermaid is back, as a vendored bundle (see below) |
 
 When a failure happens, the app now shows a local message with a retry button (`Sources/Shared/FailureNotice.swift`). Nothing is recorded or sent.
 
 ## What is still here
 
-- The two JavaScript libraries the renderer still needs: KaTeX for math and highlight.js for code colouring. Both are vendored under `Renderer/vendor/` with their licences and a checksum record, so nothing is fetched at build time.
+- The JavaScript libraries the renderer still needs: KaTeX for math, highlight.js for code colouring and Mermaid for diagrams. All are vendored under `Renderer/vendor/` with their licences and a checksum record, so nothing is fetched at build time. Mermaid is about 5.5 MB and is loaded only when a document contains a diagram; its `VENDORED.md` lists the licences of the libraries bundled inside it.
 - The macOS app itself is not sandboxed, so removing an entitlement does not technically block network access from it. What was removed is the code that made requests (updates, statistics, reporting). A document that references a remote image or a link can still cause the web view to load it, or open your browser when you click it.
 - Building needs no package manager: the Markdown parser is vendored C (`Vendor/cmark-gfm`), the renderer assets are in the repo, and `xcodegen` assembles the project.
 - The app is named BoaMarkdown, with bundle identifiers under `io.github.boaworm`, and the upstream "flux" names (renderer scheme, JavaScript globals, CSS classes, environment variables) have been renamed to "boa". Only the `markdownpreview://` URL scheme is unchanged. Settings live in `~/Library/Application Support/BoaMarkdown/`, so they do not carry over from an upstream FluxMarkdown install.
@@ -42,6 +42,7 @@ The remaining code has not been fully audited yet. Changes from upstream are rev
 | Math | Inline and block expressions (KaTeX) |
 | GFM | Tables, task lists, strikethrough, GitHub-style alerts |
 | Code highlighting | Syntax highlighting for 40+ languages |
+| Diagrams | Fenced `mermaid` blocks and `.mmd` files render as diagrams (Mermaid), with zoom controls. A diagram that fails to parse stays as code with an error note |
 | Table of contents | Interactive panel with section tracking |
 | YAML front matter | Rendered as a table |
 | Export | PDF (`Cmd+Shift+P`) and HTML (`Cmd+Shift+E`) |

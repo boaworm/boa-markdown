@@ -9,6 +9,7 @@ import { constrainSVGImage } from './svg-image-layout.js';
 import { installBlockCopy, blockCopyResult } from './block-copy.js';
 import { waitForExportReady, prepareExport } from './export-readiness.js';
 import { renderTSVTable } from './tsv.js';
+import { renderDiagrams, restyleDiagrams } from './mermaid-diagrams.js';
 import { rememberMathSource } from './math-source-store.js';
 import { findSourceLineTarget } from './position-navigation.js';
 import { buildHeadingTree } from './outline.js';
@@ -388,6 +389,7 @@ async function renderMarkdown(text, options = {}) {
         // Stage off-screen so the visible document changes once.
         const staged = document.createElement('div');
         staged.innerHTML = typeof options.html === 'string' ? options.html : '';
+        await renderDiagrams(staged, isCurrent);
         highlightCodeBlocks(staged);
         decorateTaskLists(staged);
         if (options.enableKatex !== false) typesetMath(staged);
@@ -483,7 +485,10 @@ window.renderSource = function (text, theme, _prevContent, options = {}) {
 
 // Reload change marks are not part of this renderer; the native host still calls this.
 
-window.updateTheme = function (theme) { applyTheme(theme); };
+window.updateTheme = function (theme) {
+    applyTheme(theme);
+    restyleDiagrams(document.getElementById('markdown-preview'));
+};
 
 // MARK: Links
 
