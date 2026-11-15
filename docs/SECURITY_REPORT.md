@@ -14,7 +14,8 @@
 
 ## Current status
 
-Checked against branch `feat/mermaid-diagrams` at `f8dc286` on 2026-11-14. Each finding was checked by
+Checked on 2026-11-14 against the code of this branch, plus the separate `feat/mermaid-diagrams` branch
+for the findings that mention Mermaid (15 and N3), which is not merged yet. Each finding was checked by
 reading the current code or searching for the pattern; "not re-verified" marks the ones I could not confirm.
 No dynamic testing was done. Status values:
 
