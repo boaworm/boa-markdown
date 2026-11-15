@@ -32,15 +32,15 @@ No dynamic testing was done. Status values:
 | Status | Count | Findings |
 |--------|-------|----------|
 | Removed (includes fixed by removal) | 19 | 2, 5, 7, 10, 16, 21, 22, 23, 28, 34, 35, 36, 37, 40, 45, 46, 48, 49, 51 |
-| Fixed | 4 | 26, 27, 29, 31 |
-| Partly addressed | 7 | 9, 14, 15, 32, 50, 53, 54 |
+| Fixed | 7 | 1, 6, 17, 26, 27, 29, 31 |
+| Partly addressed | 9 | 9, 13, 14, 15, 32, 50, 52, 53, 54 |
 | Holds (positive) | 1 | 25 |
 | Accepted | 2 | 4, 12 |
-| Open | 20 | 1, 3, 6, 8, 11, 13, 17, 18, 20, 24, 30, 33, 38, 39, 41, 42, 43, 44, 47, 52 |
+| Open | 15 | 3, 8, 11, 18, 20, 24, 30, 33, 38, 39, 41, 42, 43, 44, 47 |
 | Not re-verified | 1 | 19 |
 | **Total** | **54** | |
 
-The two CRITICAL findings (1 and 52) are both the same root cause: the main app is still not sandboxed.
+The two CRITICAL findings (1 and 52) shared one root cause: the main app ran unsandboxed. The App Sandbox is now enabled, so 1 is Fixed and 52 is Partly addressed: files are confined, but the sandbox does not block the network because `WKWebView` needs the `network.client` entitlement to start.
 Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Findings 6, 13 and 44 remain Open, and I now rate all three lower (see the table).
 
 ### Status of every finding
@@ -49,23 +49,23 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 
 | # | Original | Status | Now | Evidence and notes |
 |---|----------|--------|-----|--------------------|
-| 1 | CRITICAL | Open | High | Sandbox key still commented out with a TODO in `Sources/Markdown/Markdown.entitlements:7`; `MarkdownRelease.entitlements` has none. Staged plan in `docs/sandbox-plan.md`. |
+| 1 | CRITICAL | Fixed | n/a | `com.apple.security.app-sandbox` is enabled in both `Markdown.entitlements` and `MarkdownRelease.entitlements`, with read-write user-selected files, app-scope bookmarks and `network.client` (needed for `WKWebView` to start). Folder access is granted once per folder through `FolderAccessPrompt` and remembered by `ScopedAccessStore`. Details in `docs/sandbox-plan.md`. Checked by hand: the app launches and renders a document; Open Recent after a relaunch, exports and the folder prompt still need a manual check. |
 | 2 | HIGH | Removed | n/a | Quick Look extension deleted. |
 | 3 | MEDIUM | Open | Medium | `com.apple.security.cs.allow-jit` is in both remaining entitlement files. Likely unnecessary for `WKWebView` (not verified by removing it). Release also has `ENABLE_HARDENED_RUNTIME = NO` (see N2). |
 | 4 | LOW | Accepted | n/a | `get-task-allow` is in the Debug entitlements only. |
 | 5 | MEDIUM | Removed | n/a | `Sources/Markdown/main.swift` now handles only `--export-pdf`. That mode's own input handling was not reviewed. |
-| 6 | HIGH | Open | Low | `Process` with `/usr/bin/open -t` still at `MarkdownWebView.swift:350-351`. Array arguments, so no shell injection; `launchPath` is deprecated. Prefer `NSWorkspace`. |
+| 6 | HIGH | Fixed | n/a | "Open in External Editor" now uses `NSWorkspace.open(_:withApplicationAt:configuration:)` with the default plain-text editor. The app no longer spawns any process. |
 | 7 | HIGH | Removed | n/a | `QuickLookRegistration.swift` deleted. |
 | 8 | MEDIUM | Open | Low | Main-app navigation delegate still returns `.allow` for anything it does not recognise (`MarkdownWebView.swift:1013-1029`). The Quick Look half is gone. |
 | 9 | MEDIUM | Partly addressed | Low | Origin check holds (`RendererBridgePolicy`). `blockCopy` is validated (id at most 32 bytes, text at most 4 MiB, `BlockCopyBridge.swift:17-20`). The `logger` and `linkClicked` handlers have no length cap (`MarkdownWebView.swift:684-708`). |
 | 10 | MEDIUM | Removed | n/a | No `<base>` tag is created by the renderer. |
 | 11 | LOW | Open | Low | Interpolated JavaScript remains at `MarkdownWebView.swift:435, 503, 532`. Values are enum raw values and counters. Use `callAsyncJavaScript(arguments:)`. |
 | 12 | LOW | Accepted | n/a | Web Inspector is enabled only under `#if DEBUG`. |
-| 13 | HIGH | Open | Low-Medium | `markdownpreview://open?path=` still accepts any absolute path with any extension (`DocumentPosition.swift:31-37`, `MarkdownApp.swift:35-60`). Content is shown to the user only; reads are size-bounded. Restrict to supported document extensions. |
+| 13 | HIGH | Partly addressed | Low | `markdownpreview://open?path=` still accepts any absolute path with any extension in its parser (`DocumentPosition.swift:31-37`, `MarkdownApp.swift:35-60`), but under the sandbox the app can only open paths it can already read, so other paths fail. Still worth restricting to supported document extensions. |
 | 14 | MEDIUM | Partly addressed | Low | `http(s)` links still open in the browser without confirmation (standard viewer behaviour). Local links no longer launch anything without asking; see N1. |
 | 15 | MEDIUM | Partly addressed | Low | `.mmd` is still wrapped as a mermaid fence (`BoundedFileReader.swift:36`) and is now drawn by the vendored Mermaid in `strict` mode, under the CSP. |
 | 16 | POSITIVE | Removed | n/a | XPC service deleted; no longer applicable. |
-| 17 | MEDIUM | Open | Low | The settings plist path is still resolved with `getpwuid` (`SharedPreferenceStore.swift:198`), now under `BoaMarkdown/`. No explicit file permissions are set. |
+| 17 | MEDIUM | Fixed | n/a | The `getpwuid` lookup is gone. The settings plist uses the standard Application Support location, which the sandbox maps into the app's container, so other processes running as the user can no longer read or write it. |
 | 18 | LOW | Open | Low | Recent document paths are still in `UserDefaults` (`RecentDocumentHistory.swift`, key `BoaRecentDocumentPaths.v1`). |
 | 19 | LOW | Not re-verified | n/a | Scroll positions keyed by path; not rechecked. |
 | 20 | MEDIUM | Open | Low | Plist is still read with `NSDictionary(contentsOf:) as? [String: Any]` (`SharedPreferenceStore.swift:63, 258`); safe casts limit the effect. |
@@ -100,7 +100,7 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 | 49 | LOW | Removed | n/a | `benchmark/js-bench` deleted. |
 | 50 | LOW | Partly addressed | Low | `verify_truncation.sh` is gone. `scripts/generate_large_md.sh` still has no `set -e`. |
 | 51 | INFO | Removed | n/a | The probe target is gone from `project.yml`. |
-| 52 | CRITICAL | Open | High | Same root cause as 1. Exposure is smaller now: there is no Quick Look, no network code, a strict CSP and only KaTeX, highlight.js and Mermaid in the page. The native side is still unsandboxed, so any renderer or parser bug runs with full user rights. |
+| 52 | CRITICAL | Partly addressed | Medium | Same root cause as 1. The app is now sandboxed, so a renderer or parser bug can reach only the files you opened and the folders you allowed. What remains: the app holds `network.client` (required by `WKWebView`), so the sandbox does not block the network. Mitigations are that the app has no network code and the renderer's CSP (`default-src 'none'`, `connect-src 'none'`) blocks page requests. |
 | 53 | MEDIUM | Partly addressed | Low | The `file:` base path is gone. SVG images load through `local-md://` or data URLs only. Re-serialisation is still unstripped (39). |
 | 54 | MEDIUM | Partly addressed | Low | The export now has a CSP (31) but is not re-sanitised, and diagram SVG is serialised as is (Mermaid sanitises its own output in `strict` mode). The Mermaid zoom controls are removed from exports because they carry the `diagram-tools` class. |
 
@@ -121,11 +121,11 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 | Priority | Items | Effort |
 |----------|-------|--------|
 | Done | N1 (local links confined to the document's folder tree; ask before opening; reveal risky items only) | Small |
-| P1 | 1 and 52 (sandbox), following `docs/sandbox-plan.md` | Large |
+| Done | 1 and 52 (App Sandbox enabled; see `docs/sandbox-plan.md`) | Large |
 | P2 | 3 and N2 (hardened runtime, drop `allow-jit`) | Small |
 | P2 | 13 and 8 (restrict the `markdownpreview://` path; default-cancel navigation) | Small |
 | P2 | 44 and 47 (installer temp file and signing notes) | Small |
-| P3 | 11, 6 and 30 (typed JS bridge, `NSWorkspace` instead of `Process`, scheme check on `linkClicked`) | Medium |
+| P3 | 11 and 30 (typed JS bridge, scheme check on `linkClicked`) | Medium |
 | P3 | 9, 24, 17, 20, N5, N6 (message size caps, log redaction, typed plist, locking, scheme handling) | Small to medium |
 | P3 | 33, 39, 41, 42, 43, 50, N4, N7 | Small |
 

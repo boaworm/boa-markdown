@@ -2,15 +2,25 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Temporarily disable App Sandbox for image loading -->
-    <!-- TODO: Re-enable sandbox with proper file access configuration -->
-    <!--
+    <!-- App Sandbox. Images and linked files beside a document are reached through a folder the
+         user grants once (FolderAccessPrompt); see docs/sandbox-plan.md. -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
-    -->
 
-    <!-- Allow read-only access to user-selected files (e.g. Markdown documents) -->
-    <key>com.apple.security.files.user-selected.read-only</key>
+    <!-- Required by WKWebView: without it the web content and GPU processes fail to launch
+         ("Application does not have permission to communicate with network resources") and the
+         page stays blank, even though only bundled and local content is loaded. The app contains no
+         network code, and the renderer's Content-Security-Policy (default-src 'none',
+         connect-src 'none') still blocks page-level requests. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Documents the user opens, and the files they pick in the save panel for PDF and HTML export -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Remember folders the user granted across launches (ScopedAccessStore) -->
+    <key>com.apple.security.files.bookmarks.app-scope</key>
     <true/>
 
     <!-- Allow attaching debugger in Debug builds -->
@@ -26,7 +36,7 @@
     <true/>
 
     <!-- App Groups removed: macOS 26 (Tahoe) rejects App Group containers for ad-hoc signed apps.
-         Settings are now shared via a plist file in ~/Library/Application Support/BoaMarkdown/.
+         Settings live in a plist in Application Support/BoaMarkdown (inside the container when sandboxed).
          See: upstream issue #13 -->
 </dict>
 </plist>

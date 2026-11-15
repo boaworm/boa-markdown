@@ -3,6 +3,7 @@ import AppKit
 import WebKit
 import os.log
 import CoreGraphics
+import UniformTypeIdentifiers
 import BoaRender
 
 struct MarkdownWebView: NSViewRepresentable {
@@ -347,21 +348,19 @@ struct MarkdownWebView: NSViewRepresentable {
             guard let webView = currentWebView,
                   webView.window?.isKeyWindow == true,
                   let url = currentFileURL else { return }
-            let task = Process()
-            task.launchPath = "/usr/bin/open"
-            task.arguments = ["-t", url.path]
-            task.terminationHandler = { [weak self] process in
-                guard process.terminationStatus != 0 else { return }
+            // NSWorkspace instead of spawning /usr/bin/open: a sandboxed app may not run it.
+            let workspace = NSWorkspace.shared
+            guard let editor = workspace.urlForApplication(toOpen: .plainText) else {
+                if !workspace.open(url) { showDestinationFailure(url) }
+                return
+            }
+            workspace.open([url], withApplicationAt: editor, configuration: NSWorkspace.OpenConfiguration()) { [weak self] _, error in
+                guard let error else { return }
                 DispatchQueue.main.async {
                     guard let self, self.currentFileURL == url else { return }
+                    os_log("Failed to open in external editor: %{public}@", log: self.logger, type: .error, error.localizedDescription)
                     self.showDestinationFailure(url)
                 }
-            }
-            do {
-                try task.run()
-            } catch {
-                os_log("Failed to open in external editor: %{public}@", log: logger, type: .error, error.localizedDescription)
-                        showFailure(.link, error: error, recoveryTitle: "Try Again", recovery: { [weak self] in self?.handleOpenInExternalEditor() })
             }
         }
 
@@ -465,12 +464,17 @@ struct MarkdownWebView: NSViewRepresentable {
                 // The handler will manage its own access, but we need to pass the URL
                 // Note: In the main app, we might already have access via the document
                 // but passing the URL allows the handler to work consistently
+                // Under the App Sandbox the document's folder is only reachable through a grant the
+                // user gave earlier; resume it before the images are read.
+                ScopedAccessStore.shared.startAccess(coveringPath: baseDir.path)
                 if let handler = webView.configuration.urlSchemeHandler(forURLScheme: "local-md") as? LocalSchemeHandler {
-                    handler.baseDirectory = baseDir
-                    handler.allowedFileURLs = url.pathExtension.lowercased() == "tsv" ? [] : MarkdownImageDataCollector.referencedLocalImageURLs(
+                    let referenced = url.pathExtension.lowercased() == "tsv" ? [] : MarkdownImageDataCollector.referencedLocalImageURLs(
                         from: url,
                         content: content
                     )
+                    handler.baseDirectory = baseDir
+                    handler.allowedFileURLs = referenced
+                    offerFolderAccessIfNeeded(folder: baseDir, referenced: Array(referenced), documentURL: url)
                 }
             } else if let handler = webView.configuration.urlSchemeHandler(forURLScheme: "local-md") as? LocalSchemeHandler {
                 handler.allowedFileURLs = []
@@ -485,6 +489,19 @@ struct MarkdownWebView: NSViewRepresentable {
                 pendingRender = nil
             } else {
                 os_log("Coordinator: WebView not ready, queuing render", log: logger, type: .debug)
+            }
+        }
+
+        /// When images beside the document exist but cannot be read (the sandbox has not been given
+        /// the folder), ask once for the folder and redraw. Declining leaves the images missing;
+        /// File ▸ Allow Access to Document Folder… asks again.
+        private func offerFolderAccessIfNeeded(folder: URL, referenced: [URL], documentURL: URL) {
+            guard FolderAccessPrompt.isFolderAccessMissing(for: referenced) else { return }
+            DispatchQueue.main.async { [weak self] in
+                let reason = "BoaMarkdown needs access to this folder to show its images and open the files it links to."
+                if FolderAccessPrompt.request(forFolder: folder, reason: reason) {
+                    self?.reloadFromDisk(url: documentURL, force: true)
+                }
             }
         }
 
@@ -996,6 +1013,14 @@ struct MarkdownWebView: NSViewRepresentable {
             
             switch LinkNavigation.action(for: link) {
             case .openBoaMarkdown(let position):
+                // A sandboxed app cannot read a sibling document it has not been given.
+                if FolderAccessPrompt.isFolderAccessMissing(for: [targetURL]) {
+                    let reason = "BoaMarkdown needs access to this folder to open the linked document."
+                    guard FolderAccessPrompt.request(forFolder: fileURL.deletingLastPathComponent(), reason: reason, force: true) else {
+                        showDestinationFailure(targetURL)
+                        return
+                    }
+                }
                 let id = position.map { DocumentPositionStore.shared.set($0, for: targetURL) }
                 NSDocumentController.shared.openDocument(withContentsOf: targetURL, display: true) { _, _, error in
                     if error != nil {

@@ -23,6 +23,29 @@ final class ReleaseEntitlementsTests: XCTestCase {
         XCTAssertFalse(appRelease.contains("com.apple.security.get-task-allow"))
     }
 
+    func testBothEntitlementFilesEnableTheSandboxAndLetTheWebViewStart() throws {
+        for name in ["Markdown.entitlements", "MarkdownRelease.entitlements"] {
+            let url = projectRoot().appendingPathComponent("Sources/Markdown/\(name)")
+            let plist = try XCTUnwrap(
+                PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil) as? [String: Any],
+                "\(name) must be a property list"
+            )
+
+            XCTAssertEqual(plist["com.apple.security.app-sandbox"] as? Bool, true, "\(name) must enable the App Sandbox")
+            XCTAssertEqual(plist["com.apple.security.files.user-selected.read-write"] as? Bool, true,
+                           "\(name) must let the save panel write exports")
+            XCTAssertEqual(plist["com.apple.security.files.bookmarks.app-scope"] as? Bool, true,
+                           "\(name) must allow bookmarks so folder grants survive a relaunch")
+            XCTAssertNil(plist["com.apple.security.files.user-selected.read-only"],
+                         "\(name) must not keep the read-only entitlement next to read-write")
+            // WKWebView's web content and GPU processes do not launch inside the sandbox without this,
+            // and the page stays blank. Incoming connections are never needed.
+            XCTAssertEqual(plist["com.apple.security.network.client"] as? Bool, true,
+                           "\(name) must keep network.client or the web view cannot start")
+            XCTAssertNil(plist["com.apple.security.network.server"], "\(name) must not request incoming network access")
+        }
+    }
+
     private func projectRoot() -> URL {
         URL(fileURLWithPath: #file)
             .deletingLastPathComponent()
