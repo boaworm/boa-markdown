@@ -7,9 +7,10 @@ import Foundation
 /// `UserDefaults(suiteName:)` with a plist at
 /// `~/Library/Application Support/BoaMarkdown/shared-preferences.plist`.
 ///
-/// The path is resolved through `getpwuid(getuid())` so it names the real home
-/// directory instead of a sandbox container. Writing there is exactly what blocks
-/// enabling the app sandbox; see `docs/sandbox-plan.md`.
+/// The Quick Look extension that once shared this file is gone, so the path no longer has to
+/// name the real home directory. It uses the standard Application Support location, which the
+/// App Sandbox redirects into the app's container; see `docs/sandbox-plan.md`. Settings saved at
+/// the old real-home path by an unsandboxed build are not read by a sandboxed one.
 ///
 /// **Thread safety:** All access is serialized through a serial DispatchQueue.
 /// This matches the thread-safety guarantee of the `UserDefaults` API it replaces.
@@ -20,7 +21,7 @@ import Foundation
 /// See: upstream issue #13
 public class SharedPreferenceStore {
 
-    private static let relativePath = "Library/Application Support/BoaMarkdown/shared-preferences.plist"
+    private static let fileName = "shared-preferences.plist"
 
     /// Legacy App Group identifier — used for one-time migration of preferences
     /// from pre-Tahoe versions that used App Group UserDefaults.
@@ -192,27 +193,17 @@ public class SharedPreferenceStore {
 
     // MARK: - Private
 
-    /// Resolves the real user home directory via the password database, so the
-    /// path survives sandbox container redirection.
-    private static func realHomeDirectory() -> URL {
-        if let pw = getpwuid(getuid()), let home = pw.pointee.pw_dir {
-            return URL(fileURLWithPath: String(cString: home))
-        }
-        // getpwuid failed — this is unexpected on macOS. Log a warning because
-        // the fallback will return the container path for sandboxed processes,
-        // silently pointing the store at a location nothing else reads.
-        NSLog("[SharedPreferenceStore] WARNING: getpwuid(getuid()) failed — " +
-              "falling back to homeDirectoryForCurrentUser. " +
-              "Preferences may not be read from the shared location.")
-        return FileManager.default.homeDirectoryForCurrentUser
-    }
-
+    /// `Application Support/BoaMarkdown` in the user's library. Unsandboxed this is
+    /// `~/Library/Application Support/BoaMarkdown`; under the App Sandbox the system maps the same
+    /// call into the app's container, which is the only place a sandboxed app may write.
     static func applicationSupportDirectory() -> URL {
-        realHomeDirectory().appendingPathComponent("Library/Application Support/BoaMarkdown", isDirectory: true)
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support", isDirectory: true)
+        return base.appendingPathComponent("BoaMarkdown", isDirectory: true)
     }
 
     private static func defaultFileURL() -> URL {
-        return realHomeDirectory().appendingPathComponent(relativePath)
+        applicationSupportDirectory().appendingPathComponent(fileName)
     }
 
     /// Must be called within `queue.sync`. Writes cache to disk.

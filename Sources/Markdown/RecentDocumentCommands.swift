@@ -25,10 +25,24 @@ struct RecentDocumentCommands: Commands {
                     NSDocumentController.shared.clearRecentDocuments(nil)
                 }.disabled(history.urls.isEmpty)
             }
+            Button(NSLocalizedString("Allow Access to Document Folder…", comment: "File menu")) {
+                allowAccessToDocumentFolder()
+            }
+        }
+    }
+
+    /// Lets the user grant (or grant again) the folder of the document in front, so its images
+    /// and linked files can be read under the App Sandbox.
+    private func allowAccessToDocumentFolder() {
+        guard let fileURL = NSDocumentController.shared.currentDocument?.fileURL else { return }
+        let reason = "BoaMarkdown needs access to this folder to show its images and open the files it links to."
+        if FolderAccessPrompt.request(forFolder: fileURL.deletingLastPathComponent(), reason: reason, force: true) {
+            NotificationCenter.default.post(name: .reloadFile, object: nil)
         }
     }
 
     private func open(_ url: URL) {
+        ScopedAccessStore.shared.startAccess(coveringPath: url.path)
         NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, error in
             if error != nil {
                 FailureNotice.alert(.fileRead, recoveryTitle: "Choose Another File", recovery: {

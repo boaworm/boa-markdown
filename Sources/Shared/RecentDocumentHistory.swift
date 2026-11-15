@@ -25,6 +25,9 @@ final class RecentDocumentHistory: ObservableObject {
 
     func record(_ url: URL) {
         guard url.isFileURL else { return }
+        // The document is reachable right now (the user just opened it); keep a bookmark so
+        // "Open Recent" can reach it again after a relaunch under the App Sandbox.
+        ScopedAccessStore.shared.remember(url)
         save([url] + urls)
     }
 

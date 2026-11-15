@@ -2,8 +2,22 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Allow read-only access to user-selected Markdown documents. -->
-    <key>com.apple.security.files.user-selected.read-only</key>
+    <!-- App Sandbox. -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- Required by WKWebView: without it the web content and GPU processes fail to launch and the
+         page stays blank, even though only bundled and local content is loaded. The app contains no
+         network code, and the renderer's Content-Security-Policy still blocks page-level requests. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+
+    <!-- Documents the user opens, and the files they pick in the save panel for PDF and HTML export. -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Remember folders the user granted across launches. -->
+    <key>com.apple.security.files.bookmarks.app-scope</key>
     <true/>
 
     <!-- Allow JIT for WKWebView rendering performance. -->

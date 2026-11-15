@@ -14,7 +14,7 @@ This is a fork of [xykong/flux-markdown](https://github.com/xykong/flux-markdown
 | Telemetry | Usage statistics, promotion/source attribution, and the settings that controlled them |
 | Nags | The GitHub star reminder and every "Star on GitHub" button |
 | Issue reporting | In-app "Report an Issue", error reports, diagnostics bundles, settings-change history |
-| Network entitlements | `network.client` is gone from the app entitlements, as are the `Telemetry/` file exceptions |
+| Network code and file exceptions | All code that made network requests, and the `Telemetry/` file exceptions. The app is sandboxed and holds only the outgoing-network entitlement that `WKWebView` needs to start (see below) |
 | Finder Quick Look | The preview extension you got by pressing `Space`, its Spotlight-search launcher helper, the `Space`-key registration, and the diagnostic scripts that surrounded them |
 | Third-party Swift packages | Sparkle was the only one |
 | Release machinery | DMG/Homebrew/MacPorts scripts, release and issue-triage workflows, release notes, changelog |
@@ -22,16 +22,18 @@ This is a fork of [xykong/flux-markdown](https://github.com/xykong/flux-markdown
 | Upstream links and docs | Help-menu and Welcome-screen links to the upstream repo, the `docs/` tree, translated READMEs, upstream agent/process files |
 | Outbound notifications | The Feishu workflows and scripts |
 | npm renderer | The `web-renderer/` Vite project, its Node dependencies and the CI jobs that built it. Markdown is parsed in Swift by cmark-gfm |
-| Diagram and chart engines | Vega, Vega-Lite, Graphviz and Typst lived in the npm renderer. Fenced `vega`, `dot` and `typst` blocks now render as code. Mermaid is back, as a vendored bundle (see below) |
+| Diagram and chart engines | Mermaid, Vega, Vega-Lite, Graphviz and Typst lived in the npm renderer. Fenced `mermaid`, `vega`, `dot` and `typst` blocks now render as code, and `.mmd` files open as a ```mermaid code block |
 
 When a failure happens, the app now shows a local message with a retry button (`Sources/Shared/FailureNotice.swift`). Nothing is recorded or sent.
 
 ## What is still here
 
-- The JavaScript libraries the renderer still needs: KaTeX for math, highlight.js for code colouring and Mermaid for diagrams. All are vendored under `Renderer/vendor/` with their licences and a checksum record, so nothing is fetched at build time. Mermaid is about 5.5 MB and is loaded only when a document contains a diagram; its `VENDORED.md` lists the licences of the libraries bundled inside it.
-- The macOS app itself is not sandboxed, so removing an entitlement does not technically block network access from it. What was removed is the code that made requests (updates, statistics, reporting). A document that references a remote image or a link can still cause the web view to load it, or open your browser when you click it.
+- The two JavaScript libraries the renderer still needs: KaTeX for math and highlight.js for code colouring. Both are vendored under `Renderer/vendor/` with their licences and a checksum record, so nothing is fetched at build time.
+- The app runs in the macOS App Sandbox. It can read the documents you open and the folders you allow, and write only where you save an export. Opening a document grants access to that file alone, so the first time you open one with images or links to siblings, BoaMarkdown asks you to allow its folder (File ▸ Allow Access to Document Folder… asks again). The choice is remembered.
+- The sandbox does not block the network. `WKWebView` will not start in a sandboxed app without the outgoing-network entitlement, so the app holds it. What keeps the app local-only is that the code that made requests (updates, statistics, reporting) is gone, and the renderer's Content-Security-Policy blocks page requests, including remote images. Clicking an `http(s)` link still opens your browser.
+- The command-line PDF export (`BoaMarkdown --export-pdf in.md out.pdf`) cannot reach arbitrary paths under the sandbox, so it only works for files the app can already read and write.
 - Building needs no package manager: the Markdown parser is vendored C (`Vendor/cmark-gfm`), the renderer assets are in the repo, and `xcodegen` assembles the project.
-- The app is named BoaMarkdown, with bundle identifiers under `io.github.boaworm`, and the upstream "flux" names (renderer scheme, JavaScript globals, CSS classes, environment variables) have been renamed to "boa". Only the `markdownpreview://` URL scheme is unchanged. Settings live in `~/Library/Application Support/BoaMarkdown/`, so they do not carry over from an upstream FluxMarkdown install.
+- The app is named BoaMarkdown, with bundle identifiers under `io.github.boaworm`, and the upstream "flux" names (renderer scheme, JavaScript globals, CSS classes, environment variables) have been renamed to "boa". Only the `markdownpreview://` URL scheme is unchanged. Settings live in the app's container (`~/Library/Containers/io.github.boaworm.Markdown/Data/Library/Application Support/BoaMarkdown/`), so they do not carry over from an upstream FluxMarkdown install or from an earlier unsandboxed build.
 
 The remaining code has not been fully audited yet. Changes from upstream are reviewed commit by commit before they are merged.
 
@@ -42,7 +44,6 @@ The remaining code has not been fully audited yet. Changes from upstream are rev
 | Math | Inline and block expressions (KaTeX) |
 | GFM | Tables, task lists, strikethrough, GitHub-style alerts |
 | Code highlighting | Syntax highlighting for 40+ languages |
-| Diagrams | Fenced `mermaid` blocks and `.mmd` files render as diagrams (Mermaid), with zoom controls. A diagram that fails to parse stays as code with an error note |
 | Table of contents | Interactive panel with section tracking |
 | YAML front matter | Rendered as a table |
 | Export | PDF (`Cmd+Shift+P`) and HTML (`Cmd+Shift+E`) |
