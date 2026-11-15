@@ -46,24 +46,36 @@ final class LinkNavigationTests: XCTestCase {
         XCTAssertEqual(result?.path, "/Users/me/docs/subdir/notes.md")
     }
 
-    func testResolvesRelativeHrefWithParentDir() {
+    func testRejectsParentDirectoryTraversal() {
         let baseFileURL = URL(fileURLWithPath: "/Users/me/docs/subdir/index.md")
-        let href = "../other.md"
 
-        let result = LinkNavigation.resolveLocalURL(href: href, relativeTo: baseFileURL)
-
-        XCTAssertNotNil(result)
-        XCTAssertEqual(result?.path, "/Users/me/docs/other.md")
+        for href in ["../other.md", "..", "../", "a/../../other.md", "./../other.md", "a/b/../c.md",
+                     "%2e%2e/other.md", "%2E%2E%2Fother.md", "sub/%2e%2e/%2e%2e/other.md"] {
+            XCTAssertNil(LinkNavigation.resolveLocalURL(href: href, relativeTo: baseFileURL),
+                         "\(href) must not resolve: links may not use `..`")
+        }
     }
 
-    func testResolvesAbsoluteHref() {
+    func testAllowsDotDotInsideAFileName() {
         let baseFileURL = URL(fileURLWithPath: "/Users/me/docs/index.md")
-        let href = "/tmp/absolute.md"
 
-        let result = LinkNavigation.resolveLocalURL(href: href, relativeTo: baseFileURL)
+        XCTAssertEqual(LinkNavigation.resolveLocalURL(href: "notes..old.md", relativeTo: baseFileURL)?.path,
+                       "/Users/me/docs/notes..old.md", "Only a whole `..` component is a traversal")
+    }
 
-        XCTAssertNotNil(result)
-        XCTAssertEqual(result?.path, "/tmp/absolute.md")
+    func testRejectsAbsoluteHref() {
+        let baseFileURL = URL(fileURLWithPath: "/Users/me/docs/index.md")
+
+        for href in ["/tmp/absolute.md", "/", "/Applications/Calculator.app", "%2Fetc%2Fpasswd", "//host/share/x.md"] {
+            XCTAssertNil(LinkNavigation.resolveLocalURL(href: href, relativeTo: baseFileURL),
+                         "\(href) must not resolve: absolute paths are refused")
+        }
+    }
+
+    func testRejectsEmbeddedNullByte() {
+        let baseFileURL = URL(fileURLWithPath: "/Users/me/docs/index.md")
+
+        XCTAssertNil(LinkNavigation.resolveLocalURL(href: "notes.md%00.txt", relativeTo: baseFileURL))
     }
 
     func testReturnsNilForPureAnchorHref() {
@@ -84,14 +96,13 @@ final class LinkNavigationTests: XCTestCase {
         XCTAssertNil(result, "Empty href should return nil")
     }
 
-    func testResolvesFileURLScheme() {
+    func testRejectsFileURLScheme() {
         let baseFileURL = URL(fileURLWithPath: "/Users/me/docs/index.md")
-        let href = "file:///Users/me/other/notes.md"
 
-        let result = LinkNavigation.resolveLocalURL(href: href, relativeTo: baseFileURL)
-
-        XCTAssertNotNil(result)
-        XCTAssertEqual(result?.path, "/Users/me/other/notes.md")
+        for href in ["file:///Users/me/other/notes.md", "FILE:///etc/passwd", "file:notes.md", "file%3A%2F%2F%2Fetc%2Fpasswd"] {
+            XCTAssertNil(LinkNavigation.resolveLocalURL(href: href, relativeTo: baseFileURL),
+                         "\(href) must not resolve: file: URLs are refused")
+        }
     }
 
     func testExtractsFragmentFromPercentEncodedHref() {

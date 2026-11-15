@@ -1005,9 +1005,26 @@ struct MarkdownWebView: NSViewRepresentable {
                         NotificationCenter.default.post(name: DocumentPositionStore.notification, object: targetURL)
                     }
                 }
-            case .openExternally:
+            case .confirmThenOpen:
+                guard FileManager.default.fileExists(atPath: targetURL.path) else { showDestinationFailure(targetURL); return }
+                guard confirmOpeningWithDefaultApplication(targetURL) else { return }
                 if !NSWorkspace.shared.open(targetURL) { showDestinationFailure(targetURL) }
+            case .revealInFinder:
+                guard FileManager.default.fileExists(atPath: targetURL.path) else { showDestinationFailure(targetURL); return }
+                NSWorkspace.shared.activateFileViewerSelecting([targetURL])
             }
+        }
+
+        /// Local links may name any file under the document's folder, including ones the user
+        /// has not looked at, so an explicit click on the link is not enough to launch them.
+        private func confirmOpeningWithDefaultApplication(_ url: URL) -> Bool {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = "Open “\(url.lastPathComponent)”?"
+            alert.informativeText = "This file will be opened with its default application."
+            alert.addButton(withTitle: "Open")
+            alert.addButton(withTitle: "Cancel")
+            return alert.runModal() == .alertFirstButtonReturn
         }
         
         func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -1020,9 +1037,11 @@ struct MarkdownWebView: NSViewRepresentable {
             if url.scheme == "http" || url.scheme == "https" {
                 if !NSWorkspace.shared.open(url) { showDestinationFailure(url) }
                 decisionHandler(.cancel)
-            } else if url.isFileURL && (url.pathExtension.lowercased() == "md" || url.pathExtension.lowercased() == "tsv") {
-                 if !NSWorkspace.shared.open(url) { showDestinationFailure(url) }
-                 decisionHandler(.cancel)
+            } else if url.isFileURL {
+                // `file:` links are never followed; relative links go through handleLinkClick,
+                // which keeps them inside the document's folder.
+                os_log("Ignored file: link navigation", log: logger, type: .default)
+                decisionHandler(.cancel)
             } else {
                 decisionHandler(.allow)
             }

@@ -46,6 +46,7 @@ The remaining code has not been fully audited yet. Changes from upstream are rev
 | YAML front matter | Rendered as a table |
 | Export | PDF (`Cmd+Shift+P`) and HTML (`Cmd+Shift+E`) |
 | Zoom and pan | `Cmd +/-/0`, `Cmd`+scroll, pinch |
+| Local links | Relative links open files in the document's own folder or below it. Absolute paths, `file:` links and any `..` are refused. Other documents open in the app; ordinary files ask first; folders, apps, scripts, installers and executables are only shown in Finder, never opened |
 | Position memory | Remembers scroll position per file |
 | Themes | Light, Dark, or follow the system |
 | Formats | `.md`, `.mdx`, `.rmd`, `.qmd`, `.mdoc`, `.mdc`, `.mmd`, `.livemd`, `.mkd`, `.mkdn`, `.mkdown`, `.mdwn`, `.mdown`, `.markdown`, plus read-only `.tsv` tables |

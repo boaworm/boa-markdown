@@ -1,13 +1,137 @@
 # Security Review Report — BoaMarkdown (FluxMarkdown)
 
-**Date:** 2026-11-14
+**Original review date:** 2026-11-14
 **Reviewer:** Automated security review (3 subagents + manual code review)
 **Version reviewed:** v1.50.828
 **Project:** boa-markdown — a stripped-down, local-only Markdown viewer for macOS (app + Finder Quick Look extension)
 
+> **Status update.** The review below (sections 1 to 6) was written against an older code base: a
+> TypeScript renderer (`web-renderer/`), a Quick Look extension, an XPC launcher, and the Vega, Graphviz
+> and Typst engines. Most of that has since been removed. **Read "Current status" first.** The original
+> text is kept unchanged below it as a record, so its file paths and line numbers no longer match the tree.
+
 ---
 
-## 1. Executive Summary
+## Current status
+
+Checked against branch `feat/mermaid-diagrams` at `f8dc286` on 2026-11-14. Each finding was checked by
+reading the current code or searching for the pattern; "not re-verified" marks the ones I could not confirm.
+No dynamic testing was done. Status values:
+
+| Status | Meaning |
+|--------|---------|
+| Open | The issue still exists in the current code |
+| Partly addressed | Reduced or mitigated, but not closed |
+| Fixed | Closed by a change in the current code |
+| Removed | The affected code no longer exists |
+| Accepted | Known and intentional (debug-only or non-sensitive) |
+| Holds | A positive observation that is still true |
+
+### Summary
+
+| Status | Count | Findings |
+|--------|-------|----------|
+| Removed (includes fixed by removal) | 19 | 2, 5, 7, 10, 16, 21, 22, 23, 28, 34, 35, 36, 37, 40, 45, 46, 48, 49, 51 |
+| Fixed | 4 | 26, 27, 29, 31 |
+| Partly addressed | 7 | 9, 14, 15, 32, 50, 53, 54 |
+| Holds (positive) | 1 | 25 |
+| Accepted | 2 | 4, 12 |
+| Open | 20 | 1, 3, 6, 8, 11, 13, 17, 18, 20, 24, 30, 33, 38, 39, 41, 42, 43, 44, 47, 52 |
+| Not re-verified | 1 | 19 |
+| **Total** | **54** | |
+
+The two CRITICAL findings (1 and 52) are both the same root cause: the main app is still not sandboxed.
+Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Findings 6, 13 and 44 remain Open, and I now rate all three lower (see the table).
+
+### Status of every finding
+
+"Now" is my current severity for findings that are still Open; it can differ from the original rating.
+
+| # | Original | Status | Now | Evidence and notes |
+|---|----------|--------|-----|--------------------|
+| 1 | CRITICAL | Open | High | Sandbox key still commented out with a TODO in `Sources/Markdown/Markdown.entitlements:7`; `MarkdownRelease.entitlements` has none. Staged plan in `docs/sandbox-plan.md`. |
+| 2 | HIGH | Removed | n/a | Quick Look extension deleted. |
+| 3 | MEDIUM | Open | Medium | `com.apple.security.cs.allow-jit` is in both remaining entitlement files. Likely unnecessary for `WKWebView` (not verified by removing it). Release also has `ENABLE_HARDENED_RUNTIME = NO` (see N2). |
+| 4 | LOW | Accepted | n/a | `get-task-allow` is in the Debug entitlements only. |
+| 5 | MEDIUM | Removed | n/a | `Sources/Markdown/main.swift` now handles only `--export-pdf`. That mode's own input handling was not reviewed. |
+| 6 | HIGH | Open | Low | `Process` with `/usr/bin/open -t` still at `MarkdownWebView.swift:350-351`. Array arguments, so no shell injection; `launchPath` is deprecated. Prefer `NSWorkspace`. |
+| 7 | HIGH | Removed | n/a | `QuickLookRegistration.swift` deleted. |
+| 8 | MEDIUM | Open | Low | Main-app navigation delegate still returns `.allow` for anything it does not recognise (`MarkdownWebView.swift:1013-1029`). The Quick Look half is gone. |
+| 9 | MEDIUM | Partly addressed | Low | Origin check holds (`RendererBridgePolicy`). `blockCopy` is validated (id at most 32 bytes, text at most 4 MiB, `BlockCopyBridge.swift:17-20`). The `logger` and `linkClicked` handlers have no length cap (`MarkdownWebView.swift:684-708`). |
+| 10 | MEDIUM | Removed | n/a | No `<base>` tag is created by the renderer. |
+| 11 | LOW | Open | Low | Interpolated JavaScript remains at `MarkdownWebView.swift:435, 503, 532`. Values are enum raw values and counters. Use `callAsyncJavaScript(arguments:)`. |
+| 12 | LOW | Accepted | n/a | Web Inspector is enabled only under `#if DEBUG`. |
+| 13 | HIGH | Open | Low-Medium | `markdownpreview://open?path=` still accepts any absolute path with any extension (`DocumentPosition.swift:31-37`, `MarkdownApp.swift:35-60`). Content is shown to the user only; reads are size-bounded. Restrict to supported document extensions. |
+| 14 | MEDIUM | Partly addressed | Low | `http(s)` links still open in the browser without confirmation (standard viewer behaviour). Local links no longer launch anything without asking; see N1. |
+| 15 | MEDIUM | Partly addressed | Low | `.mmd` is still wrapped as a mermaid fence (`BoundedFileReader.swift:36`) and is now drawn by the vendored Mermaid in `strict` mode, under the CSP. |
+| 16 | POSITIVE | Removed | n/a | XPC service deleted; no longer applicable. |
+| 17 | MEDIUM | Open | Low | The settings plist path is still resolved with `getpwuid` (`SharedPreferenceStore.swift:198`), now under `BoaMarkdown/`. No explicit file permissions are set. |
+| 18 | LOW | Open | Low | Recent document paths are still in `UserDefaults` (`RecentDocumentHistory.swift`, key `BoaRecentDocumentPaths.v1`). |
+| 19 | LOW | Not re-verified | n/a | Scroll positions keyed by path; not rechecked. |
+| 20 | MEDIUM | Open | Low | Plist is still read with `NSDictionary(contentsOf:) as? [String: Any]` (`SharedPreferenceStore.swift:63, 258`); safe casts limit the effect. |
+| 21 | POSITIVE | Removed | n/a | `QuickLookProbeEvidence.swift` deleted. |
+| 22 | MEDIUM | Removed | n/a | The `--editor-state` option no longer exists. |
+| 23 | MEDIUM | Removed | n/a | The ShortcutProbe target is gone. |
+| 24 | LOW | Open | Low | Paths still logged with `%{public}@` (`LocalSchemeHandler.swift:40`, `MarkdownWebView.swift:707`). The log subsystem is still `com.markdownquicklook.app` (7 places). |
+| 25 | POSITIVE | Holds | n/a | Export filename still comes from `deletingPathExtension().lastPathComponent` (`MarkdownWebView.swift:428`). |
+| 26 | HIGH | Fixed | n/a | CSP is `script-src 'self' boa-renderer:` with no `unsafe-eval` (`Renderer/index.html:7`). Mermaid renders under it (see `MermaidRenderingTests`). |
+| 27 | HIGH | Fixed | n/a | markdown-it is gone. cmark runs in safe mode and `BoaRender` tests reject `javascript:`, `vbscript:` and `data:` links. |
+| 28 | HIGH | Removed | n/a | The app's DOMPurify configuration no longer exists. The Mermaid bundle contains its own DOMPurify, used in `strict` mode. |
+| 29 | HIGH | Fixed | n/a | CSP `img-src` allows only `'self'`, `boa-renderer:`, `local-md:`, `data:`, `blob:`. No `file:`, `http:` or `https:`. `file://` links are now refused natively as well; see N1. |
+| 30 | MEDIUM | Open | Low | The renderer still posts raw `href` values to native (`main.js:530`), and native does not check the scheme. A `javascript:` or other non-path value is treated as a relative path that does not exist, so it ends in a failure notice. Reasoned from code, not tested. |
+| 31 | MEDIUM | Fixed | n/a | The exported HTML head now carries `default-src 'none'; style-src 'unsafe-inline'; img-src data: file:; font-src data:` (`main.js:261`). |
+| 32 | MEDIUM | Partly addressed | Low | Font faces are excluded from the export (`collectStylesheetRules(false)`), and `@import` or `url()` targets are blocked by the export CSP. `img-src` still allows `file:`. |
+| 33 | MEDIUM | Open | Low | `new RegExp(query, flags)` with a user-typed pattern (`search.js:219-221`). Only the user typing the pattern can trigger it, so this is a self-inflicted slowdown, not an attack on content. |
+| 34 | MEDIUM | Removed | n/a | No `<base>` handling remains. |
+| 35 | MEDIUM | Removed | n/a | `diff-animator` is gone. |
+| 36 | LOW | Removed | n/a | `preprocessMermaidNewlines` is gone; Mermaid source is passed as written. |
+| 37 | LOW | Removed | n/a | Typst removed. |
+| 38 | LOW | Open | Low | The renderer still maps relative image paths to `local-md://` URLs (`main.js:149-157`); the native allowlist in `LocalSchemeHandler` is the real control and is unchanged. |
+| 39 | LOW | Open | Low | SVG images are still re-serialised with `XMLSerializer` without removing `<script>` or animation elements (`svg-image-layout.js:96`). They are only shown through `<img>` or data URLs. |
+| 40 | LOW | Removed | n/a | `acceptance.html` is gone. |
+| 41 | LOW | Open | Low | `localStorage` is still used for two help-overlay flags (`help-overlay.js:103-112, 237-238`). Not sensitive. |
+| 42 | LOW | Open | Low | `window.onerror` still forwards the raw message to the native logger (`main.js:40-42`). |
+| 43 | LOW | Open | Low | Line-number wrapping still rebuilds `innerHTML` from template strings (`main.js:100-106`). Input is escaped code from cmark or highlight.js output. |
+| 44 | HIGH | Open | Medium | `scripts/install.sh` still writes and runs `/tmp/set_default_handler.swift` at a fixed path (lines 95, 121, 125). Needs a local attacker on the same machine. Use `mktemp -d`. |
+| 45 | MEDIUM | Removed | n/a | `benchmark/ql-bench` deleted. |
+| 46 | MEDIUM | Removed | n/a | The npm build script is gone. |
+| 47 | MEDIUM | Open | Medium | `install.sh` still ad-hoc signs the app and clears quarantine with `xattr -cr` (lines 63, 69, 137). Intended for development installs; keep it documented. |
+| 48 | LOW | Removed | n/a | The Quick Look display-order code is gone from `install.sh`. |
+| 49 | LOW | Removed | n/a | `benchmark/js-bench` deleted. |
+| 50 | LOW | Partly addressed | Low | `verify_truncation.sh` is gone. `scripts/generate_large_md.sh` still has no `set -e`. |
+| 51 | INFO | Removed | n/a | The probe target is gone from `project.yml`. |
+| 52 | CRITICAL | Open | High | Same root cause as 1. Exposure is smaller now: there is no Quick Look, no network code, a strict CSP and only KaTeX, highlight.js and Mermaid in the page. The native side is still unsandboxed, so any renderer or parser bug runs with full user rights. |
+| 53 | MEDIUM | Partly addressed | Low | The `file:` base path is gone. SVG images load through `local-md://` or data URLs only. Re-serialisation is still unstripped (39). |
+| 54 | MEDIUM | Partly addressed | Low | The export now has a CSP (31) but is not re-sanitised, and diagram SVG is serialised as is (Mermaid sanitises its own output in `strict` mode). The Mermaid zoom controls are removed from exports because they carry the `diagram-tools` class. |
+
+### New findings since the original review
+
+| # | Severity | Finding | Evidence | Suggested fix |
+|---|----------|---------|----------|---------------|
+| N1 | Medium, **Fixed** | **Clicking a local link could launch any file or application.** Relative and absolute paths and `file://` URLs resolved without restriction, and anything that was not a document type went to `NSWorkspace.shared.open`. Files created locally, for example by `git clone`, carry no quarantine flag. A click was required. **Fix:** links now resolve only inside the document's own folder tree. Absolute paths, `file:` URLs, any `..` component and null bytes are refused, and a symlink that leaves the tree is refused after resolution. Ordinary files ask before opening. Folders, application and other bundles, scripts, installers and any file with the executable bit are only revealed in Finder. The navigation delegate no longer opens `file:` URLs. Covered by tests in `LinkNavigationTests` and `LocalLinkTargetTests`. | `LinkNavigation.swift` (`resolveLocalURL`, `isInsideDocumentTree`, `action(for:)`, `mightRunCodeOrIsFolder`); `MarkdownWebView.swift` (`handleLinkClick`, `decidePolicyFor`) | None. Side effect: links such as `../README.md` from a subfolder no longer work. |
+| N2 | Medium | **Hardened runtime is off in Release** (`ENABLE_HARDENED_RUNTIME = NO`), so the app cannot be notarised as built. | `xcodebuild -showBuildSettings` | Enable it, drop `allow-jit` (finding 3), and run the tests and a manual check. |
+| N3 | Info | **Mermaid 12.3.0 is vendored** (on branch `feat/mermaid-diagrams`, not yet merged) as a 5.5 MB minified bundle that inlines other libraries (DOMPurify 3.4.17, the ELK layout engine, KaTeX, lodash and others). It runs with `securityLevel: 'strict'` under the strict CSP, contains no `eval`, `new Function` or network APIs (searched), and is the latest release. It has not been audited independently. | `Renderer/vendor/mermaid/VENDORED.md` | Track upstream advisories; re-run the checks in `VENDORED.md` on every upgrade. |
+| N4 | Low | **README overstates remote content.** It says a document can still make the web view load a remote image. The CSP `img-src` suggests those loads are blocked. Not tested. | `README.md`; `Renderer/index.html:7` | Test with a remote image, then correct whichever is wrong. |
+| N5 | Info | **Thread safety in `LocalSchemeHandler`.** The `allowedFileURLs` setter changes `resourceGeneration` and `loadedBytes` before taking the lock that guards `allowedFilePaths`. Safe only if always called on the main thread. | `LocalSchemeHandler.swift:20-26` | Put all mutable state under one lock or mark the class `@MainActor`. |
+| N6 | Low | **Other URL schemes are treated as relative paths.** `mailto:` and similar links end in a "could not open" notice instead of being handled deliberately. | `MarkdownWebView.swift:973-995` | Open `mailto:` and ignore or reject the rest explicitly. |
+| N7 | Low | **Exported HTML allows local images.** The export CSP includes `img-src data: file:`. | `main.js:261` | Drop `file:` once all local images are inlined as data URLs. |
+
+### Current remediation order
+
+| Priority | Items | Effort |
+|----------|-------|--------|
+| Done | N1 (local links confined to the document's folder tree; ask before opening; reveal risky items only) | Small |
+| P1 | 1 and 52 (sandbox), following `docs/sandbox-plan.md` | Large |
+| P2 | 3 and N2 (hardened runtime, drop `allow-jit`) | Small |
+| P2 | 13 and 8 (restrict the `markdownpreview://` path; default-cancel navigation) | Small |
+| P2 | 44 and 47 (installer temp file and signing notes) | Small |
+| P3 | 11, 6 and 30 (typed JS bridge, `NSWorkspace` instead of `Process`, scheme check on `linkClicked`) | Medium |
+| P3 | 9, 24, 17, 20, N5, N6 (message size caps, log redaction, typed plist, locking, scheme handling) | Small to medium |
+| P3 | 33, 39, 41, 42, 43, 50, N4, N7 | Small |
+
+---
+
+## 1. Executive Summary (original review, written against the older code base)
 
 BoaMarkdown is a macOS Markdown preview application consisting of a native Swift
 app, a Finder Quick Look extension (sandboxed), a Swift XPC launcher service, and
@@ -1751,7 +1875,7 @@ behavior.
 
 ---
 
-## 5. Prioritized Remediation Roadmap
+## 5. Prioritized Remediation Roadmap (original; see "Current status" for the live order)
 
 | Priority | Finding(s) | Effort | Impact |
 |----------|------------|--------|--------|
