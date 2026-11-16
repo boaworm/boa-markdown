@@ -3,60 +3,12 @@ import AppKit
 import os.log
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    private var preferenceObservationTimer: Timer?
-
-    func applicationDidBecomeActive(_ notification: Notification) {
-        AppearancePreference.shared.observePreferenceChanges()
-    }
-
-    func applicationWillFinishLaunching(_ notification: Notification) {
-        // Register before launch events are delivered, including a URL that
-        // starts the application rather than targeting an existing process.
-        NSAppleEventManager.shared().setEventHandler(
-            self,
-            andSelector: #selector(handleURLEvent(_:withReplyEvent:)),
-            forEventClass: AEEventClass(kInternetEventClass),
-            andEventID: AEEventID(kAEGetURL)
-        )
-    }
-
     func applicationDidFinishLaunching(_ notification: Notification) {
-        preferenceObservationTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
-            AppearancePreference.shared.observePreferenceChanges()
-        }
-
         if CommandLine.arguments.contains("--register-only") {
             NSApplication.shared.terminate(nil)
         }
 
         RecentDocumentHistory.shared.migrate(NSDocumentController.shared.recentDocumentURLs)
-    }
-
-    @objc func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
-        guard let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
-              let url = URL(string: urlString) else {
-            print("❌ Invalid URL event")
-            return
-        }
-
-        guard let request = DocumentOpenRequest(url: url) else { return }
-        os_log("Document URL request received; position=%{public}@ placement=%{public}d", type: .info,
-               request.position == nil ? "none" : "explicit", request.windowPlacement == nil ? 0 : 1)
-        let id = request.position.map { DocumentPositionStore.shared.set($0, for: request.fileURL) }
-        let searchID = request.wantsSearch ? DocumentPositionStore.searchRequests.set(.search, for: request.fileURL) : nil
-        let placementID = request.windowPlacement.map { DocumentWindowPlacementStore.shared.set($0, for: request.fileURL) }
-        NSDocumentController.shared.openDocument(withContentsOf: request.fileURL, display: true) { document, alreadyOpen, error in
-            if error != nil {
-                if let id { DocumentPositionStore.shared.discard(for: request.fileURL, id: id) }
-                if let searchID { DocumentPositionStore.searchRequests.discard(for: request.fileURL, id: searchID) }
-                if let placementID { DocumentWindowPlacementStore.shared.discard(for: request.fileURL, id: placementID) }
-                return
-            }
-            if alreadyOpen, let window = document?.windowControllers.first?.window {
-                WindowAccessor.applyPendingSearchPlacement(to: window, for: request.fileURL)
-            }
-            NotificationCenter.default.post(name: DocumentPositionStore.notification, object: request.fileURL)
-        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -490,29 +442,6 @@ private final class ToolbarFeedbackToastHostView: NSView {
         }
     }
 
-}
-
-private struct ToolbarFeedbackToast: View {
-    let message: String
-
-    var body: some View {
-        Text(message)
-            .font(.system(size: 13, weight: .medium))
-            .foregroundColor(Color(NSColor.labelColor))
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color(NSColor.windowBackgroundColor).opacity(0.94))
-                    .shadow(color: Color.black.opacity(0.18), radius: 10, x: 0, y: 4)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Color(NSColor.separatorColor).opacity(0.45), lineWidth: 1)
-            )
-            .transition(.move(edge: .top).combined(with: .opacity))
-            .accessibilityLabel(message)
-    }
 }
 
 private struct ToolbarFeedbackObserver: NSViewRepresentable {

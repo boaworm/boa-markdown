@@ -38,7 +38,7 @@ final class CLIExporter: NSObject {
 
     private let inputURL:  URL
     private let outputURL: URL
-    private let logger = OSLog(subsystem: "com.markdownquicklook.app", category: "CLIExporter")
+    private let logger = OSLog(subsystem: "io.github.boaworm.Markdown", category: "CLIExporter")
 
     private var webView: WKWebView!
     private var offscreenWindow: NSWindow!
@@ -71,6 +71,7 @@ final class CLIExporter: NSObject {
             """, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         ucc.addUserScript(debugScript)
 
+        RendererNetworkBlocklist.install(on: ucc)
         config.userContentController = ucc
 
         let handler = LocalSchemeHandler()
@@ -229,6 +230,12 @@ final class CLIExporter: NSObject {
 }
 
 extension CLIExporter: WKNavigationDelegate {
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        // Nothing is clicked during an export, so only the bundled renderer may load.
+        let decision = RendererNavigationPolicy.decision(for: navigationAction.request.url, isLinkActivated: false)
+        decisionHandler(decision == .allow ? .allow : .cancel)
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         fputs("CLIExporter: webView didFinish navigation\n", stderr)
     }

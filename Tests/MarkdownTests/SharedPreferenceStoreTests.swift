@@ -73,46 +73,31 @@ final class SharedPreferenceStoreTests: XCTestCase {
         XCTAssertNil(reloaded.object(forKey: "key"))
     }
 
-    // MARK: - Cross-process simulation
+    // MARK: - Reading back from disk
 
-    func testCrossProcessRead() {
-        // Simulate main app writing
+    func testNewInstanceReadsSavedValues() {
         store.set("dark", forKey: "theme")
         store.set(20.0, forKey: "fontSize")
         store.set(true, forKey: "enableKatex")
         store.synchronize()
 
-        // Simulate extension reading (new instance, same file, alwaysReload mode)
-        let extensionStore = SharedPreferenceStore(fileURL: tempFile, alwaysReload: true)
-        XCTAssertEqual(extensionStore.string(forKey: "theme"), "dark")
-        XCTAssertEqual(extensionStore.double(forKey: "fontSize"), 20.0, accuracy: 0.01)
-        XCTAssertEqual(extensionStore.bool(forKey: "enableKatex"), true)
+        let reopened = SharedPreferenceStore(fileURL: tempFile)
+        XCTAssertEqual(reopened.string(forKey: "theme"), "dark")
+        XCTAssertEqual(reopened.double(forKey: "fontSize"), 20.0, accuracy: 0.01)
+        XCTAssertEqual(reopened.bool(forKey: "enableKatex"), true)
     }
 
     func testReloadsWhenFileChangesOnDisk() {
         store.set("light", forKey: "theme")
         store.synchronize()
 
-        // Another process writes to the same file
+        // Another instance writes to the same file
         let otherWriter = SharedPreferenceStore(fileURL: tempFile)
         otherWriter.set("dark", forKey: "theme")
         otherWriter.synchronize()
 
-        // Extension with alwaysReload always picks up changes
-        let reader = SharedPreferenceStore(fileURL: tempFile, alwaysReload: true)
+        let reader = SharedPreferenceStore(fileURL: tempFile)
         XCTAssertEqual(reader.string(forKey: "theme"), "dark")
-    }
-
-    func testAlwaysReloadPicksUpEveryChange() {
-        let reader = SharedPreferenceStore(fileURL: tempFile, alwaysReload: true)
-
-        store.set("v1", forKey: "key")
-        store.synchronize()
-        XCTAssertEqual(reader.string(forKey: "key"), "v1")
-
-        store.set("v2", forKey: "key")
-        store.synchronize()
-        XCTAssertEqual(reader.string(forKey: "key"), "v2")
     }
 
     // MARK: - File doesn't exist yet
@@ -196,77 +181,6 @@ final class SharedPreferenceStoreTests: XCTestCase {
         }
 
         waitForExpectations(timeout: 10)
-    }
-
-    // MARK: - Migration
-
-    func testMigrationFromAppGroupUserDefaults() {
-        // Write values to legacy App Group UserDefaults
-        let legacyDefaults = UserDefaults(suiteName: SharedPreferenceStore.legacyAppGroupIdentifier)!
-        legacyDefaults.set("dark", forKey: "preferredAppearanceMode")
-        legacyDefaults.set(20.0, forKey: "baseFontSize")
-        legacyDefaults.set("monokai", forKey: "codeHighlightTheme")
-        legacyDefaults.synchronize()
-
-        // Create a fresh store and run migration
-        let freshFile = tempDir.appendingPathComponent("migration-test.plist")
-        let freshStore = SharedPreferenceStore(fileURL: freshFile)
-        freshStore.migrateFromAppGroupIfNeeded()
-
-        // Verify values were migrated
-        XCTAssertEqual(freshStore.string(forKey: "preferredAppearanceMode"), "dark")
-        XCTAssertEqual(freshStore.double(forKey: "baseFontSize"), 20.0, accuracy: 0.01)
-        XCTAssertEqual(freshStore.string(forKey: "codeHighlightTheme"), "monokai")
-
-        // Cleanup legacy defaults
-        legacyDefaults.removeObject(forKey: "preferredAppearanceMode")
-        legacyDefaults.removeObject(forKey: "baseFontSize")
-        legacyDefaults.removeObject(forKey: "codeHighlightTheme")
-        legacyDefaults.synchronize()
-    }
-
-    func testMigrationDoesNotOverwriteExistingValues() {
-        // Write values to legacy store
-        let legacyDefaults = UserDefaults(suiteName: SharedPreferenceStore.legacyAppGroupIdentifier)!
-        legacyDefaults.set("dark", forKey: "preferredAppearanceMode")
-        legacyDefaults.synchronize()
-
-        // Pre-populate the file-based store with a different value
-        store.set("light", forKey: "preferredAppearanceMode")
-        store.synchronize()
-
-        // Create new store from same file and migrate
-        let sameStore = SharedPreferenceStore(fileURL: tempFile)
-        sameStore.migrateFromAppGroupIfNeeded()
-
-        // Existing value should NOT be overwritten
-        XCTAssertEqual(sameStore.string(forKey: "preferredAppearanceMode"), "light")
-
-        // Cleanup
-        legacyDefaults.removeObject(forKey: "preferredAppearanceMode")
-        legacyDefaults.synchronize()
-    }
-
-    func testMigrationRunsOnlyOnce() {
-        let legacyDefaults = UserDefaults(suiteName: SharedPreferenceStore.legacyAppGroupIdentifier)!
-
-        // First migration
-        store.migrateFromAppGroupIfNeeded()
-
-        // Now add a value to legacy store AFTER migration
-        legacyDefaults.set("post-migration-value", forKey: "preferredAppearanceMode")
-        legacyDefaults.synchronize()
-
-        // Second migration should be a no-op
-        let reloaded = SharedPreferenceStore(fileURL: tempFile)
-        reloaded.migrateFromAppGroupIfNeeded()
-
-        // Value added after migration should NOT appear
-        XCTAssertNil(reloaded.string(forKey: "preferredAppearanceMode"))
-
-        // Cleanup
-        legacyDefaults.removeObject(forKey: "preferredAppearanceMode")
-        legacyDefaults.synchronize()
     }
 
     // MARK: - Plist validation

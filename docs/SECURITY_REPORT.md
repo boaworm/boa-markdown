@@ -19,6 +19,8 @@ for the findings that mention Mermaid (15 and N3), which is not merged yet. Each
 reading the current code or searching for the pattern; "not re-verified" marks the ones I could not confirm.
 No dynamic testing was done. Status values:
 
+Updated on 2026-11-16 for findings 3, 8, 13, 24, 44 and N2 only; the other rows were not rechecked. The Mermaid branch has since been merged.
+
 | Status | Meaning |
 |--------|---------|
 | Open | The issue still exists in the current code |
@@ -32,12 +34,12 @@ No dynamic testing was done. Status values:
 
 | Status | Count | Findings |
 |--------|-------|----------|
-| Removed (includes fixed by removal) | 19 | 2, 5, 7, 10, 16, 21, 22, 23, 28, 34, 35, 36, 37, 40, 45, 46, 48, 49, 51 |
-| Fixed | 7 | 1, 6, 17, 26, 27, 29, 31 |
-| Partly addressed | 9 | 9, 13, 14, 15, 32, 50, 52, 53, 54 |
+| Removed (includes fixed by removal) | 20 | 2, 5, 7, 10, 13, 16, 21, 22, 23, 28, 34, 35, 36, 37, 40, 45, 46, 48, 49, 51 |
+| Fixed | 10 | 1, 3, 6, 8, 17, 26, 27, 29, 31, 44 |
+| Partly addressed | 8 | 9, 14, 15, 32, 50, 52, 53, 54 |
 | Holds (positive) | 1 | 25 |
 | Accepted | 2 | 4, 12 |
-| Open | 15 | 3, 8, 11, 18, 20, 24, 30, 33, 38, 39, 41, 42, 43, 44, 47 |
+| Open | 12 | 11, 18, 20, 24, 30, 33, 38, 39, 41, 42, 43, 47 |
 | Not re-verified | 1 | 19 |
 | **Total** | **54** | |
 
@@ -52,17 +54,17 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 |---|----------|--------|-----|--------------------|
 | 1 | CRITICAL | Fixed | n/a | `com.apple.security.app-sandbox` is enabled in both `Markdown.entitlements` and `MarkdownRelease.entitlements`, with read-write user-selected files, app-scope bookmarks and `network.client` (needed for `WKWebView` to start). Folder access is granted once per folder through `FolderAccessPrompt` and remembered by `ScopedAccessStore`. Details in `docs/sandbox-plan.md`. Checked by hand: the app launches and renders a document; Open Recent after a relaunch, exports and the folder prompt still need a manual check. |
 | 2 | HIGH | Removed | n/a | Quick Look extension deleted. |
-| 3 | MEDIUM | Open | Medium | `com.apple.security.cs.allow-jit` is in both remaining entitlement files. Likely unnecessary for `WKWebView` (not verified by removing it). Release also has `ENABLE_HARDENED_RUNTIME = NO` (see N2). |
+| 3 | MEDIUM | Fixed | n/a | `cs.allow-jit` removed from both entitlement files and the hardened runtime is on (N2). Checked on a Release build: the renderer still starts. `ReleaseEntitlementsTests` guards both. |
 | 4 | LOW | Accepted | n/a | `get-task-allow` is in the Debug entitlements only. |
 | 5 | MEDIUM | Removed | n/a | `Sources/Markdown/main.swift` now handles only `--export-pdf`. That mode's own input handling was not reviewed. |
 | 6 | HIGH | Fixed | n/a | "Open in External Editor" now uses `NSWorkspace.open(_:withApplicationAt:configuration:)` with the default plain-text editor. The app no longer spawns any process. |
 | 7 | HIGH | Removed | n/a | `QuickLookRegistration.swift` deleted. |
-| 8 | MEDIUM | Open | Low | Main-app navigation delegate still returns `.allow` for anything it does not recognise (`MarkdownWebView.swift:1013-1029`). The Quick Look half is gone. |
+| 8 | MEDIUM | Fixed | n/a | The navigation delegate now allows only the bundled renderer (`boa-renderer://bundle`), sends a clicked `http(s)` link to the browser and cancels everything else (`RendererNavigationPolicy`). A content rule list also blocks `http(s)`, `ws(s)` and `ftp` loads in the web view. |
 | 9 | MEDIUM | Partly addressed | Low | Origin check holds (`RendererBridgePolicy`). `blockCopy` is validated (id at most 32 bytes, text at most 4 MiB, `BlockCopyBridge.swift:17-20`). The `logger` and `linkClicked` handlers have no length cap (`MarkdownWebView.swift:684-708`). |
 | 10 | MEDIUM | Removed | n/a | No `<base>` tag is created by the renderer. |
 | 11 | LOW | Open | Low | Interpolated JavaScript remains at `MarkdownWebView.swift:435, 503, 532`. Values are enum raw values and counters. Use `callAsyncJavaScript(arguments:)`. |
 | 12 | LOW | Accepted | n/a | Web Inspector is enabled only under `#if DEBUG`. |
-| 13 | HIGH | Partly addressed | Low | `markdownpreview://open?path=` still accepts any absolute path with any extension in its parser (`DocumentPosition.swift:31-37`, `MarkdownApp.swift:35-60`), but under the sandbox the app can only open paths it can already read, so other paths fail. Still worth restricting to supported document extensions. |
+| 13 | HIGH | Removed | n/a | The `markdownpreview://` scheme, its Apple Event handler and `DocumentOpenRequest` are deleted. Nothing in the tree used it once the Quick Look extension was gone. |
 | 14 | MEDIUM | Partly addressed | Low | `http(s)` links still open in the browser without confirmation (standard viewer behaviour). Local links no longer launch anything without asking; see N1. |
 | 15 | MEDIUM | Partly addressed | Low | `.mmd` is still wrapped as a mermaid fence (`BoundedFileReader.swift:36`) and is now drawn by the vendored Mermaid in `strict` mode, under the CSP. |
 | 16 | POSITIVE | Removed | n/a | XPC service deleted; no longer applicable. |
@@ -73,7 +75,7 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 | 21 | POSITIVE | Removed | n/a | `QuickLookProbeEvidence.swift` deleted. |
 | 22 | MEDIUM | Removed | n/a | The `--editor-state` option no longer exists. |
 | 23 | MEDIUM | Removed | n/a | The ShortcutProbe target is gone. |
-| 24 | LOW | Open | Low | Paths still logged with `%{public}@` (`LocalSchemeHandler.swift:40`, `MarkdownWebView.swift:707`). The log subsystem is still `com.markdownquicklook.app` (7 places). |
+| 24 | LOW | Open | Low | Paths still logged with `%{public}@` (`LocalSchemeHandler.swift:40`, `MarkdownWebView.swift:707`). The log subsystem is now `io.github.boaworm.Markdown`. |
 | 25 | POSITIVE | Holds | n/a | Export filename still comes from `deletingPathExtension().lastPathComponent` (`MarkdownWebView.swift:428`). |
 | 26 | HIGH | Fixed | n/a | CSP is `script-src 'self' boa-renderer:` with no `unsafe-eval` (`Renderer/index.html:7`). Mermaid renders under it (see `MermaidRenderingTests`). |
 | 27 | HIGH | Fixed | n/a | markdown-it is gone. cmark runs in safe mode and `BoaRender` tests reject `javascript:`, `vbscript:` and `data:` links. |
@@ -93,7 +95,7 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 | 41 | LOW | Open | Low | `localStorage` is still used for two help-overlay flags (`help-overlay.js:103-112, 237-238`). Not sensitive. |
 | 42 | LOW | Open | Low | `window.onerror` still forwards the raw message to the native logger (`main.js:40-42`). |
 | 43 | LOW | Open | Low | Line-number wrapping still rebuilds `innerHTML` from template strings (`main.js:100-106`). Input is escaped code from cmark or highlight.js output. |
-| 44 | HIGH | Open | Medium | `scripts/install.sh` still writes and runs `/tmp/set_default_handler.swift` at a fixed path (lines 95, 121, 125). Needs a local attacker on the same machine. Use `mktemp -d`. |
+| 44 | HIGH | Fixed | n/a | `scripts/install.sh` writes the helper to `tmp/` inside the checkout (git-ignored) instead of the shared `/tmp`. |
 | 45 | MEDIUM | Removed | n/a | `benchmark/ql-bench` deleted. |
 | 46 | MEDIUM | Removed | n/a | The npm build script is gone. |
 | 47 | MEDIUM | Open | Medium | `install.sh` still ad-hoc signs the app and clears quarantine with `xattr -cr` (lines 63, 69, 137). Intended for development installs; keep it documented. |
@@ -110,7 +112,7 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 | # | Severity | Finding | Evidence | Suggested fix |
 |---|----------|---------|----------|---------------|
 | N1 | Medium, **Fixed** | **Clicking a local link could launch any file or application.** Relative and absolute paths and `file://` URLs resolved without restriction, and anything that was not a document type went to `NSWorkspace.shared.open`. Files created locally, for example by `git clone`, carry no quarantine flag. A click was required. **Fix:** links now resolve only inside the document's own folder tree. Absolute paths, `file:` URLs, any `..` component and null bytes are refused, and a symlink that leaves the tree is refused after resolution. Ordinary files ask before opening. Folders, application and other bundles, scripts, installers and any file with the executable bit are only revealed in Finder. The navigation delegate no longer opens `file:` URLs. Covered by tests in `LinkNavigationTests` and `LocalLinkTargetTests`. | `LinkNavigation.swift` (`resolveLocalURL`, `isInsideDocumentTree`, `action(for:)`, `mightRunCodeOrIsFolder`); `MarkdownWebView.swift` (`handleLinkClick`, `decidePolicyFor`) | None. Side effect: links such as `../README.md` from a subfolder no longer work. |
-| N2 | Medium | **Hardened runtime is off in Release** (`ENABLE_HARDENED_RUNTIME = NO`), so the app cannot be notarised as built. | `xcodebuild -showBuildSettings` | Enable it, drop `allow-jit` (finding 3), and run the tests and a manual check. |
+| N2 | Medium, **Fixed** | **Hardened runtime is off in Release** (`ENABLE_HARDENED_RUNTIME = NO`), so the app cannot be notarised as built. | `xcodebuild -showBuildSettings` | Enable it, drop `allow-jit` (finding 3), and run the tests and a manual check. Done: `ENABLE_HARDENED_RUNTIME: YES` in `project.yml`; the Release build is signed with the `runtime` flag. |
 | N3 | Info | **Mermaid 12.3.0 is vendored** (on branch `feat/mermaid-diagrams`, not yet merged) as a 5.5 MB minified bundle that inlines other libraries (DOMPurify 3.4.17, the ELK layout engine, KaTeX, lodash and others). It runs with `securityLevel: 'strict'` under the strict CSP, contains no `eval`, `new Function` or network APIs (searched), and is the latest release. It has not been audited independently. | `Renderer/vendor/mermaid/VENDORED.md` | Track upstream advisories; re-run the checks in `VENDORED.md` on every upgrade. |
 | N4 | Low | **README overstates remote content.** It says a document can still make the web view load a remote image. The CSP `img-src` suggests those loads are blocked. Not tested. | `README.md`; `Renderer/index.html:7` | Test with a remote image, then correct whichever is wrong. |
 | N5 | Info | **Thread safety in `LocalSchemeHandler`.** The `allowedFileURLs` setter changes `resourceGeneration` and `loadedBytes` before taking the lock that guards `allowedFilePaths`. Safe only if always called on the main thread. | `LocalSchemeHandler.swift:20-26` | Put all mutable state under one lock or mark the class `@MainActor`. |
@@ -123,9 +125,9 @@ Of the original HIGH findings, 2, 7, 26, 27, 28 and 29 are Fixed or Removed. Fin
 |----------|-------|--------|
 | Done | N1 (local links confined to the document's folder tree; ask before opening; reveal risky items only) | Small |
 | Done | 1 and 52 (App Sandbox enabled; see `docs/sandbox-plan.md`) | Large |
-| P2 | 3 and N2 (hardened runtime, drop `allow-jit`) | Small |
-| P2 | 13 and 8 (restrict the `markdownpreview://` path; default-cancel navigation) | Small |
-| P2 | 44 and 47 (installer temp file and signing notes) | Small |
+| Done | 3 and N2 (hardened runtime, `allow-jit` dropped) | Small |
+| Done | 13 and 8 (`markdownpreview://` removed; navigation is default-cancel) | Small |
+| Done / P2 | 44 (installer temp file moved to `tmp/`); 47 (signing notes) still open | Small |
 | P3 | 11 and 30 (typed JS bridge, scheme check on `linkClicked`) | Medium |
 | P3 | 9, 24, 17, 20, N5, N6 (message size caps, log redaction, typed plist, locking, scheme handling) | Small to medium |
 | P3 | 33, 39, 41, 42, 43, 50, N4, N7 | Small |

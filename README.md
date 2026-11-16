@@ -24,16 +24,16 @@ This is a fork of [xykong/flux-markdown](https://github.com/xykong/flux-markdown
 | npm renderer | The `web-renderer/` Vite project, its Node dependencies and the CI jobs that built it. Markdown is parsed in Swift by cmark-gfm |
 | Diagram and chart engines | Mermaid, Vega, Vega-Lite, Graphviz and Typst lived in the npm renderer. Fenced `mermaid`, `vega`, `dot` and `typst` blocks now render as code, and `.mmd` files open as a ```mermaid code block |
 
-When a failure happens, the app now shows a local message with a retry button (`Sources/Shared/FailureNotice.swift`). Nothing is recorded or sent.
+When a failure happens, the app now shows a local message with a retry button (`Sources/Shared/FailureNotice.swift`). Nothing is sent to a second party.
 
 ## What is still here
 
 - The two JavaScript libraries the renderer still needs: KaTeX for math and highlight.js for code colouring. Both are vendored under `Renderer/vendor/` with their licences and a checksum record, so nothing is fetched at build time.
 - The app runs in the macOS App Sandbox. It can read the documents you open and the folders you allow, and write only where you save an export. Opening a document grants access to that file alone, so the first time you open one with images or links to siblings, BoaMarkdown asks you to allow its folder (File ▸ Allow Access to Document Folder… asks again). The choice is remembered.
-- The sandbox does not block the network. `WKWebView` will not start in a sandboxed app without the outgoing-network entitlement, so the app holds it. What keeps the app local-only is that the code that made requests (updates, statistics, reporting) is gone, and the renderer's Content-Security-Policy blocks page requests, including remote images. Clicking an `http(s)` link still opens your browser.
+- The sandbox does not block the network. `WKWebView` will not start in a sandboxed app without the outgoing-network entitlement, so the app holds it. What keeps the app local-only is that the code that made requests (updates, statistics, reporting) is gone, the renderer's Content-Security-Policy blocks page requests, including remote images, the web view refuses to navigate anywhere but the bundled renderer, and a content rule list blocks `http(s)`, `ws(s)` and `ftp` loads. Clicking an `http(s)` link still opens your browser.
 - The command-line PDF export (`BoaMarkdown --export-pdf in.md out.pdf`) cannot reach arbitrary paths under the sandbox, so it only works for files the app can already read and write.
 - Building needs no package manager: the Markdown parser is vendored C (`Vendor/cmark-gfm`), the renderer assets are in the repo, and `xcodegen` assembles the project.
-- The app is named BoaMarkdown, with bundle identifiers under `io.github.boaworm`, and the upstream "flux" names (renderer scheme, JavaScript globals, CSS classes, environment variables) have been renamed to "boa". Only the `markdownpreview://` URL scheme is unchanged. Settings live in the app's container (`~/Library/Containers/io.github.boaworm.Markdown/Data/Library/Application Support/BoaMarkdown/`), so they do not carry over from an upstream FluxMarkdown install or from an earlier unsandboxed build.
+- The app is named BoaMarkdown, with bundle identifiers under `io.github.boaworm`, and the upstream "flux" names (renderer scheme, JavaScript globals, CSS classes, environment variables) have been renamed to "boa". The `markdownpreview://` URL scheme is gone, so other apps cannot ask BoaMarkdown to open a path. Settings live in the app's container (`~/Library/Containers/io.github.boaworm.Markdown/Data/Library/Application Support/BoaMarkdown/`), so they do not carry over from an upstream FluxMarkdown install or from an earlier unsandboxed build.
 
 The remaining code has not been fully audited yet. Changes from upstream are reviewed commit by commit before they are merged.
 

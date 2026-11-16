@@ -2,7 +2,7 @@ import WebKit
 import os.log
 
 class LocalSchemeHandler: NSObject, WKURLSchemeHandler {
-    private let logger = OSLog(subsystem: "com.markdownquicklook.app", category: "LocalSchemeHandler")
+    private let logger = OSLog(subsystem: "io.github.boaworm.Markdown", category: "LocalSchemeHandler")
     private let allowedFilesLock = NSLock()
     private var allowedFilePaths = Set<String>()
     private let resourceQueue = DispatchQueue(label: "io.github.boaworm.Markdown.images", qos: .userInitiated)

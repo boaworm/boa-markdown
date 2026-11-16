@@ -10,15 +10,15 @@ What was done, and what differed from the plan:
 
 | Area | Result |
 |------|--------|
-| Entitlements | `app-sandbox`, `files.user-selected.read-write` (the save panel must write PDF and HTML exports), `files.bookmarks.app-scope`, `print` and `cs.allow-jit` (unchanged). |
+| Entitlements | `app-sandbox`, `files.user-selected.read-write` (the save panel must write PDF and HTML exports), `files.bookmarks.app-scope`, and `print`. `cs.allow-jit` was removed later, together with enabling the hardened runtime. |
 | Network | **`network.client` is required.** Without it the `WKWebView` web content and GPU processes fail to launch ("Application does not have permission to communicate with network resources") and the page stays blank, although only bundled and local content is loaded. So the sandbox does not block the network. The app has no network code and the renderer's CSP blocks page requests. |
 | Sibling images and linked files | `ScopedAccessStore` keeps security-scoped bookmarks. `FolderAccessPrompt` asks once per run for the document's folder when images next to it exist but cannot be read, then re-renders. Clicking a link to an unreadable sibling document prompts too. File ▸ Allow Access to Document Folder… asks again on demand. |
 | Recents | `RecentDocumentHistory.record` stores a bookmark per file; "Open Recent" resumes access before opening. |
 | Settings | `SharedPreferenceStore` uses the standard Application Support location, which the sandbox maps into the container. Nothing shares the file any more now that the Quick Look extension is gone. Settings saved by an unsandboxed build at the real-home path are not read. |
 | External editor | Uses `NSWorkspace` instead of spawning `/usr/bin/open -t`. |
-| `markdownpreview://open?path=` | Opens only paths the app can already reach; other paths are denied by the sandbox. |
+| `markdownpreview://open?path=` | Removed later; nothing used it once the Quick Look extension was gone. |
 | CLI `--export-pdf in out` | Not changed. It cannot reach arbitrary paths, so it works only for files the app can read and write. Consider removing it. |
-| `allow-jit` | Left in place to change one thing at a time; probably unnecessary for `WKWebView`. |
+| `allow-jit` | Removed later, with the hardened runtime enabled; the renderer starts without it. |
 
 Checked by hand: a document renders, the web view starts, and the renderer reports ready. Covered by
 unit tests: the bookmark store, the folder-access check, and the entitlements. Still to check by hand:
@@ -63,7 +63,7 @@ the plumbing for a sandbox is in place; only the switch is missing.
    as-is, so the daily build is untouched. Enable the subresource log
    (`defaults write io.github.boaworm.Markdown BOADiagnoseSubresources -bool true`) and
    read the denials, which arrive with the failing URL and the owning document:
-   `log stream --predicate 'subsystem == "com.markdownquicklook.app"' --info --debug`
+   `log stream --predicate 'subsystem == "io.github.boaworm.Markdown"' --info --debug`
    Expected failures: sibling images, `~/Library/Application Support/...` writes.
 2. **Per-folder bookmarks.** When a document opens, request its containing folder through
    `NSOpenPanel` the first time (one prompt per folder), store a security-scoped

@@ -16,17 +16,12 @@ import Foundation
 /// This matches the thread-safety guarantee of the `UserDefaults` API it replaces.
 ///
 /// **Reload strategy:** Reads are cached and re-read when the file's modification
-/// date changes. Pass `alwaysReload: true` to re-read on every access instead.
+/// date changes.
 ///
 /// See: upstream issue #13
 public class SharedPreferenceStore {
 
     private static let fileName = "shared-preferences.plist"
-
-    /// Legacy App Group identifier — used for one-time migration of preferences
-    /// from pre-Tahoe versions that used App Group UserDefaults.
-    static let legacyAppGroupIdentifier = "group.io.github.boaworm.Markdown"
-    private static let migrationDoneKey = "_didMigrateFromAppGroup"
 
     private var cache: [String: Any]
     private let fileURL: URL
@@ -34,22 +29,14 @@ public class SharedPreferenceStore {
     private var lastModificationDate: Date?
     private let queue = DispatchQueue(label: "io.github.boaworm.Markdown.SharedPreferenceStore")
 
-    /// If true, always re-reads from disk on every read.
-    /// If false, uses modification-date caching.
-    private let alwaysReload: Bool
-
-    /// Creates a store backed by the default shared plist location.
-    /// - Parameter alwaysReload: When true, re-reads from disk on every read
-    ///   instead of caching by modification date.
-    public convenience init(alwaysReload: Bool = false) {
-        let url = Self.defaultFileURL()
-        self.init(fileURL: url, alwaysReload: alwaysReload)
+    /// Creates a store backed by the default plist location.
+    public convenience init() {
+        self.init(fileURL: Self.defaultFileURL())
     }
 
     /// Creates a store backed by a specific file URL (for testing).
-    public init(fileURL: URL, alwaysReload: Bool = false) {
+    public init(fileURL: URL) {
         self.fileURL = fileURL
-        self.alwaysReload = alwaysReload
 
         // Ensure the parent directory exists. Creating it fails when the store
         // location is not writable, which is why writability is checked separately.
@@ -67,47 +54,6 @@ public class SharedPreferenceStore {
         } else {
             self.cache = [:]
             self.lastModificationDate = nil
-        }
-    }
-
-    // MARK: - One-time migration from App Group UserDefaults
-
-    /// Migrates preferences from the legacy App Group UserDefaults to this file-based store.
-    /// Safe to call multiple times — runs only once per installation.
-    /// Call it from the app's init path, before the settings UI is shown.
-    public func migrateFromAppGroupIfNeeded(legacyDefaults: UserDefaults? = nil, onMigration: ((String, Any) -> Void)? = nil) {
-        queue.sync {
-            guard canWrite else { return }
-            guard cache[Self.migrationDoneKey] == nil else { return }
-
-            guard let legacyDefaults = legacyDefaults ?? UserDefaults(suiteName: Self.legacyAppGroupIdentifier) else {
-                cache[Self.migrationDoneKey] = true
-                _synchronizeUnsafe()
-                return
-            }
-
-            let keysToMigrate = [
-                "preferredAppearanceMode",
-                "baseFontSize",
-                "codeHighlightTheme",
-                "enableKatex",
-                "enableEmoji",
-                "collapseBlockquotesByDefault"
-            ]
-
-            var migrated = 0
-            for key in keysToMigrate {
-                if cache[key] == nil, let value = legacyDefaults.object(forKey: key) {
-                    cache[key] = value
-                    onMigration?(key, value)
-                    migrated += 1
-                }
-            }
-
-            cache[Self.migrationDoneKey] = true
-            if _synchronizeUnsafe() && migrated > 0 {
-                NSLog("[SharedPreferenceStore] Migrated %d preference(s) from App Group UserDefaults", migrated)
-            }
         }
     }
 
@@ -229,15 +175,8 @@ public class SharedPreferenceStore {
         return success
     }
 
-    /// Must be called within `queue.sync`.
-    /// Extension mode (alwaysReload=true): re-reads from disk every time.
-    /// Main app mode (alwaysReload=false): only re-reads if modification date changed.
+    /// Must be called within `queue.sync`. Re-reads only if the modification date changed.
     private func reloadIfNeeded() {
-        if alwaysReload {
-            reloadFromDisk()
-            return
-        }
-
         let currentMod = Self.modificationDate(of: fileURL)
         guard currentMod != lastModificationDate else { return }
         reloadFromDisk()

@@ -5,7 +5,7 @@ final class DisplayVersionTests: XCTestCase {
     func testDisplayVersionUsesDevelopmentOverrideWhenPresent() {
         let info: [String: Any] = [
             "CFBundleShortVersionString": "1.32.427",
-            "FMDisplayVersion": "1.32.427-dev-20260521-1430"
+            "BoaDisplayVersion": "1.32.427-dev-20260521-1430"
         ]
 
         XCTAssertEqual(
@@ -25,7 +25,7 @@ final class DisplayVersionTests: XCTestCase {
     func testDisplayVersionIgnoresEmptyDevelopmentOverride() {
         let info: [String: Any] = [
             "CFBundleShortVersionString": "1.32.427",
-            "FMDisplayVersion": "   "
+            "BoaDisplayVersion": "   "
         ]
 
         XCTAssertEqual(DisplayVersion.text(from: info), "1.32.427")

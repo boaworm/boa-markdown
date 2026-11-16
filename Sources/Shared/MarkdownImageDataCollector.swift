@@ -232,7 +232,7 @@ enum LocalResourceDiagnostics {
     static func log(_ error: Error, operation: String) {
         let e = error as NSError
         os_log("Local image failure operation=%{public}@ reason=%{public}@ domain=%{public}@ code=%{public}ld",
-               log: OSLog(subsystem: "com.markdownquicklook.app", category: "LocalResources"),
+               log: OSLog(subsystem: "io.github.boaworm.Markdown", category: "LocalResources"),
                type: .error, operation, category(error), e.domain, e.code)
     }
 }
