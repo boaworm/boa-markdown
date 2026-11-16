@@ -9,11 +9,11 @@ final class ContentsSideTests: XCTestCase {
         let defaults = UserDefaults(suiteName: domain)!
         defer { defaults.removePersistentDomain(forName: domain) }
         let store = SharedPreferenceStore(fileURL: file)
-        let first = AppearancePreference(sharedStore: store, localStore: defaults, migrateFromAppGroup: false)
+        let first = AppearancePreference(sharedStore: store, localStore: defaults)
         XCTAssertEqual(first.contentsSide, .right)
         first.contentsSide = .left
         first.flushSharedPreferences()
-        let reloaded = AppearancePreference(sharedStore: SharedPreferenceStore(fileURL: file, alwaysReload: true), localStore: defaults, migrateFromAppGroup: false)
+        let reloaded = AppearancePreference(sharedStore: SharedPreferenceStore(fileURL: file), localStore: defaults)
         XCTAssertEqual(reloaded.contentsSide, .left)
         store.set("invalid", forKey: "contentsSide")
         store.synchronize()

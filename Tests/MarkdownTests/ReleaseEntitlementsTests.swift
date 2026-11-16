@@ -14,6 +14,11 @@ final class ReleaseEntitlementsTests: XCTestCase {
         )
     }
 
+    func testProjectEnablesTheHardenedRuntime() throws {
+        let project = try String(contentsOf: projectRoot().appendingPathComponent("project.yml"), encoding: .utf8)
+        XCTAssertTrue(project.contains("ENABLE_HARDENED_RUNTIME: YES"))
+    }
+
     func testReleaseEntitlementsDropTheDebugger() throws {
         let appRelease = try String(
             contentsOf: projectRoot().appendingPathComponent("Sources/Markdown/MarkdownRelease.entitlements"),
@@ -43,6 +48,8 @@ final class ReleaseEntitlementsTests: XCTestCase {
             XCTAssertEqual(plist["com.apple.security.network.client"] as? Bool, true,
                            "\(name) must keep network.client or the web view cannot start")
             XCTAssertNil(plist["com.apple.security.network.server"], "\(name) must not request incoming network access")
+            // JavaScript is compiled in WebKit's own web content process, not in the app.
+            XCTAssertNil(plist["com.apple.security.cs.allow-jit"], "\(name) must not let the app process map JIT memory")
         }
     }
 

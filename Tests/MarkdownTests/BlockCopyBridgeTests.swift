@@ -9,11 +9,11 @@ final class BlockCopyBridgeTests: XCTestCase {
         let suite = "BlockCopyTests." + UUID().uuidString
         let local = UserDefaults(suiteName: suite)!
         defer { local.removePersistentDomain(forName: suite) }
-        let first = AppearancePreference(sharedStore: SharedPreferenceStore(fileURL: file), localStore: local, migrateFromAppGroup: false)
+        let first = AppearancePreference(sharedStore: SharedPreferenceStore(fileURL: file), localStore: local)
         XCTAssertTrue(first.showCopyButtons)
         first.showCopyButtons = false
         first.flushSharedPreferences()
-        let second = AppearancePreference(sharedStore: SharedPreferenceStore(fileURL: file, alwaysReload: true), localStore: local, migrateFromAppGroup: false)
+        let second = AppearancePreference(sharedStore: SharedPreferenceStore(fileURL: file), localStore: local)
         XCTAssertFalse(second.showCopyButtons)
         first.showCopyButtons = true
         first.flushSharedPreferences()

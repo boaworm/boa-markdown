@@ -56,11 +56,11 @@ if [ "$INSTALL_MODE" = "development" ]; then
     BASE_VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INSTALLED_APP_PATH/Contents/Info.plist")
     DISPLAY_VERSION="${BASE_VERSION}-dev-$(date '+%Y%m%d-%H%M%S')"
     echo "📋 Development display version: $DISPLAY_VERSION"
-    /usr/libexec/PlistBuddy -c "Set :FMDisplayVersion $DISPLAY_VERSION" "$INSTALLED_APP_PATH/Contents/Info.plist" 2>/dev/null || \
-        /usr/libexec/PlistBuddy -c "Add :FMDisplayVersion string $DISPLAY_VERSION" "$INSTALLED_APP_PATH/Contents/Info.plist"
+    /usr/libexec/PlistBuddy -c "Set :BoaDisplayVersion $DISPLAY_VERSION" "$INSTALLED_APP_PATH/Contents/Info.plist" 2>/dev/null || \
+        /usr/libexec/PlistBuddy -c "Add :BoaDisplayVersion string $DISPLAY_VERSION" "$INSTALLED_APP_PATH/Contents/Info.plist"
 
     echo "🔏 Re-signing development install..."
-    /usr/bin/codesign --force --sign - --entitlements "$APP_ENTITLEMENTS" "$INSTALLED_APP_PATH"
+    /usr/bin/codesign --force --sign - --options runtime --entitlements "$APP_ENTITLEMENTS" "$INSTALLED_APP_PATH"
     /usr/bin/codesign --verify --strict --deep --verbose=2 "$INSTALLED_APP_PATH"
 fi
 
@@ -92,7 +92,10 @@ if command -v duti >/dev/null 2>&1; then
 else
     # Fallback to Swift LaunchServices API
     echo "   Using Swift LaunchServices API (duti not available)..."
-    cat << 'EOF' > /tmp/set_default_handler.swift
+    # Inside the checkout, not the world-writable /tmp where another user could plant the file.
+    mkdir -p "$PROJECT_ROOT/tmp"
+    HANDLER_SCRIPT="$PROJECT_ROOT/tmp/set_default_handler.swift"
+    cat << 'EOF' > "$HANDLER_SCRIPT"
 import Foundation
 import CoreServices
 
@@ -118,11 +121,11 @@ for type in types {
 }
 exit(allSuccess ? 0 : 1)
 EOF
-    swift /tmp/set_default_handler.swift || {
+    swift "$HANDLER_SCRIPT" || {
         echo "   ⚠️  Automatic default app setting failed."
         echo "   📝 You can set it manually or install duti: brew install duti"
     }
-    rm -f /tmp/set_default_handler.swift
+    rm -f "$HANDLER_SCRIPT"
 fi
 
 echo ""

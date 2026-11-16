@@ -1,3 +1,0 @@
-This is a plain text file
-used for testing link navigation
-in Markdown Preview Enhanced.

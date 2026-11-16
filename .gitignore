@@ -65,6 +65,9 @@ test-base64.html
 # Additional build artifacts
 .build/
 
+# Scratch files written by scripts/install.sh
+/tmp/
+
 # Backup files (Swift backup)
 *.bak
 

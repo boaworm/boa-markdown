@@ -1,7 +1,7 @@
 import Foundation
 
 enum DisplayVersion {
-    private static let displayVersionKey = "FMDisplayVersion"
+    private static let displayVersionKey = "BoaDisplayVersion"
     private static let bundleVersionKey = "CFBundleShortVersionString"
 
     static func text(from infoDictionary: [String: Any]?) -> String? {

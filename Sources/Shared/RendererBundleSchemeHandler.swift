@@ -4,7 +4,7 @@ import os.log
 final class RendererBundleSchemeHandler: NSObject, WKURLSchemeHandler {
     static let scheme = "boa-renderer"
 
-    private let logger = OSLog(subsystem: "com.markdownquicklook.app", category: "RendererBundleSchemeHandler")
+    private let logger = OSLog(subsystem: "io.github.boaworm.Markdown", category: "RendererBundleSchemeHandler")
     private let rootDirectory: URL
 
     init(rootDirectory: URL) {

@@ -4,15 +4,11 @@
 "Export as HTML…" = "Export as HTML…";
 "Export as PDF…" = "Export as PDF…";
 "Find..." = "Find...";
-"BoaMarkdown Help" = "BoaMarkdown Help";
 "README" = "README";
-"Report an Issue" = "Report an Issue";
-"Release Notes" = "Release Notes";
 "Show Preview" = "Show Preview";
 "Show Source" = "Show Source";
 "Reset Zoom" = "Reset Zoom";
 "Appearance" = "Appearance";
-"Check for Updates..." = "Check for Updates...";
 
 /* === Context Menu / Search === */
 "Context menu search item" = "Find...";
@@ -41,10 +37,6 @@
 
 /* === Settings: Language Section === */
 "Language" = "Language";
-"Interface language for the entire app" = "Interface language for the entire app";
-"System Default" = "System Default";
-"Some menus update only after restarting the app." = "Some menus update only after restarting the app.";
-"Restart Now" = "Restart Now";
 
 /* === Settings: Features Section === */
 "Features" = "Features";
@@ -81,35 +73,12 @@
 "Drag & Drop" = "Drag & Drop";
 "Drop files onto the + area to open." = "Drop files onto the + area to open.";
 "Open Settings" = "Open Settings";
-"Troubleshooting" = "Troubleshooting";
 "Open" = "Open";
 "BoaMarkdown App Icon" = "BoaMarkdown App Icon";
 
-/* === Toast Messages === */
-
 /* === Feedback and diagnostics === */
-"Suggest a Feature…" = "Suggest a Feature…";
-"Review your report before continuing. The summary will be sent to GitHub; submitted issues are public." = "Review your report before continuing. The summary will be sent to GitHub; submitted issues are public.";
-"What happened? Include steps to reproduce and what you expected." = "What happened? Include steps to reproduce and what you expected.";
-"Problem description" = "Problem description";
-"Include diagnostics and recent settings changes" = "Include diagnostics and recent settings changes";
-"Stored locally: the latest 200 settings changes, without time expiration. Document contents and file paths are excluded." = "Stored locally: the latest 200 settings changes, without time expiration. Document contents and file paths are excluded.";
-"Diagnostic report" = "Diagnostic report";
-"Clear Settings History…" = "Clear Settings History…";
-"Copy Report" = "Copy Report";
-"Save Report…" = "Save Report…";
-"Report copied." = "Report copied.";
-"You submit the issue on GitHub. A GitHub account is required." = "You submit the issue on GitHub. A GitHub account is required.";
 "Cancel" = "Cancel";
-"Continue on GitHub…" = "Continue on GitHub…";
-"Clear Settings History?" = "Clear Settings History?";
 "Clear" = "Clear";
-"Settings history cleared." = "Settings history cleared.";
-"Report saved." = "Report saved.";
-"Could not save the report. You can copy it instead." = "Could not save the report. You can copy it instead.";
-"GitHub opened with a shortened summary. Copy or save the full report if needed." = "GitHub opened with a shortened summary. Copy or save the full report if needed.";
-"GitHub opened. Review the form and submit when ready." = "GitHub opened. Review the form and submit when ready.";
-"Could not open the browser. Copy the report or save it and try again." = "Could not open the browser. Copy the report or save it and try again.";
 "Copy Link" = "Copy Link";
 
 "Contents Position" = "Contents Position";
@@ -120,30 +89,16 @@
 
 "Keep contents and its button on the same side" = "Keep contents and its button on the same side";
 
-/* GitHub project support */
-"Could not open GitHub" = "Could not open GitHub";
-
 /* Optional GitHub support invitations */
-"Enjoying BoaMarkdown?" = "Enjoying BoaMarkdown?";
-"Remind Me Later" = "Remind Me Later";
-"Don't Remind Me" = "Don't Remind Me";
-"Invite me to support the project on GitHub" = "Invite me to support the project on GitHub";
 
 "Document reloaded" = "Document reloaded";
 "Reload failed" = "Reload failed";
 "Zoom reset" = "Zoom reset";
 
 /* Actionable update failure recovery */
-"Could Not Update BoaMarkdown" = "Could Not Update BoaMarkdown";
-"The automatic update could not be completed. You can update manually: download BoaMarkdown.dmg from our official download page, open it, quit BoaMarkdown, then drag BoaMarkdown into Applications and choose Replace.\n\nIf manual installation also fails, choose Help → Report an Issue and include the diagnostics, your macOS version, and how you installed BoaMarkdown." = "The automatic update could not be completed. You can update manually: download BoaMarkdown.dmg from our official download page, open it, quit BoaMarkdown, then drag BoaMarkdown into Applications and choose Replace.\n\nIf manual installation also fails, choose Help → Report an Issue and include the diagnostics, your macOS version, and how you installed BoaMarkdown.";
-"Download Latest Version" = "Download Latest Version";
 "Close" = "Close";
-"Could Not Open Download Page" = "Could Not Open Download Page";
-"Copy the download link and paste it into your browser to download the latest version." = "Copy the download link and paste it into your browser to download the latest version.";
-"Copy Download Link" = "Copy Download Link";
 
 /* Contextual error recovery and feedback */
-"Update could not be completed" = "Update could not be completed";
 "Document could not be opened" = "Document could not be opened";
 "Document could not be reloaded" = "Document could not be reloaded";
 "Export could not be completed" = "Export could not be completed";
@@ -152,75 +107,22 @@
 "Some images could not be displayed" = "Some images could not be displayed";
 "This preview is incomplete" = "This preview is incomplete";
 "The destination could not be opened" = "The destination could not be opened";
-"You can download the latest version and install it manually." = "You can download the latest version and install it manually.";
 "Choose a readable UTF-8 Markdown file, or open it in your editor to check it." = "Choose a readable UTF-8 Markdown file, or open it in your editor to check it.";
 "Open this document in your editor, or split it into smaller files before trying again." = "Open this document in your editor, or split it into smaller files before trying again.";
 "Try reloading again when the file is available. Your current document has not been discarded." = "Try reloading again when the file is available. Your current document has not been discarded.";
 "Try exporting again and choose another writable folder." = "Try exporting again and choose another writable folder.";
 "Try reloading the preview, or open the document in your editor." = "Try reloading the preview, or open the document in your editor.";
-"Check the source syntax in your editor. The rest of the document is still available." = "Check the source syntax in your editor. The rest of the document is still available.";
-"Open the destination in your browser or editor. You can copy a report if this keeps happening." = "Open the destination in your browser or editor. You can copy a report if this keeps happening.";
-"The link may point to a file that is not on this Mac, or to a path that is not relative to the document. Copy the link to open it manually, or check the path in your editor." = "The link may point to a file that is not on this Mac, or to a path that is not relative to the document. Copy the link to open it manually, or check the path in your editor.";
-"Report This Problem" = "Report This Problem";
-"Include diagnostics" = "Include diagnostics";
-"Review Feedback…" = "Review Feedback…";
-"Review Last Error…" = "Review Last Error…";
-"Clear Error History" = "Clear Error History";
-"Additional details (optional)" = "Additional details (optional)";
-"Opens GitHub with this error and system information. You confirm publication there." = "Opens GitHub with this error and system information. You confirm publication there.";
-"The feedback page could not be opened. Copy or save this report and try again later." = "The feedback page could not be opened. Copy or save this report and try again later.";
-"The feedback page could not be opened. Copy the report, then use Help → Report an Issue in BoaMarkdown." = "The feedback page could not be opened. Copy the report, then use Help → Report an Issue in BoaMarkdown.";
-"The report is ready. GitHub requires you to confirm publication. You can reopen, copy or save it here." = "The report is ready. GitHub requires you to confirm publication. You can reopen, copy or save it here.";
-"Open Feedback Page" = "Open Feedback Page";
 "Done" = "Done";
 "Try Again" = "Try Again";
 "Reload" = "Reload";
 "Export Again" = "Export Again";
 "Choose Another Folder" = "Choose Another Folder";
 "Choose Another File" = "Choose Another File";
-"How to Install…" = "How to Install…";
-"Download and open BoaMarkdown.dmg, quit BoaMarkdown, then drag the app into Applications and choose Replace." = "Download and open BoaMarkdown.dmg, quit BoaMarkdown, then drag the app into Applications and choose Replace.";
 "Preview could not start" = "Preview could not start";
-"Download and reinstall BoaMarkdown, or open the document in your editor." = "Download and reinstall BoaMarkdown, or open the document in your editor.";
-
-"Share Usage Statistics" = "Share Usage Statistics";
-
-"Turn Off Usage Statistics" = "Turn Off Usage Statistics";
-
-"Usage statistics are on: system/app versions, system timezone, daily reading time and view counts. No document names or contents. You can turn this off in Settings." = "Usage statistics are on: system/app versions, system timezone, daily reading time and view counts. No document names or contents. You can turn this off in Settings.";
-
-"Share system/app versions, system timezone, daily reading time and view counts. No document names or contents. Uploads occur at most hourly while in use." = "Share system/app versions, system timezone, daily reading time and view counts. No document names or contents. Uploads occur at most hourly while in use.";
-
-"Dismiss" = "Dismiss";
-
-"Usage statistics preference could not be saved" = "Usage statistics preference could not be saved";
-
-"Promotion source could not be linked" = "Promotion source could not be linked";
-
-"Source association is optional. Try again if the connection failed, or return to the promotion page for a fresh link. Your documents are unaffected." = "Source association is optional. Try again if the connection failed, or return to the promotion page for a fresh link. Your documents are unaffected.";
-
-"Usage Statistics Are Off" = "Usage Statistics Are Off";
-
-"No promotion source will be shared. You can keep using BoaMarkdown with statistics turned off." = "No promotion source will be shared. You can keep using BoaMarkdown with statistics turned off.";
-
-"Share This Promotion Source?" = "Share This Promotion Source?";
-
-"Link this promotion to your random installation identifier to help measure its effectiveness. No document information is sent. This is optional and does not count as reading activity." = "Link this promotion to your random installation identifier to help measure its effectiveness. No document information is sent. This is optional and does not count as reading activity.";
-
-"Share Source" = "Share Source";
-
-"Not Now" = "Not Now";
-
-"Promotion Source Linked" = "Promotion Source Linked";
-
-"Thank you. The source is linked to this installation. Effective use and return visits are measured separately when usage statistics are enabled." = "Thank you. The source is linked to this installation. Effective use and return visits are measured separately when usage statistics are enabled.";
-
-"Open Promotion Page" = "Open Promotion Page";
 
 /* Block copy controls */
 "Show Copy Buttons" = "Show Copy Buttons";
 "Text could not be copied" = "Text could not be copied";
-"Select the text to copy it manually, or try the copy button again." = "Select the text to copy it manually, or try the copy button again.";
 
 "Copy Document Path" = "Copy Document Path";
 

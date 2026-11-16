@@ -225,21 +225,14 @@ public class AppearancePreference: ObservableObject {
 
     public convenience init() {
         self.init(
-            sharedStore: SharedPreferenceStore(alwaysReload: false),
-            localStore: UserDefaults.standard,
-            migrateFromAppGroup: true
+            sharedStore: SharedPreferenceStore(),
+            localStore: UserDefaults.standard
         )
     }
 
-    init(sharedStore: SharedPreferenceStore, localStore: UserDefaults, migrateFromAppGroup: Bool) {
+    init(sharedStore: SharedPreferenceStore, localStore: UserDefaults) {
         self.sharedStore = sharedStore
         self.localStore = localStore
-
-        // Migrate preferences from pre-Tahoe App Group UserDefaults on first launch.
-        // No-op when the shared store is read-only.
-        if migrateFromAppGroup {
-            sharedStore.migrateFromAppGroupIfNeeded()
-        }
 
         // Sync @Published backing store from disk so views have the correct initial value.
         let raw = sharedStore.string(forKey: key) ?? AppearanceMode.system.rawValue
@@ -265,12 +258,6 @@ public class AppearancePreference: ObservableObject {
         sharedStore.synchronize()
     }
     
-    func observePreferenceChanges() {
-        // Keep the @Published theme in sync with an observed external write.
-        let mode = AppearanceMode(rawValue: sharedStore.string(forKey: key) ?? "system") ?? .system
-        if mode != _currentMode { _currentMode = mode }
-    }
-
     func setAppearance(_ mode: AppearanceMode) {
         _currentMode = mode
         sharedStore.set(mode.rawValue, forKey: key)

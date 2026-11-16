@@ -26,6 +26,7 @@ targets:
         INFOPLIST_FILE: Sources/Markdown/Info.plist
         INFOPLIST_KEY_NSMainStoryboardFile: ""
         ENABLE_PREVIEWS: NO
+        ENABLE_HARDENED_RUNTIME: YES
         MARKETING_VERSION: ${MARKETING_VERSION}
         CURRENT_PROJECT_VERSION: ${CURRENT_PROJECT_VERSION}
       configs:
